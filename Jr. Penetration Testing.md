@@ -87,6 +87,8 @@ Two key concepts are used to assign and manage the access rights of individuals:
 **PIM** -> used to translate a **==user's==** role within an organisation into an access role on a system.
 **PAM** -> is the management of the privileges a system's access role has, amongst other things.
 
+## Security Models 
+
 According to a security model, any system or piece of technology storing information is called an **Information system**. 
 
 #### The Bell-La Padula Model
@@ -108,3 +110,4 @@ It got its on Advantage and Disadvantage:
 This model applies the rule to objects (data) and subjects (users) that can be summarised as "no write up, no read down". This rule means that subjects **can** create or write content to objects at or below their level but **can only** read the contents of objects above the subject's level.
 
 ## Threat Modelling & Incident Response
+
