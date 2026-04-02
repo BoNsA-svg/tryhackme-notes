@@ -23,4 +23,8 @@ The methodology focuses primarily on how these systems, applications communicate
 3. Wireless communications
 
 #### Owasp
-It's updated frequently and it's community-driven and 
+It's updated frequently and it's community-driven and it's solely used to test web application and services
+
+
+#### NIST
+is a popular framework used to improve an organisations cybersecurity standards and manage the risk of cyber threats.
