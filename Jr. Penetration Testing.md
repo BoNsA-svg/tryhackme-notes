@@ -23,3 +23,4 @@ The methodology focuses primarily on how these systems, applications communicate
 3. Wireless communications
 
 #### Owasp
+It's updated frequently and it's community-driven and 
