@@ -49,4 +49,4 @@ The framework provides guidelines on security controls & benchmarks for success 
 
 ### Boxes' Of Penetration Testing
 
-- *==BLACK BOX==* - No Knowledge of the target we are testing 
+- *==BLACK BOX==* - No Knowledge of the target we are testing, so we should spend a lot of time taking our time on Info. Gathering (Stage 1) and enumeration (Stage 2). 
