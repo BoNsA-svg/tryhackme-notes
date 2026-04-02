@@ -10,4 +10,5 @@ Penetration tests can have a wide variety of objectives and target within scope.
 | Exploitation         | Once we find vulnerabilities on systems we try to leverage that to get inside.                                                                                                                                   |
 | Privilege Escalation | Once exploited which is called a ==foothold==. We could go horizontally (to user's we the same permission) or go vertically (To administrator).                                                                  |
 | Post Exploitation    | We could pivot to other hosts within the same network, we could collect information from the host that we are in, we have to cover our track, or report. **This part is mostly influenced by the ROE document**. |
-*=
+
+The Table above is more of 
