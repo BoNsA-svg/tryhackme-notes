@@ -95,3 +95,7 @@ This model is used to achieve the confidentiality element of the CIA triad.
 
 The model works by granting access to pieces of data (called objects) on a strictly need to know basis. This model uses the rule **=="no write down, no read up".==** 
 
+![Enlarged image](https://tryhackme-images.s3.amazonaws.com/user-uploads/5de96d9ca744773ea7ef8c00/room-content/0e6e5d9d80785fc287b4a67e1453b295.png)
+
+It got its on Advantage and Disadvantage:
+
