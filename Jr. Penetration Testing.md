@@ -113,3 +113,16 @@ This model applies the rule to objects (data) and subjects (users) that can be s
 
 ***Threat Modelling*** is the process of reviewing, improving, and testing the security protocols in place in an organisation's information technology infrastructure and services.
 
+The threat modelling process is very similar to a risk assessment made in workplaces for employees and customers. The principles all return to:
+
+- Preparation
+- Identification
+- Mitigations
+- Review
+
+It is, however, a complex process that needs constant review and discussion with a dedicated team. An effective threat model includes:
+
+- Threat intelligence
+- Asset identification
+- Mitigation capabilities
+- Risk assessment
