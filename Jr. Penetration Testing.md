@@ -50,4 +50,6 @@ The framework provides guidelines on security controls & benchmarks for success 
 ### Boxes' Of Penetration Testing
 
 - *==BLACK BOX==* - No Knowledge of the target we are testing, so we should spend a lot of time taking our time on Info. Gathering (Stage 1) and enumeration (Stage 2). 
-- **==Grey Box==** - Partial Knowledge of the system, most popular way if testing. 
+
+- **==Grey Box==** - Partial Knowledge of the system, most popular way if testing. Grey-Box testing, the limited knowledge given saves time, and is often chosen for extremely well-hardened attack surfaces.
+- **White Box** - is a low-level process usually done by a software developer who knows programming and application logic.
