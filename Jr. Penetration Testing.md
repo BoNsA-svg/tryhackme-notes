@@ -1,6 +1,6 @@
 
 ## Penetration Testing Methodologies
 
-Penetration tests can have a wide variety of objectives and target within scope. **The General theme** :
+Penetration tests can have a wide variety of objectives and target within scope. **The General theme**:
 
-| Stage 
+| Column 1 | 
