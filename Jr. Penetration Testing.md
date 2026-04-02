@@ -91,4 +91,6 @@ According to a security model, any system or piece of technology storing informa
 
 #### The Bell-La Padula Model
 
-This model is used to achieve the confidentitality element of the CIA triad
+This model is used to achieve the confidentiality element of the CIA triad. 
+
+The model works by granting access to pieces of data (called objects) on a strictly need to know basis. This model uses the rule "no write down, no read up".==**
