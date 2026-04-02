@@ -55,3 +55,6 @@ The framework provides guidelines on security controls & benchmarks for success 
 
 - **==Grey Box==** - Partial Knowledge of the system, most popular way if testing. Grey-Box testing, the limited knowledge given saves time, and is often chosen for extremely well-hardened attack surfaces.
 - **White Box** - is a low-level process usually done by a software developer who knows programming and application logic.
+
+
+# Principle Of Security
