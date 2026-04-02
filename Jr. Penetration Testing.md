@@ -139,3 +139,17 @@ To help with this, there are frameworks such as **STRIDE**
 |Denial of Service|Applications and services use up system resources, these two things should have measures in place so that abuse of the application/service won't result in bringing the whole system down.|
 |Elevation of Privilege|This is the worst-case scenario for an application or service. It means that a user was able to escalate their authorization to that of a higher level i.e. an administrator. This scenario often leads to further exploitation or information disclosure.|
 A breach of security is known as an **incident**. 
+
+An incident is responded to by a **C**omputer **S**ecurity **I**ncident **R**esponse **T**eam (**CSIRT**) which is prearranged group of employees with technical knowledge about the systems and/or current incident. To successfully solve an incident, these steps are often referred to as the six phases of Incident Response that takes place, listed in the table below:
+
+  
+
+|   |   |
+|---|---|
+|**Action**|**Description**|
+|Preparation|Do we have the resources and plans in place to deal with the security incident?|
+|Identification|Has the threat and the threat actor been correctly identified in order for us to respond to?|
+|Containment|Can the threat/security incident be contained to prevent other systems or users from being impacted?|
+|Eradication|Remove the active threat.|
+|Recovery|Perform a full review of the impacted systems to return to business as usual operations.|
+|Lessons Learned|What can be learnt from the incident? I.e. if it was due to a phishing email, employees should be trained better to detect phishing emails.|
