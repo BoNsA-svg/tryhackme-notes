@@ -88,3 +88,7 @@ Two key concepts are used to assign and manage the access rights of individuals:
 **PAM** -> is the management of the privileges a system's access role has, amongst other things.
 
 According to a security model, any system or piece of technology storing information is called an **Information system**. 
+
+#### The Bell-La Padula Model
+
+This model is used to achieve the confidentitality element of the CIA triad
