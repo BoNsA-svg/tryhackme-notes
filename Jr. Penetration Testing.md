@@ -47,4 +47,6 @@ The framework provides guidelines on security controls & benchmarks for success 
 - Response and recovery planning
 
 
-### Boxes' Of Pen
+### Boxes' Of Penetration Testing
+
+- *==BLACK BOX==* - No Knowledge of the target we are testing 
