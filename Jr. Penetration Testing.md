@@ -82,4 +82,6 @@ The levels of access given to individuals are determined on two primary factors:
 - The individual's role/function within the organisation
 - The sensitivity of the information being stored on the system
 
-Two key concepts are used to assign and manage the access rights of individuals: Privileged Identity Management (PIM) and Privileged Access Management (or PAM for short).
+Two key concepts are used to assign and manage the access rights of individuals: Privileged Identity Management (PIM) and Privileged Access Management (or ==*PAM for short).
+
+**PIM** - 
