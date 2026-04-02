@@ -111,3 +111,4 @@ This model applies the rule to objects (data) and subjects (users) that can be s
 
 ## Threat Modelling & Incident Response
 
+***Threat Modelling*** is the process of reviewing, improving, and testing the secur
