@@ -138,3 +138,4 @@ To help with this, there are frameworks such as **STRIDE**
 |Information Disclosure|Applications or services that handle information of multiple users need to be appropriately configured to only show information relevant to the owner.|
 |Denial of Service|Applications and services use up system resources, these two things should have measures in place so that abuse of the application/service won't result in bringing the whole system down.|
 |Elevation of Privilege|This is the worst-case scenario for an application or service. It means that a user was able to escalate their authorization to that of a higher level i.e. an administrator. This scenario often leads to further exploitation or information disclosure.|
+A breach of security is known as an **incident**. 
