@@ -58,3 +58,7 @@ The framework provides guidelines on security controls & benchmarks for success 
 
 
 # Principle Of Security
+
+## CIA Triad
+
+The CIA triad is an information security model that is us
