@@ -99,3 +99,6 @@ The model works by granting access to pieces of data (called objects) on a stric
 
 It got its on Advantage and Disadvantage:
 
+| Adv. | Dis. |
+| ---- | ---- |
+|      |      |
