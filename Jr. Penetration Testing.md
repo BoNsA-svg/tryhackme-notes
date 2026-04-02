@@ -3,4 +3,6 @@
 
 Penetration tests can have a wide variety of objectives and target within scope. **The General theme**:
 
-| Create Table | Description |
+| Stage          | Description                                                    |
+| -------------- | -------------------------------------------------------------- |
+| Info Gathering |  We collect info about the target from publically available re |
