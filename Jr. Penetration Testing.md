@@ -14,4 +14,12 @@ Penetration tests can have a wide variety of objectives and target within scope.
 The Table above is more of a general theme type of thing, but we got methodologies for every system lets begin :
 
 #### OSSTMM
-This framework is mainly used for 
+This framework is mainly used for systems, software, applications, communications and the human aspect of cybersecurity.
+
+The methodology focuses primarily on how these systems, applications communicate, so it includes a methodology for:
+
+1. Telecommunications (phones, VoIP, etc.)
+2. Wired Networks
+3. Wireless communications
+
+#### Owasp
