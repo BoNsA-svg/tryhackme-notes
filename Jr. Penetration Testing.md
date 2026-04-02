@@ -106,3 +106,5 @@ It got its on Advantage and Disadvantage:
 #### Biba model
 
 This model applies the rule to objects (data) and subjects (users) that can be summarised as "no write up, no read down". This rule means that subjects **can** create or write content to objects at or below their level but **can only** read the contents of objects above the subject's level.
+
+| 
