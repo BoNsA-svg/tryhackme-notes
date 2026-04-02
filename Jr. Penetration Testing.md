@@ -9,4 +9,4 @@ Penetration tests can have a wide variety of objectives and target within scope.
 | Enumeration/Scanning | Discovering applications and services running on the systems, it could be finding a web server that might be potentially vulnerable             |
 | Exploitation         | Once we find vulnerabilities on systems we try to leverage that to get inside.                                                                  |
 | Privilege Escalation | Once exploited which is called a ==foothold==. We could go horizontally (to user's we the same permission) or go vertically (To administrator). |
-| Post E               |                                                                                                                                                 |
+| Post Exploitation    | We could pivot to other hosts within the same network, we could                                                                                 |
