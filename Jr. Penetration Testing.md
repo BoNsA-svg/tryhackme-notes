@@ -70,3 +70,4 @@ Protection of data from unauthorized access and misuse. Basically it means to on
 This element of CIA is to make sure information is kept accurate and consistent unless authorized changes are made. Again Basically it means to keep the data unaltered.
 
 **Availability**
+The data to be useful, it must be available and accessible by the user, like when it's needed it should be instantly recovered.
