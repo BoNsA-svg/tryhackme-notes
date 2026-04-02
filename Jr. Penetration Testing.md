@@ -86,3 +86,4 @@ Two key concepts are used to assign and manage the access rights of individuals:
 
 **PIM** -> used to translate a **==user's==** role within an organisation into an access role on a system.
 **PAM** -> is the management of the privileges a system's access role has, amongst other things.
+
