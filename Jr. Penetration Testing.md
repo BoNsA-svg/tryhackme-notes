@@ -99,6 +99,6 @@ The model works by granting access to pieces of data (called objects) on a stric
 
 It got its on Advantage and Disadvantage:
 
-| Adv. | Dis. |
-| ---- | ---- |
-|      |      |
+| Adv.                                         | Dis.                                                                        |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
+| Policies can be replicated in organisations. | Users can't read it but know it exists, its not confidential in that aspect |
