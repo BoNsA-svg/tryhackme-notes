@@ -28,3 +28,9 @@ It's updated frequently and it's community-driven and it's solely used to test w
 
 #### NIST
 is a popular framework used to improve an organisations cybersecurity standards and manage the risk of cyber threats.
+
+The framework provides guidelines on security controls & benchmarks for success for organisations from critical infrastructure (power plants, etc.) all through to commercial.  There is a limited section on a standard guideline for the methodology as we penetration testers should take.
+
+
+#### NCSC CAF
+
