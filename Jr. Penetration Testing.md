@@ -84,4 +84,4 @@ The levels of access given to individuals are determined on two primary factors:
 
 Two key concepts are used to assign and manage the access rights of individuals: Privileged Identity Management (*===PIM===*) and Privileged Access Management (or *==PAM ==* for short).
 
-**PIM** - 
+**PIM** -> used to translate a user's role within an organisation into an access role on a system
