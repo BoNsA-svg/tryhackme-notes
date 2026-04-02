@@ -12,3 +12,6 @@ Penetration tests can have a wide variety of objectives and target within scope.
 | Post Exploitation    | We could pivot to other hosts within the same network, we could collect information from the host that we are in, we have to cover our track, or report. **This part is mostly influenced by the ROE document**. |
 
 The Table above is more of a general theme type of thing, but we got methodologies for every system lets begin :
+
+#### OSSTMM
+This framework is mainly used for 
