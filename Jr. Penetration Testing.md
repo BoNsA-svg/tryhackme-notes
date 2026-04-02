@@ -103,3 +103,5 @@ It got its on Advantage and Disadvantage:
 | -------------------------------------------- | ---------------------------------------------------------------------------- |
 | Policies can be replicated in organisations. | Users can't read it but know it exists, its not confidential in that aspect. |
 | Simple to implement.                         | It relies on a large amount of trust within the organisation.                |
+#### Biba model
+
