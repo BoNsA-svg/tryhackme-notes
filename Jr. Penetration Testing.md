@@ -64,4 +64,6 @@ The framework provides guidelines on security controls & benchmarks for success 
 The CIA triad is an information security model that is used in consideration throught creating a security policy.
 
 **Confidentiality**
-Protection of data from unauthorised access and misuse. 
+Protection of data from unauthorised access and misuse. Basically it means to only give access to the intended person only.
+
+**Integrity**
