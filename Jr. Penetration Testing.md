@@ -67,4 +67,4 @@ The CIA triad is an information security model that is used in consideration thr
 Protection of data from unauthorised access and misuse. Basically it means to only give access to the intended person only.
 
 **Integrity**
-This element of CIA is to make sure information is kept accurate and consistent unless a
+This element of CIA is to make sure information is kept accurate and consistent unless authorized changes are made. Again Basically it 
