@@ -154,6 +154,10 @@ An incident is responded to by a **C**omputer **S**ecurity **I**ncident **R*
 |Recovery|Perform a full review of the impacted systems to return to business as usual operations.|
 |Lessons Learned|What can be learnt from the incident? I.e. if it was due to a phishing email, employees should be trained better to detect phishing emails.|
 
-## Today
+## Web Appliocation Using Buil-in resource
 
-**I'll** be teaching everything that is needed from me.
+View Source - Use your browser to view the human-readable source code of a website.
+Inspector - Learn how to inspect page elements and make changes to view usually blocked content.
+Debugger - Inspect and control the flow of a page's JavaScript
+Network - See all the network requests a page makes.
+
