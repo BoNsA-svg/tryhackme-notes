@@ -153,3 +153,7 @@ An incident is responded to by a **C**omputer **S**ecurity **I**ncident **R*
 |Eradication|Remove the active threat.|
 |Recovery|Perform a full review of the impacted systems to return to business as usual operations.|
 |Lessons Learned|What can be learnt from the incident? I.e. if it was due to a phishing email, employees should be trained better to detect phishing emails.|
+
+## Today
+
+**I'll** be teaching everything that is needed from me.
