@@ -154,6 +154,7 @@ An incident is responded to by a **C**omputer **S**ecurity **I**ncident **R*
 |Recovery|Perform a full review of the impacted systems to return to business as usual operations.|
 |Lessons Learned|What can be learnt from the incident? I.e. if it was due to a phishing email, employees should be trained better to detect phishing emails.|
 
+# WEB Penetration Testing
 ## Web Appliocation Using Buil-in resource
 
 View Source - Use your browser to view the human-readable source code of a website.
@@ -277,4 +278,28 @@ Using Gobuster:
 gobuster
 user@machine$ gobuster dir --url http://MACHINE_IP/ -w /usr/share/wordlists/{THE PLACE}/common.txt
 
+## Sub-Domain Enumeration
+
+is the process of finding valid subdomains for a domain, but why do we do this? We do this to expand our attack surface to try and discover more potential points of vulnerability.
+
+We will explore three different subdomain enumeration methods: 
+1. Brute Force
+2.  OSINT (Open-Source Intelligence) and
+3.  Virtual Host.
+
+### OSINT - SSL/TLS Certificates
+
+When an SSL/TLS (Secure Sockets Layer/Transport Layer Security) certificate is created for a domain by a CA (Certificate Authority), CA's take part in what's called "Certificate Transparency (CT) logs". These are publicly accessible logs of every SSL/TLS certificate created for a domain name. The purpose of Certificate Transparency logs is to stop malicious and accidentally made certificates from being used. We can use this service to our advantage to discover subdomains belonging to a domain, sites like https://crt.sh(opens in new tab) offer a searchable database of certificates that shows current and historical results.
+
+### OSINT - Search Engines
+
+Search engines contain trillions of links to more than a billion websites, which can be an excellent resource for finding new subdomains. Using advanced search methods on websites like Google, such as the site: filter, can narrow the search results. For example, site:*.domain.com -site:www.domain.com would only contain results leading to the domain name domain.com but exclude any links to www.domain.com; therefore, it shows us only subdomain names belonging to domain.com.
+
+## DNS Bruteforce
+
+Bruteforce DNS (Domain Name System) enumeration is the method of trying tens, hundreds, thousands or even millions of different possible subdomains from a pre-defined list of commonly used subdomains. Because this method requires many requests, we automate it with tools to make the process quicker. In this instance, we are using a tool called **dnsrecon** to perform this.
+
+## OSINT - Sublist3r
+
+To speed up the process of OSINT subdomain discovery, we can automate the above methods with the help of tools like Sublist3r.
 
