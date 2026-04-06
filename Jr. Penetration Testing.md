@@ -303,3 +303,6 @@ Bruteforce DNS (Domain Name System) enumeration is the method of trying tens, hu
 
 To speed up the process of OSINT subdomain discovery, we can automate the above methods with the help of tools like Sublist3r.
 
+## Virtual Hosts
+
+
