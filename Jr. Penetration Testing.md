@@ -577,7 +577,73 @@ Always ask:
 | Logic Flaw           | Bypass logic      | Unauthorized access  |
 | Cookie Manipulation  | Modify cookies    | Privilege escalation |
 
+
+# IDOR (Insecure Direct Object Reference)
+
+## Idea
+
+IDOR occurs when a user can access data by modifying input (e.g., IDs) without proper authorization checks.
+
 ---
+
+## Example
+
+```
+/profile?user_id=1305
+```
+
+Change to:
+
+```
+/profile?user_id=1000
+```
+
+If another user's data is shown → IDOR
+
+---
+
+## Methods
+
+* Change ID values manually
+* Use two accounts and swap IDs
+* Decode encoded values (Base64)
+* Crack predictable hashes
+
+---
+
+## Hidden IDOR
+
+* Found in AJAX requests or JavaScript
+* Discovered via parameter mining
+
+Example:
+
+```
+/user/details?user_id=123
+```
+
+---
+
+## Impact
+
+* Access other users' data
+* Modify or delete accounts
+* Account takeover
+
+---
+
+## Prevention
+
+* Always verify ownership on server-side
+* Do not trust user input
+* Use proper access control
+
+---
+
+## Summary
+
+IDOR = Accessing unauthorized data by manipulating identifiers
+
 
 ##  End Goal
 
