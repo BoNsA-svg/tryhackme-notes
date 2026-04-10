@@ -305,7 +305,29 @@ To speed up the process of OSINT subdomain discovery, we can automate the above 
 
 ## Virtual Hosts
 
+Some subdomains are hidden and not listed in public DNS but still exist on the server.
 
+## Method
+
+Use the Host header to test subdomains:
+
+```bash
+ffuf -w namelist.txt -H "Host: FUZZ.acmeitsupport.thm" -u http://TARGET_IP
+```
+
+* FUZZ = subdomain guesses
+
+## Filter Results
+
+Ignore common responses using size:
+
+```bash
+ffuf -w namelist.txt -H "Host: FUZZ.acmeitsupport.thm" -u http://TARGET_IP -fs {size}
+```
+
+## Result
+
+Find hidden subdomains such as admin or dev
 
 
 #  Authentication & Cookie Exploitation Notes (TryHackMe)
