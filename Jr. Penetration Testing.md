@@ -727,3 +727,171 @@ Example:
 File Inclusion = loading unintended files via user-controlled input
 
 
+# SSRF (Server-Side Request Forgery) Notes
+
+## What is SSRF
+
+SSRF (Server-Side Request Forgery) is a vulnerability where an attacker causes a server to make HTTP requests to unintended resources.
+
+## Types of SSRF
+
+### Regular SSRF
+
+Response is returned to the attacker
+Easier to detect and exploit
+
+### Blind SSRF
+
+No response is returned
+Requires external tools to confirm exploitation
+
+## Impact of SSRF
+
+Access to unauthorized or internal systems
+Exposure of sensitive data
+Retrieval of authentication tokens or credentials
+Ability to pivot into internal networks
+
+## Where to Look for SSRF
+
+Full URL in parameter
+
+```
+?url=http://example.com
+```
+
+Hostname input
+
+```
+?server=example.com
+```
+
+File fetching endpoints
+
+```
+?srv=filestorage.cloud.thm&port=8001
+```
+
+Hidden form fields containing URLs
+
+## Most Likely SSRF Example
+
+```
+https://website.thm/fetch-file.php?fname=242533.pdf&srv=filestorage.cloud.thm&port=8001
+```
+
+Reason
+User controls server parameter
+User controls port parameter
+Backend likely performs a request
+
+## SSRF Protections and Bypasses
+
+### Deny List
+
+Blocks specific inputs such as
+localhost
+127.0.0.1
+169.254.169.254
+
+#### Bypass Techniques
+
+Alternative localhost formats
+
+```
+127.1
+0.0.0.0
+2130706433
+```
+
+Wildcard formats
+
+```
+127.*.*.*
+```
+
+DNS tricks
+
+```
+127.0.0.1.nip.io
+```
+
+Cloud metadata bypass using domain pointing to 169.254.169.254
+
+### Allow List
+
+Only allows specific domains
+
+```
+https://website.thm
+```
+
+#### Bypass
+
+```
+https://website.thm.attacker.com
+```
+
+## Open Redirect Technique
+
+```
+https://website.thm/link?url=https://attacker.com
+```
+
+Server follows redirect and performs request to attacker-controlled domain
+
+## SSRF Lab Walkthrough
+
+Step 1 Create account and log in
+
+Step 2 Navigate to
+
+```
+/customers/new-account-page
+```
+
+Step 3 Inspect avatar input field and locate image path
+
+Step 4 Attempt SSRF by changing value
+
+```
+private
+```
+
+Request is blocked due to deny list
+
+Step 5 Bypass using directory traversal
+
+```
+x/../private
+```
+
+Explanation
+
+```
+x/../private resolves to /private
+```
+
+Step 6 Observe response returned as Base64 data URI
+
+```
+data:image/png;base64,...
+```
+
+Step 7 Decode Base64 to retrieve flag
+
+## Tools for Blind SSRF
+
+Burp Suite Collaborator
+requestbin.com
+Custom HTTP server
+
+## Key Takeaways
+
+SSRF allows attackers to make server-side requests
+Look for parameters that accept URLs, hosts, or ports
+Deny lists and allow lists can be bypassed
+Test internal IPs, metadata endpoints, and traversal payloads
+
+
+
