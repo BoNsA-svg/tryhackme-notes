@@ -1160,7 +1160,7 @@ Result
 Captured cookies
 Decoded using Base64
 
----
+
 
 ## Polyglot Payload
 
@@ -1181,6 +1181,439 @@ Blind XSS targets privileged users
 Filters can often be bypassed
 Always test different injection points and contexts
 
+
+# Race Conditions
+
+## Definition
+
+A Race Condition happens when multiple requests or threads try to access or modify the same data at the same time, causing unexpected behavior.
+
+The result depends on which request “wins the race”.
+
+This can lead to:
+
+* Applying discounts multiple times
+* Spending more money than available
+* Reusing gift cards
+* Bypassing limits
+* Duplicating transactions
+
 ---
 
-If you want, I can convert this into a **perfect exam cheat sheet or ultra-condensed version**.
+# Core Idea
+
+A web application usually checks something before performing an action.
+
+Example:
+
+1. Check account balance
+2. Approve transaction
+3. Update balance
+
+The vulnerability happens if:
+
+* Multiple requests reach the server before the balance updates
+
+This creates a small timing window attackers can abuse.
+
+This is called:
+Time Of Check To Time Of Use (TOCTOU)
+
+---
+
+# Simple Real-World Analogy
+
+Two restaurant workers reserve the same table at the same time.
+
+Both workers:
+
+* Look at the table
+* See it as available
+* Mark it reserved
+
+Now two customers own one table.
+
+The problem:
+The system checked availability before updating the state.
+
+---
+
+# Program Basics
+
+## Program
+
+A static set of instructions.
+
+Example:
+
+* Python script
+* Flask app
+* Recipe instructions
+
+A program does nothing until executed.
+
+---
+
+## Process
+
+A program currently running.
+
+A process includes:
+
+* Code
+* Memory
+* State
+
+Example states:
+
+* New
+* Ready
+* Running
+* Waiting
+* Terminated
+
+---
+
+## Thread
+
+A lightweight execution unit inside a process.
+
+Threads:
+
+* Share memory
+* Run tasks simultaneously
+
+Example:
+A web server creates multiple threads to handle many users at once.
+
+---
+
+# Multi-Threading
+
+## Serial Processing
+
+One request handled at a time.
+
+Users wait in line.
+
+---
+
+## Parallel Processing
+
+Many requests handled simultaneously using threads.
+
+Faster, but dangerous if synchronization is missing.
+
+---
+
+# Why Race Conditions Happen
+
+## Common Causes
+
+### Shared Resources
+
+Multiple threads modify the same:
+
+* Database row
+* Account balance
+* Coupon usage
+
+---
+
+### Parallel Execution
+
+Web servers process requests simultaneously.
+
+Two requests may:
+
+* Read old data
+* Both succeed incorrectly
+
+---
+
+### Database Timing Issues
+
+Two users update the same record simultaneously.
+
+Without locking:
+
+* Data becomes inconsistent
+
+---
+
+### Third-Party Services
+
+External APIs may not safely handle concurrent requests.
+
+---
+
+# Bank Account Example
+
+## Example A
+
+Balance:
+$100
+
+Two requests:
+
+* Withdraw $45
+* Withdraw $35
+
+Problem:
+Both requests see $100 before either updates the balance.
+
+Possible result:
+
+* User withdraws $80
+* Balance only reduced once
+
+---
+
+## Example B
+
+Balance:
+$75
+
+Two requests:
+
+* Withdraw $50
+* Withdraw $50
+
+Both requests see:
+$75
+
+Both succeed.
+
+Result:
+
+* User withdraws $100 from $75
+
+---
+
+# State Diagrams
+
+Applications move through states.
+
+---
+
+## Money Transfer States
+
+### Simple View
+
+* Amount not sent
+* Amount sent
+
+---
+
+### Realistic View
+
+* Request received
+* Checking balance
+* Processing transfer
+* Updating database
+* Transfer completed
+
+The dangerous moment:
+Between checking and updating.
+
+---
+
+## Coupon Example
+
+### Possible States
+
+* Coupon not applied
+* Checking validity
+* Checking constraints
+* Recalculating total
+* Coupon applied
+
+Attackers try sending many requests before:
+Coupon applied = true
+
+---
+
+# Exploiting Race Conditions
+
+Attackers:
+
+* Duplicate requests
+* Send them simultaneously
+* Hope multiple requests succeed before the system updates
+
+---
+
+# Burp Suite Repeater
+
+Used to:
+
+* Duplicate requests
+* Send them rapidly
+* Test timing vulnerabilities
+
+---
+
+# Sending Methods
+
+## Sequential
+
+Requests sent one after another.
+
+Usually less effective.
+
+---
+
+## Parallel
+
+Requests sent almost simultaneously.
+
+Much more effective for race conditions.
+
+---
+
+# Last-Byte Synchronization
+
+Used mainly in HTTP/1.
+
+Burp:
+
+* Sends almost the entire request
+* Holds the last byte
+* Releases all final bytes together
+
+Goal:
+Make requests arrive at the server simultaneously.
+
+---
+
+# HTTP/2 Optimization
+
+With HTTP/2:
+
+* Multiple requests can be packed into one TCP packet
+
+This improves synchronization accuracy.
+
+---
+
+# Typical Race Condition Targets
+
+## Financial Systems
+
+* Bank transfers
+* Wallet balances
+* Gift cards
+
+---
+
+## E-Commerce
+
+* Coupons
+* Discounts
+* Promo codes
+
+---
+
+## Voting Systems
+
+* Vote multiple times
+
+---
+
+## Reward Systems
+
+* Redeem points repeatedly
+
+---
+
+# Detection
+
+Penetration testers:
+
+1. Learn normal behavior
+2. Find limits
+3. Send simultaneous requests
+4. Check if limits break
+
+---
+
+# Indicators of Vulnerability
+
+Examples:
+
+* Balance goes negative
+* Coupon reused
+* Duplicate transfers succeed
+* More credits received than possible
+
+---
+
+# Mitigation
+
+## Locks / Synchronization
+
+Only one thread accesses data at a time.
+
+---
+
+## Atomic Operations
+
+Operations complete fully before interruption.
+
+---
+
+## Database Transactions
+
+All steps succeed or fail together.
+
+Prevents partial updates.
+
+---
+
+# Important Terms
+
+## TOCTOU
+
+Time Of Check To Time Of Use
+
+The gap between:
+
+* Validation
+* Actual action
+
+---
+
+## Shared Resource
+
+Data accessed by multiple threads.
+
+Examples:
+
+* Account balances
+* Coupons
+* Inventory stock
+
+---
+
+## Parallel Requests
+
+Requests arriving at nearly the same time.
+
+---
+
+# Key Takeaway
+
+Race conditions happen when:
+
+* Multiple requests interact with shared data simultaneously
+* The application fails to properly synchronize operations
+
+Attackers exploit the tiny delay between:
+
+* Checking a condition
+* Updating the system
+
+This allows actions to happen multiple times before protections activate.
+
+
+
