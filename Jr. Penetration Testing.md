@@ -1617,3 +1617,293 @@ This allows actions to happen multiple times before protections activate.
 
 
 
+**Command Injection**
+What is Command Injection?
+
+Command Injection is a web vulnerability where an attacker tricks an application into executing operating system commands.
+
+This happens when the application takes user input and passes it directly into system commands without proper validation or sanitization.
+
+It is also commonly called:
+
+RCE (Remote Code Execution)
+
+because the attacker can remotely execute commands on the server.
+
+Why It’s Dangerous
+
+If successful, the attacker can:
+
+Read sensitive files
+Access user data
+Execute system commands
+Spawn reverse shells
+Take control of the server
+Escalate privileges
+
+The attacker executes commands using the same permissions as the application.
+
+Example:
+
+If the web app runs as user joe, the attacker’s commands also run as joe.
+
+How Command Injection Happens
+
+Applications sometimes use programming language functions to interact with the operating system.
+
+Common languages:
+
+PHP
+Python
+Node.js
+
+Example scenario:
+
+A music website searches for songs using a Linux command.
+
+Flow
+User enters a song title
+Application stores input in a variable
+App sends that input into a system command
+Operating system executes it
+PHP Example
+$title = $_GET["title"];
+system("grep " . $title . " songtitle.txt");
+Problem
+
+If the user inputs:
+
+Beatles; whoami
+
+The server may execute:
+
+grep Beatles songtitle.txt; whoami
+
+This runs TWO commands:
+
+grep
+whoami
+Python Example
+from flask import Flask
+import subprocess
+
+app = Flask(__name__)
+
+@app.route('/<cmd>')
+def execute(cmd):
+    return subprocess.check_output(cmd, shell=True)
+
+app.run()
+
+Visiting:
+
+http://site/whoami
+
+executes:
+
+whoami
+
+on the server.
+
+Key Terms
+Program
+
+A set of instructions written in code.
+
+Example:
+
+Python script
+Web application
+Calculator app
+Process
+
+A program currently running in memory.
+
+Example:
+
+Running a Flask server creates a process.
+
+Thread
+
+A lightweight execution unit inside a process.
+
+Threads allow multiple tasks to run simultaneously.
+
+Multi-threading
+
+Using multiple threads to handle many tasks at once.
+
+Web servers use multi-threading to serve many users simultaneously.
+
+Types of Command Injection
+Type	Description
+Blind	No visible output from executed command
+Verbose	Output is shown directly on the page
+Detecting Verbose Command Injection
+
+The application directly shows command results.
+
+Example payload:
+
+whoami
+
+Possible output:
+
+www-data
+Detecting Blind Command Injection
+
+No output is displayed.
+
+You detect it through behavior changes.
+
+Time Delay Payloads
+Linux
+sleep 5
+
+or
+
+ping -c 5 127.0.0.1
+Windows
+timeout 5
+
+If the page hangs for 5 seconds, command execution likely worked.
+
+Useful Payloads
+Linux
+Payload	Purpose
+whoami	Current user
+ls	List files
+cat file.txt	Read files
+ping	Delay testing
+sleep	Delay testing
+nc	Reverse shell
+Windows
+Payload	Purpose
+whoami	Current user
+dir	List files
+ping	Delay testing
+timeout	Delay testing
+Command Chaining Operators
+
+Attackers use shell operators to combine commands.
+
+Operator	Example
+;	whoami; ls
+&&	whoami && ls
+&	whoami & ls
+Example Exploit
+
+Input:
+
+test; cat /etc/passwd
+
+Server executes:
+
+grep test songtitle.txt; cat /etc/passwd
+
+Result:
+
+Sensitive file contents may be exposed.
+
+Blind Injection with Output Redirection
+
+If output isn’t visible:
+
+whoami > output.txt
+
+Then read it:
+
+cat output.txt
+Using curl for Testing
+
+Example:
+
+curl http://vulnerable.app/process.php?search=TheBeatles;whoami
+Prevention Methods
+1. Avoid Dangerous Functions
+
+Dangerous PHP functions:
+
+exec()
+system()
+passthru()
+2. Input Sanitization
+
+Validate and clean user input.
+
+Example:
+
+Only allow numbers
+Remove special characters
+
+Dangerous characters:
+
+; & | > < $
+3. Allowlisting
+
+Only permit expected input patterns.
+
+Example:
+
+if(is_numeric($input))
+
+Only numbers are accepted.
+
+4. Use Safe APIs
+
+Avoid shell execution entirely.
+
+Use:
+
+Database queries
+Internal libraries
+Safe subprocess handling
+
+instead of shell commands.
+
+Bypassing Filters
+
+Applications may block characters like:
+
+"
+'
+;
+
+Attackers may bypass filters using:
+
+Hex encoding
+Alternate syntax
+Environment variables
+Different shell operators
+Important Concepts
+User Input + System Command = Risk
+
+If user-controlled input reaches the OS shell:
+
+Command injection becomes possible.
+Why RCE is Critical
+
+RCE vulnerabilities are among the most dangerous web vulnerabilities because they often lead to:
+
+Full server compromise
+Data theft
+Remote shell access
+Privilege escalation
+Practical Testing Workflow
+Find user input fields
+Test basic payloads
+Try chaining operators
+Test blind payloads
+Attempt file reads
+Check application responses
+Common Testing Payloads
+Linux
+whoami
+ls
+pwd
+cat /etc/passwd
+sleep 5
+Windows
+whoami
+dir
+timeout 5
