@@ -2851,4 +2851,222 @@ Combined together:
 
 ---
 
+# Penetration Testing Framework Selection Notes
+
+## Key Idea
+
+Knowing multiple penetration testing frameworks is important, but choosing the right one depends on the engagement's requirements. Framework selection is influenced by:
+
+1. Engagement scope and target type
+2. Regulatory/compliance requirements
+3. Need for measurable and repeatable results
+4. Team expertise and available resources
+
+---
+
+## 1. Engagement Scope & Target Type
+
+Choose frameworks based on what is being tested:
+
+| Target Type                                     | Recommended Framework |
+| ----------------------------------------------- | --------------------- |
+| Web Applications                                | OWASP WSTG            |
+| Mobile Applications                             | OWASP MASTG           |
+| Network Penetration Tests                       | PTES or OSSTMM        |
+| Multi-channel (physical, human, wireless, etc.) | OSSTMM                |
+
+**Example:** A web application assessment naturally aligns with OWASP WSTG, while a mobile banking app assessment aligns with OWASP MASTG.
+
+---
+
+## 2. Regulatory & Compliance Requirements
+
+Sometimes regulations determine the framework.
+
+| Requirement                         | Framework                              |
+| ----------------------------------- | -------------------------------------- |
+| Payment Card Data                   | PCI DSS Penetration Testing Guidelines |
+| UK Financial Institutions           | CBEST                                  |
+| U.S. Government/Federal Contractors | NIST SP 800-115                        |
+
+**Key Point:** Compliance requirements override personal framework preferences.
+
+---
+
+## 3. Need for Quantifiable Results
+
+When organizations want to compare security improvements over time:
+
+### OSSTMM
+
+* Uses **RAV (Risk Assessment Values)** metrics.
+* Produces measurable, repeatable results.
+* Enables comparison between:
+
+  * Different testing teams
+  * Different testing periods
+  * Year-over-year assessments
+
+**Best for:** Organizations tracking security maturity and progress.
+
+---
+
+## 4. Team Expertise & Resources
+
+Framework selection must consider available skills and resources.
+
+### PTES
+
+* Practical and straightforward.
+* Good for standard corporate assessments.
+* Lower overhead.
+
+### OSSTMM
+
+* Requires deep understanding of metrics.
+* More complex implementation.
+
+### CBEST
+
+* Requires threat intelligence capabilities.
+* Specialized for financial institutions.
+
+---
+
+# Scenario Examples
+
+## Scenario 1: Regional Hospital
+
+### Requirements
+
+* Patient-facing web portal
+* Internal network testing
+* HIPAA compliance
+* Executive reporting
+
+### Recommended Frameworks
+
+**Primary:** PTES
+
+**Supplementary:**
+
+* OWASP WSTG (web portal testing)
+* MITRE ATT&CK mapping (threat context)
+
+### Why?
+
+PTES provides:
+
+* End-to-end methodology
+* Network and web testing coverage
+* Executive and technical reporting
+
+---
+
+## Scenario 2: London-Based Multinational Bank
+
+### Requirements
+
+* UK regulatory compliance
+* Threat intelligence-driven assessment
+
+### Recommended Framework
+
+**CBEST**
+
+### Why?
+
+* Designed specifically for UK financial institutions.
+* Requires bespoke threat intelligence.
+* Recognized by the Bank of England.
+
+---
+
+## Scenario 3: SaaS Startup Tracking Progress
+
+### Requirements
+
+* Web platform
+* Multiple testing firms
+* Compare results over multiple years
+
+### Recommended Frameworks
+
+**Primary:** OSSTMM
+
+**Supplementary:** OWASP WSTG
+
+### Why?
+
+* OSSTMM's RAV metrics allow objective comparisons across teams and time periods.
+* WSTG provides web-specific testing guidance.
+
+---
+
+## Scenario 4: Mobile Banking Applications
+
+### Requirements
+
+* Android and iOS apps
+* Credit card transactions
+
+### Recommended Frameworks
+
+**OWASP MASTG + PCI DSS**
+
+### Why?
+
+* MASTG covers mobile security testing.
+* PCI DSS is required because cardholder data is processed.
+
+---
+
+# Exam Tips
+
+### PTES
+
+* Best all-around penetration testing methodology.
+* Covers full engagement lifecycle.
+* Strong reporting structure.
+
+### OWASP WSTG
+
+* Focused on web application testing.
+
+### OWASP MASTG
+
+* Focused on Android and iOS mobile app testing.
+
+### OSSTMM
+
+* Best for measurable, repeatable, quantitative assessments.
+* Uses RAV metrics.
+
+### CBEST
+
+* UK financial sector framework.
+* Threat intelligence-driven.
+* Bank of England recognized.
+
+### PCI DSS
+
+* Required when testing environments that process cardholder data.
+
+---
+
+## Important Takeaway
+
+Framework selection is rarely a single-framework decision.
+
+Most real-world engagements use:
+
+* **One primary framework** to structure the assessment.
+* **One or more supplementary frameworks** to address:
+
+  * Specific technologies (web/mobile)
+  * Compliance requirements
+  * Reporting needs
+  * Measurement requirements
+
+A skilled penetration tester knows how to combine frameworks to meet the engagement's objectives.
 
