@@ -1,0 +1,8 @@
+#Ping
+
+Quick Reference
+Result	Most likely meaning	Next step
+Fast replies, low or no packet loss	Target is online and allows ICMP	Proceed to port scanning
+"Destination Host Unreachable"	Target is down or no route exists	Check if machine is powered on
+100% packet loss with no error message	ICMP is filtered or blocked	Try TCP/UDP host discovery with Nmap
+High latency or heavy loss	Network congestion, long distance, or filtering	Investigate the path with traceroute
