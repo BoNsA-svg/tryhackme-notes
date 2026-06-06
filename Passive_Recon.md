@@ -1,4 +1,3 @@
-Here is your clean, high-visibility quick-reference sheet for passive reconnaissance. I've cleaned up the formatting and organized the commands so you can easily copy-paste or glance at them while you're in the zone.
 
 ---
 
