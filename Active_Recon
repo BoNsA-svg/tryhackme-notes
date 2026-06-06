@@ -1,8 +1,149 @@
-**Ping**
 
-Quick Reference
-Result	Most likely meaning	Next step
-Fast replies, low or no packet loss	Target is online and allows ICMP	Proceed to port scanning
-"Destination Host Unreachable"	Target is down or no route exists	Check if machine is powered on
-100% packet loss with no error message	ICMP is filtered or blocked	Try TCP/UDP host discovery with Nmap
-High latency or heavy loss	Network congestion, long distance, or filtering	Investigate the path with traceroute
+
+## Active Reconnaissance Overview
+
+> **Core Principle:** Directly interacting with the target system to discover open ports, live hosts, and running service versions. Unlike passive recon, active methods **leave footprints** and can trigger alerts on Firewalls, WAFs, and EDR systems.
+
+---
+
+## 1. Web Browser & Developer Tools
+
+The web browser is the ultimate active recon tool because its traffic naturally blends in with legitimate user activity.
+
+### DevTools Shortcuts
+
+* **Windows / Linux:** `Ctrl` + `Shift` + `I`
+* **macOS:** `Option` + `Command` + `I`
+
+### Recon-Critical DevTools Tabs
+
+* **Network:** Displays real-time requests/responses. Inspect headers (`Server`, `X-Powered-By`, `Content-Security-Policy`), status codes, and cookies.
+* **Sources:** Browse loaded JS, CSS, and HTML files. *Look for hardcoded API endpoints, directory structures, hidden internal URLs, and developer comments.*
+* **Application (Storage):** Inspect Cookies, `Local Storage`, and `Session Storage` for exposed session tokens or tracking IDs.
+* **Security:** Check SSL/TLS certificate details. Inspect **Subject Alternative Names (SANs)** to discover undocumented subdomains.
+* **Console:** Execute arbitrary JavaScript snippets directly inside the DOM context.
+
+### Essential Recon Extensions
+
+* **Wappalyzer / BuiltWith:** Fast technology fingerprinting (CMS, frameworks, backend infrastructure).
+* **FoxyProxy:** Instantly route/switch browser traffic through intercepting proxies like Burp Suite or OWASP ZAP.
+* **User-Agent Switcher:** Emulate mobile devices or old browsers to find hidden endpoints or trick mobile-specific logic.
+
+---
+
+## 2. Host & Path Discovery (`ping`, `traceroute`, `mtr`)
+
+### Ping (ICMP Host Discovery)
+
+Uses **ICMP Echo Requests (Type 8)** and expects an **ICMP Echo Reply (Type 0)**.
+
+* **Linux / macOS (Count of 5):** `ping -c 5 <IP_or_Domain>`
+* **Windows (Count of 5):** `ping -n 5 <IP_or_Domain>`
+* **Force IPv4 / IPv6:** `ping -4 <IP>` or `ping -6 <IPv6>` (or `ping6`)
+
+#### OS Fingerprinting via TTL (Time To Live)
+
+The starting TTL value in a ping response gives away the target's operating system:
+
+* **Linux / Unix:** Default starting TTL is **64**.
+* **Windows:** Default starting TTL is **128**.
+* *Note: Every intermediate router decrements this value by 1. A response with `ttl=58` means it's likely a Linux machine 6 hops away.*
+
+#### Ping Troubleshooting Matrix
+
+| Result | Most Likely Meaning | Next Step |
+| --- | --- | --- |
+| **Fast replies / 0% loss** | Target is alive and responding to ICMP. | Proceed to port scanning (`nmap`). |
+| **"Destination Host Unreachable"** | Target is offline or no route exists. | Verify host status/IP address. |
+| **100% packet loss (No error)** | ICMP is filtered/blocked by a firewall/WAF. | Switch to TCP/UDP discovery. |
+| **High latency / Heavy loss** | Network congestion or heavy traffic filtering. | Map the path using `traceroute`. |
+
+### Traceroute (Path Mapping)
+
+Exploits the TTL field by incrementing it starting at 1 (`TTL=1`, `TTL=2`, etc.) to force each router along the path to drop the packet and send back an **ICMP Time-to-Live Exceeded** message.
+
+* **Linux / macOS (UDP by default):** `traceroute <IP>`
+* **Windows:** `tracert <IP>`
+* **Bypass UDP filters (Linux):** * TCP mode: `traceroute -T <IP>`
+* ICMP mode: `traceroute -I <IP>`
+
+
+* **Real-time continuous path tracking:** `mtr <IP>` (Combines ping + traceroute stats).
+* *Note: An asterisk (`*`) in the output means a router dropped/suppressed the ICMP response due to security hardening.*
+
+---
+
+## 3. Banner Grabbing & Netcat Operations
+
+Connecting directly to TCP ports to read the "banner" sent by the server reveals software versions that can be cross-referenced against CVE databases.
+
+### Telnet (Legacy, Cleartext Only)
+
+* **Syntax:** `telnet <IP> <PORT>`
+* **HTTP Banner Example:**
+```bash
+telnet 10.145.191.225 80
+# Type the following HTTP request and press Enter twice:
+GET / HTTP/1.1
+host: target
+
+```
+
+
+
+### Netcat (`nc`) - The Swiss Army Knife
+
+Netcat handles both TCP and UDP. Modern variants like `ncat` support SSL/TLS.
+
+#### Netcat as a Client (Banner Grabbing)
+
+* **Syntax:** `nc <IP> <PORT>`
+* **FTP / SMTP Banner Grabbing:** Banners usually drop immediately upon connection:
+```bash
+nc 10.145.191.225 21
+
+```
+
+
+
+#### Netcat as a Server (Listening Mode)
+
+* **Syntax:** `nc -vnlp <PORT>`
+* **IPv6 Listening:** `nc -6 -lp <PORT>`
+
+| Flag | Meaning |
+| --- | --- |
+| **`-l`** | Listen mode (acts as server). |
+| **`-p`** | Specify the port number (Must directly follow `-p`, e.g., `-p 1234`). |
+| **`-n`** | Numeric IPs only; disables DNS lookups to save time and prevent leakage. |
+| **`-v`** / **`-vv`** | Verbose / Very verbose output (debugging connection details). |
+| **`-k`** | Keep listening and accepting new connections after a client disconnects. |
+
+### Encrypted Banner Grabbing (HTTPS/SMTPS)
+
+Standard `telnet` and `nc` cannot handle TLS-wrapped connections. Use these instead:
+
+* **Quick HTTP Headers:** `curl -I https://<IP>`
+* **SSL/TLS Banner Grabbing:** `openssl s_client -connect <IP>:<PORT>`
+* **Nmap Project Netcat (with SSL):** `ncat --ssl <IP> <PORT>`
+
+---
+
+## Quick Reference Command Dashboard
+
+```bash
+# --- HOST DISCOVERY & PATHS ---
+ping -c 5 10.145.191.225               # Ping (Linux)
+ping -n 5 10.145.191.225               # Ping (Windows)
+traceroute 10.145.191.225              # Trace Path (Linux UDP)
+traceroute -T 10.145.191.225           # Trace Path (Linux TCP - Bypass Filters)
+tracert 10.145.191.225                 # Trace Path (Windows)
+mtr 10.145.191.225                     # Live Path Monitoring
+
+# --- BANNER GRABBING & PORT PROBING ---
+nc 10.145.191.225 80                   # Netcat TCP Connection
+nc -vnlp 1234                          # Netcat Listen on Port 1234
+curl -I http://10.145.191.225          # Fetch Web Server Headers
+openssl s_client -connect 10.145.191.225:443 # Grab SSL/TLS Service Banner
+
+```
