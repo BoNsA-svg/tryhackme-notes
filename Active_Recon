@@ -1,149 +1,372 @@
+# Active Reconnaissance Quick Reference
 
-
-## Active Reconnaissance Overview
-
-> **Core Principle:** Directly interacting with the target system to discover open ports, live hosts, and running service versions. Unlike passive recon, active methods **leave footprints** and can trigger alerts on Firewalls, WAFs, and EDR systems.
+> **Core Principle:** Active reconnaissance involves directly interacting with a target system to identify live hosts, open ports, running services, and exposed technologies. Unlike passive recon, these techniques generate detectable traffic and may trigger alerts from firewalls, WAFs, IDS/IPS, or EDR solutions.
 
 ---
 
-## 1. Web Browser & Developer Tools
+# 1. Web Browser & Developer Tools
 
-The web browser is the ultimate active recon tool because its traffic naturally blends in with legitimate user activity.
+The web browser is one of the most powerful active reconnaissance tools because its traffic naturally resembles legitimate user activity.
 
-### DevTools Shortcuts
+## DevTools Shortcuts
 
-* **Windows / Linux:** `Ctrl` + `Shift` + `I`
-* **macOS:** `Option` + `Command` + `I`
+| Platform | Shortcut |
+|-----------|-----------|
+| Windows / Linux | `Ctrl + Shift + I` |
+| macOS | `Option + Command + I` |
 
-### Recon-Critical DevTools Tabs
+## Recon-Critical DevTools Tabs
 
-* **Network:** Displays real-time requests/responses. Inspect headers (`Server`, `X-Powered-By`, `Content-Security-Policy`), status codes, and cookies.
-* **Sources:** Browse loaded JS, CSS, and HTML files. *Look for hardcoded API endpoints, directory structures, hidden internal URLs, and developer comments.*
-* **Application (Storage):** Inspect Cookies, `Local Storage`, and `Session Storage` for exposed session tokens or tracking IDs.
-* **Security:** Check SSL/TLS certificate details. Inspect **Subject Alternative Names (SANs)** to discover undocumented subdomains.
-* **Console:** Execute arbitrary JavaScript snippets directly inside the DOM context.
+### Network
 
-### Essential Recon Extensions
+Displays real-time requests and responses.
 
-* **Wappalyzer / BuiltWith:** Fast technology fingerprinting (CMS, frameworks, backend infrastructure).
-* **FoxyProxy:** Instantly route/switch browser traffic through intercepting proxies like Burp Suite or OWASP ZAP.
-* **User-Agent Switcher:** Emulate mobile devices or old browsers to find hidden endpoints or trick mobile-specific logic.
+Look for:
+
+- `Server`
+- `X-Powered-By`
+- `Content-Security-Policy`
+- Response status codes
+- Cookies
+
+### Sources
+
+Inspect loaded:
+
+- JavaScript files
+- CSS files
+- HTML documents
+
+Look for:
+
+- Hardcoded API endpoints
+- Internal URLs
+- Directory structures
+- Developer comments
+
+### Application (Storage)
+
+Inspect:
+
+- Cookies
+- Local Storage
+- Session Storage
+
+Potential findings:
+
+- Session tokens
+- Authentication data
+- Tracking identifiers
+
+### Security
+
+Review:
+
+- SSL/TLS certificate details
+- Certificate chain
+- Subject Alternative Names (SANs)
+
+Potential findings:
+
+- Undocumented subdomains
+- Alternate hostnames
+
+### Console
+
+Execute JavaScript directly within the page context for testing and inspection.
+
+## Useful Recon Extensions
+
+| Extension | Purpose |
+|------------|----------|
+| Wappalyzer | Technology fingerprinting |
+| BuiltWith | Technology fingerprinting |
+| FoxyProxy | Proxy switching for Burp Suite or OWASP ZAP |
+| User-Agent Switcher | Browser/device emulation |
 
 ---
 
-## 2. Host & Path Discovery (`ping`, `traceroute`, `mtr`)
+# 2. Host & Path Discovery
 
-### Ping (ICMP Host Discovery)
+## Ping (ICMP Host Discovery)
 
-Uses **ICMP Echo Requests (Type 8)** and expects an **ICMP Echo Reply (Type 0)**.
+Uses:
 
-* **Linux / macOS (Count of 5):** `ping -c 5 <IP_or_Domain>`
-* **Windows (Count of 5):** `ping -n 5 <IP_or_Domain>`
-* **Force IPv4 / IPv6:** `ping -4 <IP>` or `ping -6 <IPv6>` (or `ping6`)
+- ICMP Echo Request (Type 8)
+- ICMP Echo Reply (Type 0)
 
-#### OS Fingerprinting via TTL (Time To Live)
+### Basic Usage
 
-The starting TTL value in a ping response gives away the target's operating system:
+#### Linux / macOS
 
-* **Linux / Unix:** Default starting TTL is **64**.
-* **Windows:** Default starting TTL is **128**.
-* *Note: Every intermediate router decrements this value by 1. A response with `ttl=58` means it's likely a Linux machine 6 hops away.*
+```bash
+ping -c 5 <IP_or_Domain>
+```
 
-#### Ping Troubleshooting Matrix
+#### Windows
 
-| Result | Most Likely Meaning | Next Step |
-| --- | --- | --- |
-| **Fast replies / 0% loss** | Target is alive and responding to ICMP. | Proceed to port scanning (`nmap`). |
-| **"Destination Host Unreachable"** | Target is offline or no route exists. | Verify host status/IP address. |
-| **100% packet loss (No error)** | ICMP is filtered/blocked by a firewall/WAF. | Switch to TCP/UDP discovery. |
-| **High latency / Heavy loss** | Network congestion or heavy traffic filtering. | Map the path using `traceroute`. |
+```cmd
+ping -n 5 <IP_or_Domain>
+```
 
-### Traceroute (Path Mapping)
+#### Force IPv4 or IPv6
 
-Exploits the TTL field by incrementing it starting at 1 (`TTL=1`, `TTL=2`, etc.) to force each router along the path to drop the packet and send back an **ICMP Time-to-Live Exceeded** message.
+```bash
+ping -4 <IP>
+ping -6 <IPv6>
+```
 
-* **Linux / macOS (UDP by default):** `traceroute <IP>`
-* **Windows:** `tracert <IP>`
-* **Bypass UDP filters (Linux):** * TCP mode: `traceroute -T <IP>`
-* ICMP mode: `traceroute -I <IP>`
+## TTL-Based OS Fingerprinting
 
+The Time To Live (TTL) value can provide clues about the target operating system.
 
-* **Real-time continuous path tracking:** `mtr <IP>` (Combines ping + traceroute stats).
-* *Note: An asterisk (`*`) in the output means a router dropped/suppressed the ICMP response due to security hardening.*
+| Operating System | Default TTL |
+|------------------|------------|
+| Linux / Unix | 64 |
+| Windows | 128 |
+
+Example:
+
+```text
+ttl=58
+```
+
+Likely indicates:
+
+- Linux host
+- Approximately 6 network hops away
 
 ---
 
-## 3. Banner Grabbing & Netcat Operations
+## Ping Troubleshooting Matrix
 
-Connecting directly to TCP ports to read the "banner" sent by the server reveals software versions that can be cross-referenced against CVE databases.
+| Result | Likely Meaning | Recommended Action |
+|----------|---------------|-------------------|
+| Fast replies / 0% loss | Host is alive | Proceed with service enumeration |
+| Destination Host Unreachable | No route or host offline | Verify IP and network path |
+| 100% packet loss | ICMP blocked by firewall | Use TCP or UDP discovery |
+| High latency / packet loss | Congestion or filtering | Run traceroute |
 
-### Telnet (Legacy, Cleartext Only)
+---
 
-* **Syntax:** `telnet <IP> <PORT>`
-* **HTTP Banner Example:**
+## Traceroute (Path Mapping)
+
+Traceroute increments TTL values to identify each hop between your system and the target.
+
+Each router returns:
+
+```text
+ICMP Time Exceeded
+```
+
+when the TTL reaches zero.
+
+### Linux / macOS
+
+```bash
+traceroute <IP>
+```
+
+### Windows
+
+```cmd
+tracert <IP>
+```
+
+### TCP Traceroute
+
+Useful when UDP traffic is filtered.
+
+```bash
+traceroute -T <IP>
+```
+
+### ICMP Traceroute
+
+```bash
+traceroute -I <IP>
+```
+
+### Continuous Monitoring
+
+```bash
+mtr <IP>
+```
+
+Combines:
+
+- Ping statistics
+- Traceroute functionality
+
+### Note
+
+```text
+*
+```
+
+typically indicates a router that suppresses ICMP responses.
+
+---
+
+# 3. Banner Grabbing & Netcat Operations
+
+Banner grabbing involves connecting to services and reading identifying information exposed by the server.
+
+This information often includes:
+
+- Service name
+- Software version
+- Protocol details
+
+---
+
+## Telnet (Legacy TCP Client)
+
+> Telnet is unencrypted and should only be used for plaintext services.
+
+### Syntax
+
+```bash
+telnet <IP> <PORT>
+```
+
+### Example: HTTP Banner
+
 ```bash
 telnet 10.145.191.225 80
-# Type the following HTTP request and press Enter twice:
+```
+
+Then type:
+
+```http
 GET / HTTP/1.1
-host: target
+Host: target
 
 ```
 
-
-
-### Netcat (`nc`) - The Swiss Army Knife
-
-Netcat handles both TCP and UDP. Modern variants like `ncat` support SSL/TLS.
-
-#### Netcat as a Client (Banner Grabbing)
-
-* **Syntax:** `nc <IP> <PORT>`
-* **FTP / SMTP Banner Grabbing:** Banners usually drop immediately upon connection:
-```bash
-nc 10.145.191.225 21
-
-```
-
-
-
-#### Netcat as a Server (Listening Mode)
-
-* **Syntax:** `nc -vnlp <PORT>`
-* **IPv6 Listening:** `nc -6 -lp <PORT>`
-
-| Flag | Meaning |
-| --- | --- |
-| **`-l`** | Listen mode (acts as server). |
-| **`-p`** | Specify the port number (Must directly follow `-p`, e.g., `-p 1234`). |
-| **`-n`** | Numeric IPs only; disables DNS lookups to save time and prevent leakage. |
-| **`-v`** / **`-vv`** | Verbose / Very verbose output (debugging connection details). |
-| **`-k`** | Keep listening and accepting new connections after a client disconnects. |
-
-### Encrypted Banner Grabbing (HTTPS/SMTPS)
-
-Standard `telnet` and `nc` cannot handle TLS-wrapped connections. Use these instead:
-
-* **Quick HTTP Headers:** `curl -I https://<IP>`
-* **SSL/TLS Banner Grabbing:** `openssl s_client -connect <IP>:<PORT>`
-* **Nmap Project Netcat (with SSL):** `ncat --ssl <IP> <PORT>`
+Press **Enter twice** to submit the request.
 
 ---
 
-## Quick Reference Command Dashboard
+## Netcat (`nc`)
+
+A versatile TCP/UDP networking utility.
+
+### Client Mode
+
+Connect to a remote service.
 
 ```bash
-# --- HOST DISCOVERY & PATHS ---
-ping -c 5 10.145.191.225               # Ping (Linux)
-ping -n 5 10.145.191.225               # Ping (Windows)
-traceroute 10.145.191.225              # Trace Path (Linux UDP)
-traceroute -T 10.145.191.225           # Trace Path (Linux TCP - Bypass Filters)
-tracert 10.145.191.225                 # Trace Path (Windows)
-mtr 10.145.191.225                     # Live Path Monitoring
-
-# --- BANNER GRABBING & PORT PROBING ---
-nc 10.145.191.225 80                   # Netcat TCP Connection
-nc -vnlp 1234                          # Netcat Listen on Port 1234
-curl -I http://10.145.191.225          # Fetch Web Server Headers
-openssl s_client -connect 10.145.191.225:443 # Grab SSL/TLS Service Banner
-
+nc <IP> <PORT>
 ```
+
+Example:
+
+```bash
+nc 10.145.191.225 21
+```
+
+Some services (such as FTP and SMTP) immediately display banners after connection.
+
+---
+
+### Listening Mode
+
+Start a listener.
+
+```bash
+nc -vnlp <PORT>
+```
+
+Example:
+
+```bash
+nc -vnlp 1234
+```
+
+### IPv6 Listener
+
+```bash
+nc -6 -lp <PORT>
+```
+
+---
+
+## Common Netcat Flags
+
+| Flag | Description |
+|--------|-------------|
+| `-l` | Listen mode |
+| `-p` | Specify port |
+| `-n` | Disable DNS resolution |
+| `-v` | Verbose output |
+| `-vv` | Extra verbose output |
+| `-k` | Keep listening after disconnect |
+
+---
+
+## TLS / HTTPS Banner Inspection
+
+Traditional `telnet` and many `nc` implementations cannot negotiate TLS.
+
+### HTTP Headers
+
+```bash
+curl -I https://<IP>
+```
+
+### SSL/TLS Inspection
+
+```bash
+openssl s_client -connect <IP>:<PORT>
+```
+
+### Netcat with SSL Support
+
+```bash
+ncat --ssl <IP> <PORT>
+```
+
+---
+
+# Quick Reference Command Dashboard
+
+```bash
+# =========================
+# HOST DISCOVERY & PATHS
+# =========================
+
+ping -c 5 10.145.191.225
+ping -n 5 10.145.191.225
+
+traceroute 10.145.191.225
+traceroute -T 10.145.191.225
+tracert 10.145.191.225
+
+mtr 10.145.191.225
+
+# =========================
+# BANNER GRABBING
+# =========================
+
+nc 10.145.191.225 80
+
+nc -vnlp 1234
+
+curl -I http://10.145.191.225
+
+openssl s_client -connect 10.145.191.225:443
+
+ncat --ssl 10.145.191.225 443
+```
+
+---
+
+# Key Takeaways
+
+- Active reconnaissance generates traffic that may be logged or detected.
+- Browser Developer Tools often reveal valuable application intelligence.
+- `ping`, `traceroute`, and `mtr` help identify live hosts and network paths.
+- Banner grabbing can expose service versions useful for vulnerability assessment.
+- TLS-enabled services require tools such as `openssl s_client` or `ncat --ssl`.
+- ICMP filtering does not necessarily mean a host is offline.
