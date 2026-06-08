@@ -492,3 +492,73 @@ For fine-tuned control over your scanning signature, use these advanced options:
 * **`--max-rate 50`**: Restricts Nmap from sending more than 50 packets per second. This is an excellent way to manually stay under the radar of automated firewall blocking rules.
 * **`--min-rate 15`**: Guarantees Nmap sends at least 15 packets per second, ensuring your scan finishes within a predictable timeframe.
 * **`--min-parallelism 100`**: Forces Nmap to run at least 100 probes in parallel. This is useful when optimizing performance across highly stable, fast local networks.
+
+---
+
+# Nmap Advanced Port Scanning & Evasion Techniques
+
+## Overview
+
+Advanced port scanning techniques manipulate TCP headers in non-standard ways to probe ports. These methods are primarily used to bypass stateless firewalls, evade Intrusion Detection Systems (IDS), or map out firewall filtering rules.
+
+According to RFC 793, any packet sent to a **closed** port must prompt a `RST` response, while packets sent to an **open** port with unexpected flag combinations should be silently dropped. This behavior forms the foundation of Null, FIN, and Xmas scans.
+
+---
+
+##  Advanced & Inverse TCP Scan Types
+
+These scans rely on setting specific TCP flags to observe how the target responds, allowing you to infer port states.
+
+| Scan Type & Command | Flag Configurations | When to Use It | When **NOT** to Use It |
+| --- | --- | --- | --- |
+| **TCP Null Scan**<br>
+
+<br>`sudo nmap -sN 10.144.173.120` | Sets **no flags** at all (all bits in the TCP flag byte are 0). | **Bypassing Stateless Firewalls:** Useful for sneaking past basic filters looking for standard handshake attempts (`SYN`). | **Windows Environments:** Do not use against Windows-based systems. Microsoft's TCP/IP stack ignores RFC 793 and responds with a `RST` packet regardless of whether the port is open or closed, breaking the logic of the scan. |
+| **TCP FIN Scan**<br>
+
+<br>`sudo nmap -sF 10.144.173.120` | Sets only the **`FIN` bit** (used normally to gracefully close a connection). | **IDS Evasion:** Good for slipping past older intrusion detection systems configured to flag standard `SYN` sweeps. | **Windows Targets:** Like the Null scan, Windows targets will incorrectly return a `RST` for both open and closed states. |
+| **TCP Xmas Scan**<br>
+
+<br>`sudo nmap -sX 10.144.173.120` | Sets the **`FIN`, `PSH`, and `URG` flags** simultaneously, lighting up the packet "like a Christmas tree." | **Defeating Linux/Unix Default Rules:** Effective against standard Linux/BSD/Unix systems to check for unfiltered, open ports without establishing a formal connection state. | **Modern Next-Gen Firewalls (NGFW):** Avoid when stealth is paramount. The unusual combination of `FIN+PSH+URG` is highly anomalous and instantly triggers alerts on modern firewalls. |
+| **TCP Maimon Scan**<br>
+
+<br>`sudo nmap -sM 10.144.173.120` | Sets the **`FIN` and `ACK` flags**. | **Probing Derived BSD Stacks:** Named after its discoverer, Uriel Maimon. It is tailored to find open ports on older, BSD-derived systems that treat this flag pattern differently than standard modern OS kernels. | **Modern Linux/Windows Networks:** Most modern operating systems drop or block this identically across open and closed ports, yielding uniform `RST` packets that provide no data. |
+| **TCP ACK Scan**<br>
+
+<br>`sudo nmap -sA 10.144.173.120` | Sets only the **`ACK` flag**. It does *not* determine if a port is open or closed. | **Mapping Firewall Rulesets:** Use this explicitly to map out firewall rules. If Nmap receives a `RST`, the port is **unfiltered**. If no response comes back (or an ICMP error is returned), the port is **filtered**. | **Service Enumeration:** Do not use if you are trying to find open applications, as the results only display `unfiltered` or `filtered`. |
+| **TCP Window Scan**<br>
+
+<br>`sudo nmap -sW 10.144.173.120` | Identical to an ACK scan, but it inspects the **TCP Window field** of the returning `RST` packet. | **Exploiting Specific OS Handshaking:** On certain operating systems, a closed port returns a Window size of `0`, while an open port returns a positive Window size, revealing open ports using only `ACK` packets. | **General Targeting:** Do not rely on this globally; it yields false positives or entirely hidden results on systems that do not differentiate Window sizes for error handling. |
+| **Custom TCP Scan**<br>
+
+<br>`sudo nmap --scanflags [FLAGS] 10.144.173.120` | Allows manual specification of any combination of TCP flags: `URG`, `ACK`, `PSH`, `RST`, `SYN`, `FIN`. | **Advanced Firewall Evading:** Use this if you have manually discovered a unique loophole or blindspot in a specific network security control or proprietary firewall. | **Standard Recon:** Avoid for basic operations due to the unnecessary complexity over built-in flags. |
+
+---
+
+##  IDS/IPS Evasion & Spoofing Modifiers
+
+These options obscure your identity, mask the source of the traffic, or manipulate the packet structure to slide through network security appliances.
+
+* **Spoofed Source IP (`-S SPOOFED_IP`):** Replaces your real IP with a fake one in the IP header.
+* *Context:* The target replies directly to the spoofed IP. You will not see the responses unless you have a separate packet capture (`tcpdump`/`Wireshark`) running on a position where you can sniff the return traffic.
+
+
+* **Spoofed MAC Address (`--spoof-mac SPOOFED_MAC`):** Changes your Layer 2 hardware address. Useful for bypassing router/switch Access Control Lists (ACLs) or MAC filtering on wireless/local networks.
+* **Decoy Scan (`-D DECOY_IP1,DECOY_IP2,ME`):** Blends your real scanning traffic with packets sent from fake decoy IP addresses. The target's logs will see dozens of systems scanning them at once, hiding your true IP address in the noise.
+* **Idle (Zombie) Scan (`-sI ZOMBIE_IP`):** An advanced, completely blind scan. It maps out open ports on a target without ever sending a packet from your actual IP. Instead, it monitors changes in the IP ID (`IPID`) fragment identification field of an idle third-party host ("the zombie").
+* **Packet Fragmentation (`-f` or `-ff`):** Splits the TCP header across multiple tiny 8-byte (`-f`) or 16-byte (`-ff`) IP fragments. This splits the flag indicators up, causing older packet filters and deep packet inspection systems to miss the malicious flag combinations completely.
+
+### Auxiliary Traffic Controls
+
+* **`--source-port PORT_NUM`:** Forces Nmap to send probes from a specific port (e.g., DNS port `53` or HTTP port `80`). Many poorly configured firewalls explicitly trust all incoming traffic originating from standard service ports.
+* **`--data-length NUM`:** Appends random, meaningless data to the packet payload to reach the specified byte size. This alters the predictable packet signature of Nmap, throwing off signature-based IDS alerts.
+
+---
+
+##  Investigation & Troubleshooting Flags
+
+When experimenting with advanced or custom flags, standard output may become ambiguous. Use these switches to understand Nmap's decision-making process:
+
+* **`--reason`:** Displays the explicit reason why Nmap classified a port into a specific state. For instance, it will tell you if it marked a port `open\|filtered` because of a "no-response" or `unfiltered` because it received a "reset (RST)".
+* **`-v` / `-vv` (Verbose / Very Verbose):** Prints out open ports instantly as they are discovered rather than waiting for the entire scan execution cycle to finish.
+* **`-d` / `-dd` (Debugging / Deep Debugging):** Displays low-level packet-handling data, raw timeouts, and system socket errors. Essential for troubleshooting when your custom flags or spoofing chains break network routes.
