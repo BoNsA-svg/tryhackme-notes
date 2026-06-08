@@ -433,3 +433,62 @@ By default, Nmap performs reverse-DNS lookups on all discovered active hosts to 
 
 * **On Local Subnets:** Always default to an **ARP Scan (`-PR`)**. It is native to layer-2 operations, incredibly fast, and cannot be blocked by host-based firewalls (like Windows Defender) on the same network segment.
 * **Across Routers/Firewalls:** Combine **TCP SYN (`-PS`)** and **TCP ACK (`-PA`)** pings targeting common web and administrative ports (such as `80`, `443`, `22`). This dual approach maximizes the chances of penetrating stateful packet inspections and access control lists (ACLs).
+
+# Nmap Port Scanning: Core Mechanics & Timing Controls
+
+## Overview
+
+Once live hosts have been discovered, the next phase of reconnaissance is port scanning. This phase identifies open ports, determines what protocols are active (TCP or UDP), and maps out the target’s attack surface.
+
+---
+
+## 🛠️ Core Port Scan Types
+
+The three fundamental scan types each interact with the target operating system's network stack differently to determine if a port is `open`, `closed`, or `filtered`.
+
+| Scan Type & Command | Protocol Mechanism | When to Use It | When **NOT** to Use It |
+| --- | --- | --- | --- |
+| **TCP Connect Scan**<br>
+
+<br>`nmap -sT 10.144.176.188` | Completes the full **TCP Three-Way Handshake** (`SYN` ➡️ `SYN/ACK` ⬅️ `ACK`). It relies on the underlying operating system's standard network API (`connect`). | **Non-Root Users:** Use this when you do not have administrative/root privileges on your attack machine, as it does not require raw packet crafting permissions. | **Stealth Operations:** Do not use if you want to remain covert. Because it completes the full connection, the target service logs the connection request, leaving a distinct digital footprint. |
+| **TCP SYN Scan**<br>
+
+<br>`sudo nmap -sS 10.144.176.188` | Often called a **"Half-Open" or Stealth Scan**. It sends a `SYN` packet and waits for a `SYN/ACK`. If received, Nmap immediately tears down the connection with a `RST` packet *before* the handshake finishes. | **Default TCP Scans:** This is the industry standard for fast, high-performance scanning. It is less likely to be logged by target applications because the connection is never fully established. | **No Root/Sudo Privileges:** Do not use if you cannot run commands as root, as Nmap requires raw socket access to craft these custom TCP headers. |
+| **UDP Scan**<br>
+
+<br>`sudo nmap -sU 10.144.176.188` | Sends raw UDP packets to target ports. If no response is received, the port is marked `open|filtered`. If it receives an ICMP Type 3 Code 3 error, the port is `closed`. | **Service Hunting:** Use this when explicitly auditing for common UDP services like DNS (`53`), SNMP (`161`), DHCP (`67/68`), or OpenVPN (`1194`). | **High-Speed Scans:** Do not use if you are in a rush. UDP scanning is inherently slow because it must wait for timeouts, and modern OS kernels strictly limit how fast they send ICMP error messages. |
+
+---
+
+## ⚙️ Port Selection Modifiers
+
+By default, Nmap scans the top 1,000 most common ports. Use these modifiers to change the scope of your scan:
+
+* **`-p-` (All Ports):** Scans the entire valid port range from **1 to 65535**. Use this to find stealthy services running on non-standard ports.
+* **`-p1-1023` (Privileged Ports):** Scans the well-known system ports reserved for critical services (like SSH, HTTP, FTP).
+* **`-F` (Fast Mode):** Scans only the top 100 most common ports, drastically slashing scan times.
+* **`-r` (Consecutive Order):** Scans ports sequentially from lowest to highest, instead of randomizing the order (Nmap's default behavior to evade basic threshold detection).
+
+---
+
+## ⏱️ Timing & Performance Optimization
+
+Controlling how fast Nmap transmits packets is essential for dodging security controls and managing network bandwidth.
+
+### Timing Templates (`-T<0-5>`)
+
+Nmap provides six predefined timing profiles. Higher numbers sacrifice stealth for speed:
+
+* **`-T0` (Paranoid) & `-T1` (Sneaky):** Extremely slow. Used to completely evade Intrusion Detection Systems (IDS) by waiting up to 5 minutes between individual packets.
+* **`-T2` (Polite):** Slows down the scan to consume less bandwidth and prevent crashing fragile or legacy systems.
+* **`-T3` (Normal):** The default behavior. Balances speed and accuracy based on network responsiveness.
+* **`-T4` (Aggressive):** Speeds up the scan significantly. Recommended for modern, reliable broadband or local lab environments.
+* **`-T5` (Insane):** Maximum speed. Sends packets aggressively. Only use this on high-speed corporate networks where you don't care about making noise or dropping packets due to congestion.
+
+### Granular Performance Controls
+
+For fine-tuned control over your scanning signature, use these advanced options:
+
+* **`--max-rate 50`**: Restricts Nmap from sending more than 50 packets per second. This is an excellent way to manually stay under the radar of automated firewall blocking rules.
+* **`--min-rate 15`**: Guarantees Nmap sends at least 15 packets per second, ensuring your scan finishes within a predictable timeframe.
+* **`--min-parallelism 100`**: Forces Nmap to run at least 100 probes in parallel. This is useful when optimizing performance across highly stable, fast local networks.
