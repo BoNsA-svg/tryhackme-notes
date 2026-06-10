@@ -622,3 +622,56 @@ Maintaining a record of your scan results is vital for evidence keeping and pass
 * **`-oG` (Grepable Output):** Formats all target info and open ports onto a single line per host. This is specifically designed for command-line parsing using tools like `grep`, `awk`, or `cut`.
 * **`-oX` (XML Output):** Structures your data into formal XML. This is the preferred format for programmatically importing your scan data straight into automated toolsets like the Metasploit Framework, Burp Suite, or custom parsing scripts.
 * **`-oA` (All Formats):** A master backup switch. It saves your current scan into three separate files simultaneously using your designated base name (e.g., `scan_results.nmap`, `scan_results.gnmap`, and `scan_results.xml`), ensuring you have the data structured for any future workflow.
+
+---
+
+Awesome job cracking that order! It's definitely a great pattern to document. Let's create a clean, professional cheat sheet for your reference notes so you can quickly review this scanning methodology during your upcoming labs and projects.
+
+---
+
+# Nmap Scanning Methodology: Stealth & Evasion
+
+When executing an engagement against a secured network perimeter, running a blind or overly aggressive scan will instantly trigger security alerts. A comprehensive, professional workflow prioritizes configuration, masking, and rule analysis before diving into heavy port scanning.
+
+##  The Correct Logical Sequence
+
+### 1️ Configure packet fragmentation using `-f` option
+
+* **Purpose:** Network Layer Evasion
+* **Why it's first:** Before a single packet ever hits the target infrastructure, you must configure your local tool parameters. Splitting the IP header across several smaller packets (fragmentation) forces simple firewalls and Intrusion Detection Systems (IDS) to process them individually, often allowing them to slip past unexamined.
+* **Nmap Implementation:** `nmap -f [Target]`
+
+### 2️ Launch decoy scan to obscure the true source
+
+* **Purpose:** Identity Obfuscation
+* **Why it's second:** With your packet structures modified for evasion, you next layer your source masking. By configuring a pool of active decoy IP addresses, your actual scanning traffic blends into a crowd of spoofed addresses. If security analysts notice the scan, they cannot easily determine which IP is the real attacker.
+* **Nmap Implementation:** `nmap -D RND:10,ME [Target]` *(Generates 10 random decoys and blends your IP in)*
+
+### 3️ Execute ACK scan to map firewall rules
+
+* **Purpose:** Defensive Perimeter Mapping
+* **Why it's third:** Now that your stealth and masking parameters are live, you probe the perimeter's defenses. An ACK scan doesn't look for open ports; it sends a TCP packet with only the ACK flag set. Stateful firewalls drop these, while stateless firewalls or open systems respond with a RST packet—allowing you to map exactly which ports are *filtered* vs. *unfiltered*.
+* **Nmap Implementation:** `nmap -sA [Target]`
+
+### 4️ Perform initial TCP SYN scan to identify open ports
+
+* **Purpose:** Half-Open Target Enumeration
+* **Why it's last:** Now that you have modified your packets, masked your identity, and mapped the firewall rules standing in your way, you can safely launch the core stealth scan. The SYN scan (half-open scan) targets the unfiltered channels to determine exactly which operational services are open and listening without completing the noisy 3-way handshake.
+* **Nmap Implementation:** `nmap -sS [Target]`
+
+---
+
+##  Quick-Reference Command Blueprint
+
+When you are combining these exact steps into a unified, weaponized command line on your terminal, it looks like this:
+
+```bash
+sudo nmap -sS -sA -f -D RND:5 [Target_IP]
+
+```
+
+* **`-sS`** ➡️ Tells Nmap to perform the target SYN stealth scan.
+* **`-sA`** ➡️ Evaluates the firewall state tracking alongside the scan.
+* **`-f`** ➡️ Fragments the outgoing packets.
+* **`-D RND:5`** ➡️ Wraps the entire operation inside 5 random decoy addresses.
+
