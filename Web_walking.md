@@ -465,3 +465,529 @@ done
 * **`X-Content-Type-Options: nosniff`** ➡️ Forces the browser to strictly follow the declared `Content-Type` header, stopping dangerous MIME-sniffing and cross-site scripting (XSS) vectors.
 * **`Content-Security-Policy (CSP)`** ➡️ Establishes a strict safelist defining exactly where scripts, styles, and assets can load from.
 * **`Referrer-Policy: same-origin`** ➡️ Restricts the browser from leaking sensitive internal query paths inside the `Referer` header when navigating to outside domains.
+
+  ---
+
+  # IIS 
+
+## Overview
+
+Internet Information Services (IIS) is Microsoft's web server platform and is tightly integrated with:
+
+* Windows Server
+* Active Directory
+* Windows Authentication
+* ASP.NET / .NET Framework
+* Application Pools
+
+Because of this integration, IIS frequently serves as:
+
+* Initial Access Vector
+* Internal Pivot Point
+* Credential Exposure Source
+* Privilege Escalation Launchpad
+
+---
+
+# Attack Surface Mindset
+
+Before attempting exploitation, determine:
+
+1. IIS Version
+2. Windows Version
+3. Authentication Methods
+4. WebDAV Presence
+5. ASP.NET Usage
+6. Directory Listings
+7. Configuration Exposure
+8. Application Pool Identity
+
+Most successful engagements begin with misconfiguration discovery rather than CVE exploitation.
+
+---
+
+# IIS Version Reference
+
+| IIS Version | Windows Server        | Status      |
+| ----------- | --------------------- | ----------- |
+| IIS 6.0     | Server 2003           | End of Life |
+| IIS 7.0     | Server 2008           | End of Life |
+| IIS 7.5     | Server 2008 R2        | End of Life |
+| IIS 8.0     | Server 2012           | End of Life |
+| IIS 8.5     | Server 2012 R2        | End of Life |
+| IIS 10.0    | Server 2016/2019/2022 | Current     |
+
+### Important Notes
+
+* IIS skipped version 9.x
+* Older IIS versions often have publicly known vulnerabilities
+* Version identification helps narrow vulnerability research
+
+---
+
+# IIS Request Flow
+
+Client Request
+↓
+HTTP.sys (Kernel)
+↓
+W3SVC
+↓
+WAS
+↓
+w3wp.exe (Worker Process)
+↓
+ASP.NET Application
+
+## Why This Matters
+
+### HTTP.sys
+
+Kernel-level component.
+
+Potential impact:
+
+* Kernel vulnerabilities
+* System crashes
+* Privilege escalation
+
+### Application Pools
+
+Isolation boundary for IIS applications.
+
+Each pool:
+
+* Runs its own w3wp.exe
+* Uses its own identity
+* Has independent permissions
+
+Typical identity:
+
+IIS APPPOOL<PoolName>
+
+---
+
+# Initial Enumeration Checklist
+
+## HTTP Headers
+
+Review:
+
+* Server
+* X-Powered-By
+* X-AspNet-Version
+* Set-Cookie
+* CSP headers
+
+Interesting findings:
+
+* Microsoft-IIS version
+* ASP.NET version
+* Technology stack
+
+---
+
+## Authentication Discovery
+
+Look for:
+
+* NTLM
+* Negotiate
+* Kerberos
+* Basic Authentication
+
+Indicators:
+
+WWW-Authenticate headers
+
+---
+
+## HTTP Methods
+
+Determine:
+
+* GET
+* POST
+* HEAD
+* OPTIONS
+
+Potentially risky:
+
+* PUT
+* DELETE
+* MOVE
+* COPY
+* TRACE
+* PROPFIND
+* MKCOL
+* LOCK
+* UNLOCK
+
+---
+
+# WebDAV Enumeration
+
+## What is WebDAV?
+
+WebDAV extends HTTP with file-management functionality.
+
+Common methods:
+
+* PUT
+* DELETE
+* COPY
+* MOVE
+* PROPFIND
+* MKCOL
+* LOCK
+* UNLOCK
+
+---
+
+## Why It Matters
+
+Misconfigured WebDAV may provide:
+
+* File upload capability
+* File deletion capability
+* File movement capability
+* Unauthorized content modification
+
+---
+
+## Detection Indicators
+
+### Headers
+
+Look for:
+
+DAV:
+
+### Allow Methods
+
+Common WebDAV verbs:
+
+PROPFIND
+MKCOL
+MOVE
+COPY
+LOCK
+UNLOCK
+
+---
+
+# IIS Short Filename Enumeration (8.3)
+
+## Concept
+
+Windows can generate DOS-style short filenames.
+
+Example:
+
+BackupFiles
+
+becomes
+
+BACKUP~1
+
+---
+
+## Why It Matters
+
+Attackers may discover:
+
+* Hidden directories
+* Backup locations
+* Configuration files
+* Administrative interfaces
+
+without knowing full names.
+
+---
+
+## Common Discoveries
+
+| Short Name | Possible Resource |
+| ---------- | ----------------- |
+| BACKUP~1   | BackupFiles       |
+| ADMINI~1   | AdminInterface    |
+| CONFIG~1   | Configuration     |
+| USERS_~1   | User Exports      |
+
+---
+
+## Risk
+
+Can reveal:
+
+* Backup directories
+* Sensitive exports
+* Forgotten content
+* Internal administration portals
+
+---
+
+# ASP.NET Indicators
+
+## Common Extensions
+
+.aspx
+.ashx
+.asmx
+.axd
+
+### High Value Targets
+
+web.config
+
+trace.axd
+
+Global.asax
+
+---
+
+# Application Pool Identity
+
+## Why Check It?
+
+Any code execution typically inherits the Application Pool identity.
+
+Common account:
+
+IIS APPPOOL\DefaultAppPool
+
+---
+
+## Key Privilege
+
+Frequently observed:
+
+SeImpersonatePrivilege
+
+This privilege is important because it is commonly associated with Windows privilege escalation techniques.
+
+---
+
+# Common IIS Misconfigurations
+
+## 1. Directory Listing Enabled
+
+Indicators:
+
+* Browsable folders
+* File indexes
+* Downloadable backups
+
+Look for:
+
+* .bak
+* .zip
+* .config
+* .sql
+* .log
+
+---
+
+## 2. Exposed web.config
+
+Potential contents:
+
+* Database credentials
+* SMTP credentials
+* API keys
+* Connection strings
+
+Severity:
+
+HIGH
+
+---
+
+## 3. TRACE Enabled
+
+Potential issue:
+
+* Diagnostic method exposed
+
+Desired state:
+
+405 Method Not Allowed
+
+---
+
+## 4. Verbose Errors
+
+Indicators:
+
+* Stack traces
+* Source code paths
+* Internal hostnames
+* Framework versions
+
+Example exposure:
+
+C:\inetpub\wwwroot\
+
+---
+
+## 5. trace.axd Enabled
+
+Potentially reveals:
+
+* Recent requests
+* Session data
+* Cookies
+* Form submissions
+* Debug information
+
+---
+
+## 6. Excessive App Pool Privileges
+
+Red Flags:
+
+* Local Administrator
+* SYSTEM
+* Domain Admin
+
+Application pools should follow least privilege.
+
+---
+
+# Nmap NSE Quick Reference
+
+## Service Detection
+
+Purpose:
+
+* Identify IIS version
+* Identify Windows version
+* Confirm HTTP service
+
+---
+
+## HTTP Methods Script
+
+Purpose:
+
+* Enumerate allowed HTTP methods
+
+Look for:
+
+* PUT
+* DELETE
+* TRACE
+* PROPFIND
+
+---
+
+## WebDAV Detection Script
+
+Purpose:
+
+* Confirm WebDAV support
+
+Indicators:
+
+* DAV headers
+* WebDAV-specific verbs
+
+---
+
+## NTLM Information Script
+
+Purpose:
+
+* Gather host metadata
+
+Potential findings:
+
+* Computer Name
+* Domain Name
+* OS Build
+* NTLM Configuration
+
+---
+
+# High-Value Findings Checklist
+
+## Information Disclosure
+
+* [ ] Directory Listing
+* [ ] web.config Exposure
+* [ ] trace.axd Exposure
+* [ ] Verbose Errors
+* [ ] Backup Files
+* [ ] Hidden Directories
+
+---
+
+## Authentication
+
+* [ ] NTLM Enabled
+* [ ] Basic Auth Enabled
+* [ ] Anonymous Access
+* [ ] Misconfigured Access Controls
+
+---
+
+## WebDAV
+
+* [ ] WebDAV Present
+* [ ] Upload Capability
+* [ ] Modification Capability
+* [ ] Deletion Capability
+
+---
+
+## Infrastructure
+
+* [ ] IIS Version Identified
+* [ ] Windows Version Identified
+* [ ] App Pool Identity Identified
+
+---
+
+# Real-World Threat Actor Usage
+
+Notable groups have repeatedly abused IIS infrastructure through:
+
+* Web shell deployment
+* Exchange Server compromise
+* ASP.NET application abuse
+* Misconfigured WebDAV services
+* Vulnerable third-party IIS components
+
+Recurring themes:
+
+1. Initial Access
+2. Persistence
+3. Credential Theft
+4. Lateral Movement
+
+---
+
+# Reporting Notes
+
+When documenting IIS findings:
+
+Include:
+
+* Affected Host
+* IIS Version
+* Authentication Method
+* Impact
+* Evidence
+* Screenshots
+* Recommended Remediation
+
+Focus on:
+
+* Misconfigurations
+* Exposed Sensitive Data
+* Weak Authentication
+* Unnecessary Features
+* Legacy Software
+
+Avoid assuming compromise solely from version numbers; verify exposure and impact.
+
