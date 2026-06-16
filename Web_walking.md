@@ -766,3 +766,131 @@ $stmt->execute([$_POST['username']]);
 | **Microsoft SQL Server** | `--` | `WAITFOR DELAY '0:0:5'` | `information_schema` or `sys.tables` |
 | **SQLite** | `--` | `randomblob(100000000)` | `sqlite_master` |
 | **Oracle** | `--` | `dbms_pipe.receive_message` | `all_tables` |
+
+---
+
+This module covers **Cross-Site Request Forgery (CSRF)**, a vulnerability that occurs when a malicious website tricks a user's web browser into performing an unwanted, authenticated action on a trusted application.
+
+Here is a comprehensive, structured reference guide to add to your cybersecurity notes.
+
+---
+
+## 🏗️ The Mechanics of CSRF
+
+CSRF does not rely on stealing a user's credentials or session tokens. Instead, it exploits the implicit trust relationship between a web application and the victim's browser.
+
+### 1. Why CSRF Works: Automatic Cookie Handling
+
+When a user logs into a web application, the server generates an identity state and drops a session cookie into the browser. By default design, **the browser automatically attaches this session cookie to every subsequent HTTP request directed to that specific domain.**
+
+The browser cannot distinguish intent; it does not care if an HTTP request was initiated by clicking an authentic button on the legitimate site or triggered via a hidden script running on an entirely separate, malicious tab. If the request is bound for the target domain, the cookie is attached.
+
+### 2. The 3 Pillars of a Successful CSRF Attack
+
+For an application endpoint to be exploitable via CSRF, three fundamental conditions must align:
+
+1. **Active Authentication Context:** The target victim must possess a live, authenticated session session cookie with the target application.
+2. **State-Changing Impact:** The endpoint must execute an absolute mutation of data (e.g., modifying email addresses, transferring financial funds, or resetting privileges). Read-only requests (`GET` data views) are rarely meaningful targets.
+3. **Predictable Query Parameters:** The target request payload must contain exclusively predictable parameters. If the query parameters can be completely mapped by an attacker, they can be accurately forged.
+
+---
+
+## 🗺️ Common Attack Delivery Methods
+
+Attackers deliver CSRF payloads by structuring malicious HTML documents or event triggers that simulate legitimate application forms.
+
+### 1. Hidden Auto-Submitting Forms (`POST` Vectors)
+
+Many developers assume switching data actions from `GET` to `POST` neutralizes CSRF risks. This is false. Attackers easily construct hidden forms on external pages and automate submission using JavaScript upon document loading.
+
+```html
+<html>
+  <body>
+    <form action="http://staffhub.thm:8080/update_email.php" method="POST" id="attack">
+      <input type="hidden" name="email" value="attacker@evilmail.thm">
+    </form>
+    
+    <script>
+      // Instantly fire the form transaction silently behind the scenes
+      document.getElementById("attack").submit();
+      
+      // Optional: Redirect the user back to prevent obvious suspicion
+      setTimeout(function() {
+          window.location.href = "http://staffhub.thm:8080/settings.php";
+      }, 1000);
+    </script>
+  </body>
+</html>
+
+```
+
+### 2. Image and Interaction Triggers (`GET` & Event Vectors)
+
+If sensitive state changes are handled improperly via `GET` requests, execution is trivial—often requiring nothing more than embedding a standard media reference tag `<img src="...">`.
+
+If the application expects a token but derives it using a weak, reversible algorithm (e.g., a static base64 string of a user's role like `YWRtaW4=` $\rightarrow$ `admin`), an attacker can pre-calculate the token and bind it to visual DOM event triggers:
+
+```html
+<html>
+  <body>
+    <h2>StaffHub Internal Notice</h2>
+    <p>Move your mouse over the banner below to load the latest updates.</p>
+    
+    <img src="http://staffhub.thm:8080/one.png" 
+         onmouseover="window.location='http://staffhub.thm:8080/update_role.php?role=staff&csrf_token=YWRtaW4='" 
+         width="400">
+  </body>
+</html>
+
+```
+
+---
+
+## 🔎 Pentesting Methodology: Spotting CSRF Vulnerabilities
+
+During an offensive assessment, follow this structured blueprint to evaluate endpoints for missing or weak anti-CSRF controls:
+
+```
+[1. Map Data State Changes] ──► Audit account settings, email/password resets, profile adjustments.
+              │
+[2. Analyze Token Presence] ──► Is there a 'csrf_token' field? If absent, the endpoint is likely vulnerable.
+              │
+[3. Test Token Robustness]  ──► Attempt decoding (Base64, MD5). Check if tokens are static or re-usable.
+              │
+[4. Verify Outside Context] ──► Replicate the raw HTTP request layout in an isolated, external local HTML file.
+              │
+[5. Launch Proof-of-Concept]──► Execute the standalone form while logged into the app. Confirm if data updates.
+
+```
+
+1. **Prioritize State Changes:** Map out the target application and isolate parameters that handle user settings, credential changes, or account parameters.
+2. **Deconstruct Token Properties:** If a token field exists (e.g., `csrf_token`), audit its generation framework. Is it truly random, or is it predictable (e.g., tracking timestamps or user IDs)?
+3. **Evaluate Cookie Attributes:** Inspect the session configuration flags. If cookies do not specify isolation boundaries, the endpoint relies solely on implicit trust.
+
+---
+
+## 🛡️ Defensive Engineering: Preventing CSRF
+
+Securing applications against request forgery requires explicit validation layers that verify request origin authenticity.
+
+### 1. Anti-CSRF Tokens (The Synchronizer Token Pattern)
+
+The primary protection mechanism involves assigning a unique, unpredictable, and cryptographically secure pseudo-random value to each authenticated session.
+
+* **The Process:** When the application renders a form, it inserts this session token into a hidden field. When the form is submitted, the server evaluates the inbound parameter against the token bound securely within the user's active server-side session.
+* **Why it stops attacks:** Since an external malicious webpage cannot read across domains to steal the unique value, any forged request they emit will lack the correct token value and be dropped immediately by the server.
+
+### 2. Utilizing the `SameSite` Cookie Attribute
+
+Modern browsers support the `SameSite` attribute within the `Set-Cookie` HTTP header configuration. This explicitly dictates cookie transmission behaviors during cross-site requests:
+
+| SameSite Policy | Transmission Behavior | Security Posture |
+| --- | --- | --- |
+| **`SameSite=None`** | Cookies are automatically attached to all third-party, cross-site requests. | **Highly Vulnerable**; requires separate token defenses. |
+| **`SameSite=Lax`** | Cookies are omitted on cross-site sub-resource requests (like images/forms) but attached when navigating *to* the site via top-level link clicks. | **Standard Default**; blocks basic automated script execution. |
+| **`SameSite=Strict`** | Cookies are entirely withheld from any cross-site request. If you click a link pointing to the site from an external domain, you initially appear unauthenticated. | **Maximum Security**; ideal for highly sensitive administrative panels. |
+
+### 3. Additional Defense-in-Depth Measures
+
+* **Custom Headers:** Modern web application architectures (like Single Page Apps) validate requests by enforcing custom API headers (e.g., `X-Requested-With: XMLHttpRequest`). Browsers restrict external cross-site forms from attaching custom headers without passing explicit Cross-Origin Resource Sharing (CORS) pre-flight pre-conditions.
+* **Re-Authentication Prompts:** For critical operations (e.g., updating account passwords or modifying financial routing), always force users to re-enter their existing credentials or complete a secondary verification factor.
