@@ -1164,3 +1164,117 @@ echo "UEFSTE9BRF9ERVRBSUxTX0dPX0hFUkU=" | base64 -d
 ```
 
 ---
+
+# 🔑 Insecure Direct Object References (IDOR) Playbook Manual
+
+## 1. The Architectural Threat
+
+An **Insecure Direct Object Reference (IDOR)** occurs when an application exposes a direct reference (such as an integer, string, or key) to an internal backend resource or data object, allowing a user to manipulate that reference to access or modify unauthorized data.
+
+### 🔹 The Root Cause: Missing Authorisation
+
+In an IDOR scenario, the application's **Authentication** layer functions correctly (it validates *who* you are via a live session cookie). However, the **Authorisation** layer is entirely absent or broken.
+
+The server-side application logic fails to perform a critical check: validating whether the authenticated session token possesses ownership or access rights to the specific object identifier requested.
+
+### 🔹 Position & Classification
+
+* **OWASP Top 10 (Web):** Category #1 — **Broken Access Control**.
+* **OWASP API Security Top 10:** Categorized as **BOLA (Broken Object Level Authorisation)**.
+
+---
+
+## 2. Taxonomy of Object Identifier Formats
+
+Developers leverage different structural representations for internal keys. Identifying the scheme dictates the enumeration strategy.
+
+```
+                  ┌──────────────────────────────┐
+                  │  Object Identifier Formats   │
+                  └──────────────┬───────────────┘
+          ┌──────────────────────┼──────────────────────┐
+          ▼                      ▼                      ▼
+    [Plaintext]              [Encoded]               [Hashed]
+  e.g., id=1305          e.g., id=TVRJeg==       e.g., id=202cb962...
+
+```
+
+### A. Plaintext (Sequential / Numeric)
+
+* **The Scenario:** Identifiers map directly to database primary keys or autoincrement sequences.
+`http://online-service.thm/profile?user_id=1305`
+* **Exploitation:** Increment or decrement the sequence directly (`user_id=1304`, `user_id=1306`) to extract or modify adjacent target records.
+
+### B. Encoded (Reversible Transformations)
+
+* **The Scenario:** Identifiers are obfuscated into ASCII-safe strings (typically **Base64** text strings containing characters `a-z`, `A-Z`, `0-9`, and `=` padding elements).
+`http://online-service.thm/profile?id=TVRJeg==`
+* **Exploitation Method:**
+1. Strip and decode the string via your terminal suite: `echo 'TVRJeg==' | base64 -d` $\rightarrow$ `123`.
+2. Mutate the plaintext integer target value: `123` $\rightarrow$ `1`.
+3. Re-encode the modified value string: `echo -n '1' | base64` $\rightarrow$ `MQ==`.
+4. Inject the re-encoded string value back into the request target.
+
+
+
+### C. Hashed (Cryptographic Signatures)
+
+* **The Scenario:** Identifiers are run through one-way cryptographic algorithms (MD5, SHA-1, SHA-256) to yield a fixed-length hexadecimal hash value.
+`MD5(123) = 202cb962ac59075b964b07152d234b70`
+* **Exploitation Method:** If the input to the hash is a sequential integer, pre-compute the matching hashes locally.
+1. Determine hash architecture via length: **MD5** (32 characters), **SHA-1** (40 characters), **SHA-256** (64 characters).
+2. Use precomputed databases (like *CrackStation*) or local looping bash scripts to compute ranges:
+```bash
+for i in {1..20}; do echo -n $i | md5sum; done
+
+```
+
+
+3. Replace the application hash parameter with your pre-calculated variant.
+
+
+
+### D. Unpredictable Identifiers (UUIDs / GUIDs)
+
+* **The Scenario:** Applications implement random, non-sequential universally unique identifiers (`d3b07384-d9a0-4e9b-8b3c-2f1a6c7e4a90`). Enumeration via guessing is mathematically impossible.
+* **The Exploitation Blindspot:** IDOR risks *still exist* if the backend lacks access validation logic. An attacker simply has to harvest valid UUIDs from secondary leaks (such as public forums, HTML source code, API payloads, or shared links).
+* **The Two-Account Testing Technique:**
+1. Register **Account A** and **Account B**.
+2. Authenticate to Account A; isolate and document its random UUID asset strings.
+3. Authenticate to Account B; swap its outbound asset tokens with Account A's captured tokens.
+4. If Account B views Account A's private data, the endpoint is vulnerable.
+
+
+
+---
+
+## 3. High-Probability IDOR Target Zones
+
+IDOR vectors hide inside all application tiers. Restricting your audit scope to the browser URL address bar leaves most vectors undiscovered.
+
+* **Asynchronous Background Requests (AJAX/Fetch APIs):** Inspect the browser's developer tools (`F12` $\rightarrow$ Network tab) or proxy logs (Burp Suite). Look for background JSON service routes pulling details asynchronously (e.g., `/api/v1/customer?id=15`).
+* **REST API Path Segments:** Audit standard API path structure patterns where references are embedded explicitly into the URL path: `/api/users/{user_id}/orders/{order_id}`.
+* **Hidden Form Elements:** Review raw HTML source strings for concealed functional attributes passed during page submissions: `<input type="hidden" name="account_number" value="98421">`.
+* **Parameter Mining (Hidden Properties):** Fuzz endpoints that do not normally show an identifier. If `/user/details` implicitly serves your own account info, try manually appending `?user_id=1` or `?id=1`. If the server honors the parameter and switches the profile view context, you have unmined a latent IDOR vector.
+
+---
+
+## 🛠️ Step-by-Step IDOR Assessment Workflow
+
+Use this workflow to intercept, test, and validate an IDOR flaw safely during an engagement:
+
+```
+[1. Intercept Traffic]   ──► Map out the network trail via Burp Suite or F12 Dev Tools.
+            │
+[2. Isolate Parameters]  ──► Target 'id=', 'user_id=', or path variables inside the payload.
+            │
+[3. Isolate Session]     ──► Send the targeted HTTP request straight to Burp Repeater.
+            │
+[4. Mutate & Replay]     ──► Alter the identity reference value (e.g., change id=3 to id=1).
+            │
+[5. Analyze Content]     ──► Evaluate the response body for unauthorized cross-account text.
+
+```
+
+---
+
