@@ -1052,3 +1052,115 @@ An **XSS Polyglot** is a single, highly dense string engineered to break out of 
 jaVasCript:/*-/*`/*\`/*'/*"/**/(/* */onerror=alert('THM') )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert('THM')//>\x3e
 
 ```
+Here is the complete **SSRF Advanced Vectors & Defensive Bypass Manual** note again, formatted and structured so you can copy it straight into your playbook.
+
+---
+
+# 🌐 SSRF Advanced Vectors & Defensive Bypass Manual
+
+## 1. Structural Injection Vectors
+
+SSRF does not always manifest as a clean, obvious URL parameter. Vulnerabilities hide inside varied structural constraints depending on how backend developers incorporate user input into server-initiated queries.
+
+### 🔹 Full URL in a Parameter
+
+The application accepts a complete URI (scheme, host, path, and query). Common in webhook managers, URL preview features, and PDF rendering engines.
+
+* **The Exploitation Nuance:** If the application appends backend parameters to your input, terminate your injection string with an ampersand parameter wrapper (`&x=`) to neutralize trailing application additions as dead query variables.
+* **Example:** `?server=server.website.thm/flag?id=9&x=` becomes `https://server.website.thm/flag?id=9&x=/appended/path`.
+
+### 🔹 Hostname / Path Only (Partial URLs)
+
+The application supplies a static prefix (like `https://api.internal/`) and allows user control over only the trailing path or destination hostname.
+
+* **The Exploitation Nuance:** If you control the hostname segment, swap it with an external listener domain to capture outbound telemetry. If you control only the path segment, execute **Directory Traversal** (`/../admin`) to break out of the intended directory context and reach root web endpoints.
+
+### 🔹 Hidden Form Fields
+
+Input vectors can be embedded outside the visible address bar inside static HTML structures.
+
+* **The Exploitation Nuance:** Profile setup portals or file importers may reference default locations via hidden inputs: `<input type="hidden" name="avatar" value="/images/default.png">`. Attackers use browser Developer Tools (`F12`) or intercepting proxies (Burp Suite) to modify these parameters directly before form submission.
+
+---
+
+## 2. Perimeter Defense Bypass Techniques
+
+Developers implement automated input validation boundaries to restrict backend requests. These controls fall into three primary strategies, each possessing distinct structural flaws.
+
+### A. Evading Deny Lists (Blacklists)
+
+Deny lists drop requests explicitly matching prohibited targets (like `127.0.0.1` or `169.254.169.254`). They fail because IP addresses can be expressed in multiple valid mathematical architectures:
+
+| Target IP | Alternative Architecture | Bypass String Example | Why It Works |
+| --- | --- | --- | --- |
+| **`127.0.0.1`** | Decimal Notation | `2130706433` | System kernels automatically resolve large decimals back to standard IPs. |
+| **`127.0.0.1`** | Octal Notation | `017700000001` | Pad numbers with leading zeros to switch context. |
+| **`127.0.0.1`** | Shorthand Loopback | `0` or `0.0.0.0` or `127.1` | Abbreviated notations that map directly to the local interface. |
+| **`127.0.0.1`** | Wildcard DNS | `127.0.0.1.nip.io` | Passes string-based checks because it is a valid domain name, but resolves to localhost. |
+| **`169.254.169.254`** | Attacker-Owned DNS | `metadata.attacker.com` | A custom domain configured with an `A` record pointing straight to the cloud metadata endpoint. |
+
+### B. Evading Allow Lists (Whitelists)
+
+Allow lists block all destinations unless they match a trusted pattern (e.g., verifying if a string begins with `https://trusted.thm`).
+
+* **Subdomain Masking:** Attackers register a domain mimicking the trusted pattern: `https://trusted.thm.attacker.com`. If the engine only evaluates prefix strings without strict domain separation, the check passes.
+* **URL Credential Abuse:** Leveraging standard URI syntax (`https://user:pass@host/`). Injecting `https://trusted.thm@attacker.com` forces weak parsing engines to treat `trusted.thm` as username credentials while routing the actual outbound request to `attacker.com`.
+
+### C. Open Redirect Chaining
+
+When an allow list cannot be bypassed natively, look for an **Open Redirect** endpoint on the trusted domain (e.g., `https://trusted.thm/redirect?url=http://target`).
+
+By passing the trusted redirect link into the SSRF parameter, the allow list validates the initial URL as trusted. When the server executes the connection, it hits its own redirect file and forwards itself directly to the restricted target network interface.
+
+---
+
+## 3. Exploit Blueprint: Multi-Stage SSRF Walkthrough
+
+The following step-by-step methodology demonstrates bypassing a path-based deny list by abusing a hidden form vector to extract restricted files.
+
+### Step 1: Map the Target Interface
+
+Inspect an account profile page hosting an avatar update utility. Reviewing the underlying source code reveals the tracking parameters use a radio selection menu mapping back to internal system files:
+
+```html
+<input type="radio" name="avatar" value="/images/avatars/default.png">
+
+```
+
+### Step 2: Establish the Validation Behavior
+
+Attempting to change the form value to a target resource like `/private` triggers a strict validation response from the application filter block:
+
+> `Error: Path cannot start with /private`
+
+This signature demonstrates a literal prefix string match condition.
+
+### Step 3: Craft a Normalization Bypass Payload
+
+Because the blocklist inspects the string *before* the web server normalizes the path directory hierarchy, inject an arbitrary directory prefix followed by relative dot-dot-slash traversal operators:
+
+```html
+value="x/../private"
+
+```
+
+* **The Validation Phase:** The string starts with `x/`, missing the blacklisted `/private` match rule. The check passes.
+* **The Normalization Phase:** The underlying web engine parses the string. It enters folder `x`, encounters `../`, steps up one level to root, and executes a local read on `/private`.
+
+### Step 4: Exfiltrate and De-serialize the Payload
+
+The application reads the local data and returns it rendered securely into the user's view source screen inside a Base64 Data URI string layout:
+
+```html
+<img src="data:image/png;base64,UEFSTE9BRF9ERVRBSUxTX0dPX0hFUkU=">
+
+```
+
+Isolate the payload string and pass it straight through your terminal decoding terminal suite to reveal the hidden flag contents:
+
+```bash
+echo "UEFSTE9BRF9ERVRBSUxTX0dPX0hFUkU=" | base64 -d
+
+```
+
+---
