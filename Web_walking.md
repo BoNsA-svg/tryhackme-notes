@@ -1278,3 +1278,131 @@ Use this workflow to intercept, test, and validate an IDOR flaw safely during an
 
 ---
 
+Here is the complete, unified **Session Management Playbook Manual**, fully updated with the **Defenses** section added right onto the end so you can grab the whole thing in one clean copy.
+
+---
+
+# 🍪 Session Management Playbook Manual
+
+## 1. The Architectural Threat
+
+**Session Management** is the engine that maintains state, tracks actions, and enforces authorization decisions across sequential user requests. Because the HTTP protocol is inherently **stateless**, web applications require a persistent mechanism to remember who a user is after they authenticate.
+
+### 🔹 Authentication vs. Authorisation vs. Accountability (IAAA)
+
+Understanding session flaws requires isolating the distinct core components of the Identity assurance model:
+
+* **Identification:** The initial claim of an identity boundary (e.g., submitting a raw username string).
+* **Authentication:** The cryptographic or secret verification of that claim (e.g., validating a password match). **This process acts as the direct catalyst for Session Creation.**
+* **Authorisation:** The system's ongoing verification that an active session possesses the exact rights required to perform a specific action or access a target dataset. **Session Tracking explicitly handles this constraint.**
+* **Accountability:** The chronological logging and auditing of user actions tied to a unique session identifier. This is critical for post-incident timeline reconstruction.
+
+---
+
+## 2. The Session Management Lifecycle
+
+A resilient session implementation must maintain robust security boundaries across four distinct temporal phases.
+
+```text
+  ┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+  │ 1. Creation      │ ───► │ 2. Tracking      │ ───► │ 3. Expiry        │ ───► │ 4. Termination   │
+  └──────────────────┘      └──────────────────┘      └──────────────────┘      └──────────────────┘
+   • Credential Match        • Inbound Validation      • Max Lifetime Limit      • Explicit Logout
+   • Random Generation       • Server Access Lookup    • Inactivity Timeout      • Server Invalidation
+
+```
+
+### 1️⃣ Session Creation
+
+* **Mechanics:** Triggered upon a successful authentication match. The server issues a high-entropy session identifier string to the client.
+* **Risks:** Naive token algorithms, guessable custom values, or a failure to rotate the session ID post-authentication (**Session Fixation**).
+
+### 2️⃣ Session Tracking
+
+* **Mechanics:** The client presents the session token inside every consecutive outbound HTTP request. The server parses the value and matches it against an internal database map to resolve user context.
+* **Risks:** **Vertical Bypass** (escalating privileges to an admin role) or **Horizontal Bypass** (accessing another user's identical data layer).
+
+### 3️⃣ Session Expiry
+
+* **Mechanics:** The passive defense mechanism. Sessions must enforce an explicit internal lifetime clock. Once exceeded, the session string becomes invalid, forcing a redirect back to authentication.
+* **Risks:** Excessive lifetimes that expand the window of opportunity for an attacker holding an intercepted token.
+
+### 4️⃣ Session Termination
+
+* **Mechanics:** The active destruction phase. Triggered immediately when a user hits the "Logout" button or triggers a password reset. The server must explicitly flush and destroy the record inside its backend lookup database.
+* **Risks:** Token clearing only on the client side (e.g., deleting a local cookie while the server-side value remains functional).
+
+---
+
+## 3. Storage Mechanisms: Cookies vs. Tokens
+
+Applications fundamentally rely on two storage models to cache session material on client machines.
+
+| Attribute Matrix | Cookie-Based Session Management | Token-Based Session Management |
+| --- | --- | --- |
+| **Transmission Mechanism** | Automatically appended to every outbound request by the browser engine based on domain rules. | Manually loaded and attached via custom client-side JavaScript headers (e.g., `Authorization: Bearer <JWT>`). |
+| **Storage Location** | Browser Cookie Jar | Browser `LocalStorage` / `SessionStorage` |
+| **Primary Risk Profile** | Vulnerable to **CSRF (Cross-Site Request Forgery)** attacks if browser context is abused. | Vulnerable to **XSS (Cross-Site Request Forgery)** data extraction via malicious scripts reading local storage. |
+| **Architecture Suitability** | Excellent for traditional centralized monolithic web layouts. | Optimized for decentralized, stateless microservices or APIs. |
+
+### 🛠️ Essential Defensive Cookie Attributes
+
+* **`Secure`:** Directs the browser to transmit the cookie exclusively over encrypted **HTTPS** channels.
+* **`HTTPOnly`:** Blocks client-side JavaScript APIs (like `document.cookie`) from accessing the data string, neutralizing XSS exfiltration.
+* **`SameSite`:** Governs cookie inclusion during cross-origin requests (`Strict`, `Lax`, `None`) to mitigate CSRF vectors.
+
+---
+
+## 4. Assessment Checklist & Lifecycle Testing Vulnerabilities
+
+When auditing session health on a web engagement, step through each lifecycle component to uncover operational flaws:
+
+### ⚠️ Session Creation Flaws
+
+* **Weak Session Tokens:** Check if session strings change based on predictable variables. Decode strings to ensure they aren't basic encoding representations (like `Base64(username)`).
+* **Session Fixation:** Intercept an unauthenticated traffic session ID. Log into the application using your test account. If the application keeps the exact same session ID after you authenticate, it is vulnerable. An attacker who seeds a victim with a known token can hijack the account after the victim logs in.
+* **Insecure Session Transmission:** Audit single sign-on (SSO) handoffs. Ensure that redirect endpoints post-authentication don't allow open URL modifications that spill token materials into attacker logs.
+
+### ⚠️ Session Tracking Flaws
+
+* **Client-Side State Reliance:** Look for applications that store authorization privileges (e.g., `userRole=student`) in mutable client locations like `LocalStorage`. If you can toggle a number or string value locally and gain access to tabs or API endpoints, the tracking mechanism trusts untrusted user input.
+
+### ⚠️ Session Termination Flaws
+
+* **Ghost Sessions (Missing Backend Revocation):** Capture a valid, active session token string and route it into an interception tool like Burp Suite Repeater. Trigger an explicit logout action inside the main web browser. Return to Burp Suite and replay the request. If the server continues to return authorized profile data with a code `200 OK` rather than a `401 Unauthorized` redirect, the session was never destroyed on the server backend.
+
+---
+
+## 🛡️ 5. Session Management Defensive Blueprint
+
+To effectively insulate an application against session hijacking, fixation, and tracking bypasses, developers must implement structural security controls at every phase of the session lifecycle.
+
+### 🔹 Secure Cryptographic Storage
+
+* **Cookies:** Must be hardened with strict browser-enforced attributes. Always deploy the `Secure` attribute to mandate HTTPS transmission, and the `HTTPOnly` flag to prevent client-side JavaScript access and mitigate XSS exfiltration.
+* **Tokens:** When utilizing local storage for tokens (like JWTs), the client application must implement robust contextual handling to prevent malicious scripts from scraping token strings from `LocalStorage`.
+
+### 🔹 High-Entropy Generation & Integrity Protection
+
+* **Randomness:** Custom or native session identifiers must be generated using cryptographically secure pseudo-random number generators (CSPRNGs) to guarantee high entropy and prevent mathematical predictability or brute-force enumeration.
+* **Cryptographic Signatures:** For stateless session tokens (such as JWTs), the backend must enforce strong cryptographic signing mechanisms (e.g., HMAC or digital signatures) using robust secret keys. The server must strictly validate this signature on *every* incoming request to ensure data parameters have not been tampered with.
+
+### 🔹 Server-Side Session Tracking & Access Controls
+
+* **Active Validation:** Applications must use incoming session tokens to perform strict server-side lookups. Never trust role parameters or access privileges passed directly from client-side state registers (like LocalStorage).
+* **Contextual Authorisation:** The application must actively bind the resolved session identity to the requested resource data. It must explicitly verify if the session owner has permission to read, modify, or delete that specific object array (preventing both Vertical and Horizontal privilege escalation).
+
+### 🔹 Defined Temporal Boundaries (Session Expiry)
+
+* **Max Lifetime Enforcement:** Implement rigid time-to-live (TTL) limits and inactivity timeouts tailored to the application's risk profile.
+* **Sliding Windows:** If a session lifetime is dynamically extended during user activity, enforce a hard maximum cap to ensure tokens expire completely after a reasonable timeframe, minimizing the temporal window available to a threat actor holding an intercepted string.
+
+### 🔹 Dual-Action Invalidation (Session Termination)
+
+* **Client and Server Cohesion:** When a logout action is triggered, the application must delete the session identifier from the client's storage *and* issue an explicit invalidation command to destroy the session mapping on the server backend. Otherwise, a user would be unable to destroy their session if it was compromised.
+* **Token Blacklisting:** For stateless tokens where immediate server deletion isn't natively possible, the application must track revoked tokens inside an active server-side blocklist or data cache until their natural expiration time elapses, ensuring compromised tokens cannot be replayed.
+
+---
+
+
+
