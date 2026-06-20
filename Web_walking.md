@@ -1404,5 +1404,117 @@ To effectively insulate an application against session hijacking, fixation, and 
 
 ---
 
+Here is a synthesized, highly organized study guide based on your notes for the **Authentication Bypass** module. It covers the core attack types, tools like `ffuf`, exploitation mechanics, and their mitigations.
 
+---
+
+## 📑 Core Concepts
+
+* **Authentication:** The process where a web application verifies who a user is by comparing submitted credentials against a data store, then returning a session token for subsequent requests.
+* **Authentication Bypass:** Any attack allowing an unauthorized user to access restricted account functionality without supplying the correct credentials. These often exploit developer assumptions or unverified, trusted data.
+
+---
+
+## 🛠️ The 4 Common Exploitation Techniques
+
+### 1. Username Enumeration
+
+Reconnaissance used to find valid accounts by programmatically identifying differences in how a signup, login, or password reset form responds.
+
+* **Error Message Differentials:** The application returns explicit statements like *"An account with this username already exists."*
+* **Other Signals:** Even if text matches, a tool can differentiate valid/invalid entries based on **response length, status code, response time, or redirect behavior.**
+
+#### 🚀 Fuzzing with `ffuf`
+
+```bash
+ffuf -w /usr/share/wordlists/SecLists/Usernames/Names/names.txt \
+     -X POST \
+     -d "username=FUZZ&email=x&password=x&cpassword=x" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -u http://10.145.140.246/customers/signup \
+     -mr "username already exists"
+
+```
+
+* `-w`: Wordlist location.
+* `-X POST`: Sets the HTTP method.
+* `-d`: The POST body payload (with `FUZZ` as the injection marker).
+* `-mr`: Match regex (filters output to show only responses containing this text).
+
+---
+
+### 2. Credential Brute Forcing
+
+Pairing a verified list of usernames with a dictionary of common passwords to find a match. This is practical only when you have a short, high-quality list of valid usernames to avoid triggering lockouts or rate limits.
+
+#### 🚀 Multi-Wordlist Brute Forcing with `ffuf`
+
+```bash
+ffuf -w valid_usernames.txt:W1,/usr/share/wordlists/SecLists/Passwords/Common-Credentials/10-million-password-list-top-100.txt:W2 \
+     -X POST \
+     -d "username=W1&password=W2" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -u http://10.145.140.246/customers/login \
+     -fc 200
+
+```
+
+* `W1` and `W2`: Maps specific wordlists to custom markers in the request body.
+* `-fc 200`: Filter code (hides failed login responses that return an HTTP 200, exposing only the successful redirect/response).
+
+---
+
+### 3. Logic Flaws & Parameter Pollution
+
+Logic flaws occur when perfectly valid data drives an application through an unintended sequence of choices. Automated scanners rarely find them because they depend entirely on unique application rules.
+
+#### 💥 Case-Sensitive Routing vs. Strict Authorizations
+
+If a router matches `/adMin` and `/admin` to the same backend asset, but the authorization mechanism strictly checks `if (url === '/admin')`, a request to `/adMin` bypasses security entirely.
+
+#### 💥 HTTP Parameter Pollution (HPP) via `$_REQUEST`
+
+In PHP, the `$_REQUEST` superglobal merges `$_GET`, `$_POST`, and `$_COOKIE`. If keys overlap, `$_POST` usually overrides `$_GET`.
+
+* **The Flaw:** The developer reads the target account from the URL query string (`?email=robert@acmeitsupport.thm`) but sends the actual recovery email using `$_REQUEST['email']`.
+* **The Exploit:** An attacker passes their own email into the POST body, overriding the recipient without changing the target account identifier.
+
+```bash
+curl 'http://10.145.140.246/customers/reset?email=robert@acmeitsupport.thm' \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     -d 'username=robert&email={your_username}@customer.acmeitsupport.thm'
+
+```
+
+---
+
+### 4. Cookie Manipulation
+
+Because HTTP is stateless, apps use cookies to track state. If cookies lack cryptographic integrity signatures, an attacker can modify them locally to impersonate someone else.
+
+| Cookie Type | Mechanism | Exploit Method |
+| --- | --- | --- |
+| **Plain Text** | Stores key-value variables raw in headers (e.g., `admin=false`). | Directly rewrite variables via curl or developer tools: <br>
+
+<br>`curl -H "Cookie: logged_in=true; admin=true" [URL]` |
+| **Hashed** | Stores static hash strings (MD5, SHA-1) thinking they are safe because they are one-way. | Use pre-computed databases (like CrackStation) to look up common values (e.g., finding that `c4ca4238a0b923820dcc509a6f75849b1` is just `1`). |
+| **Encoded** | Uses formats like Base64 or Base32 to transport complex objects (like JSON arrays). | Decode the string, alter payload parameters (e.g., change `{"admin":false}` to `{"admin":true}`), re-encode, and replay. |
+
+---
+
+## 🛡️ Mitigation & Defense Summary
+
+```
+[Authentication Defenses]
+├── Username Enumeration ──► Return identical responses/times for success & failure; add CAPTCHAs
+├── Brute Force          ──► Multi-Factor Authentication (MFA); Account lockouts; Rate limiting
+├── Logic Flaws          ──► Use explicit scopes ($_POST instead of $_REQUEST); Single trusted data source
+└── Cookie Tampering     ──► Sign tokens (JWT/HMAC) OR use random, opaque server-side session IDs
+
+```
+
+* **Enumeration:** Send a confirmation email regardless of whether the account exists or not, ensuring the frontend web response looks identical in both scenarios.
+* **Brute Force:** Mandate Multi-Factor Authentication (MFA) so a guessed password alone is useless. Encourage long passphrases rather than short, complex forced-rotation passwords.
+* **Logic Flaws:** Avoid global inputs. Read variables explicitly from where they are supposed to reside (e.g., use `$_POST` instead of `$_REQUEST` in PHP).
+* **Cookies:** **A hash is not a signature.** Secure apps must sign tokens with a strong server-side secret (HMAC/JWT) or utilize entirely opaque tracking keys mapped to a secure backend database (like Redis).
 
