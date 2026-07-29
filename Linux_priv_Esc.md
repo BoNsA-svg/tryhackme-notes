@@ -849,3 +849,577 @@ find / -name pass*.txt
 * Focus on the operating system, kernel, users, processes, scheduled tasks, networking, and file permissions.
 * Commands like `find`, `ps`, `netstat`/`ss`, `sudo -l`, and `id` are essential tools for discovering potential privilege escalation paths.
 * Enumeration provides the context needed to identify and exploit misconfigurations that lead to higher privileges.
+
+---
+
+# Linux Privilege Escalation: Common Misconfigurations (Defensive Study Notes)
+
+## Overview
+
+Privilege escalation often results from **misconfigurations**, not software vulnerabilities. The goal is to enumerate the system thoroughly and identify places where privileged processes, binaries, or services can be influenced by a low-privileged user.
+
+> **Key mindset:** Enumerate first, exploit second.
+
+---
+
+# 1. Sudo Misconfigurations
+
+## What is sudo?
+
+`sudo` allows authorized users to execute specific commands with elevated privileges without granting full root access.
+
+Check your permissions:
+
+```bash
+sudo -l
+```
+
+Example:
+
+```text
+User labuser may run the following commands:
+
+(ALL) NOPASSWD: /bin/cat
+```
+
+This tells us:
+
+* User can execute `/bin/cat`
+* Runs as root
+* No password required (`NOPASSWD`)
+
+---
+
+## Enumeration Checklist
+
+```bash
+sudo -l
+```
+
+Look for:
+
+* NOPASSWD entries
+* Wildcards
+* Dangerous binaries
+* Environment variables (LD_PRELOAD, SETENV)
+
+---
+
+## GTFOBins
+
+The first place to check after finding sudo permissions is:
+
+**GTFOBins**
+
+[https://gtfobins.github.io/](https://gtfobins.github.io/)
+
+Search the binary you're allowed to execute and look for:
+
+* Sudo
+* SUID
+* Capabilities
+
+---
+
+## Leveraging Program Functionality
+
+Sometimes a binary isn't directly exploitable.
+
+Instead:
+
+* Read its help page
+
+```bash
+binary -h
+binary --help
+man binary
+```
+
+Look for options that:
+
+* Read files
+* Load configuration files
+* Execute plugins/modules
+* Spawn shells
+
+Example:
+
+Apache allows alternate configuration files using:
+
+```
+-f
+```
+
+A privileged configuration mistake can sometimes expose sensitive files such as `/etc/shadow`.
+
+---
+
+# LD_PRELOAD Misconfiguration
+
+Sometimes sudo preserves the environment:
+
+Example:
+
+```text
+env_keep+=LD_PRELOAD
+```
+
+If present:
+
+A shared library can be loaded **before** the target program starts.
+
+Potential outcome:
+
+* Custom code executes with elevated privileges.
+
+Typical process:
+
+1. Check sudo configuration
+2. Create shared library
+3. Compile as `.so`
+4. Launch sudo binary using LD_PRELOAD
+
+Modern systems rarely expose this configuration, but it's worth checking.
+
+---
+
+# 2. SUID (Set User ID)
+
+## What is SUID?
+
+Normally:
+
+```
+Program runs with YOUR permissions
+```
+
+With SUID:
+
+```
+Program runs with OWNER'S permissions
+```
+
+If owned by root:
+
+```
+Runs as root
+```
+
+---
+
+## Finding SUID Files
+
+```bash
+find / -type f -perm -04000 -ls 2>/dev/null
+```
+
+Example output:
+
+```text
+/usr/bin/passwd
+/usr/bin/sudo
+/usr/bin/chsh
+/bin/mount
+/bin/nano
+```
+
+---
+
+## Why It Matters
+
+Some binaries become dangerous when SUID is enabled.
+
+Always compare findings with GTFOBins.
+
+Common examples:
+
+* vim
+* nano
+* find
+* bash
+* cp
+* less
+* more
+* tar
+
+---
+
+## Typical Enumeration
+
+```bash
+find / -perm -4000 2>/dev/null
+```
+
+Then search GTFOBins.
+
+---
+
+## Possible Outcomes
+
+Misconfigured SUID binaries may allow:
+
+* Reading protected files
+* Modifying protected files
+* Creating privileged users
+* Spawning root shells
+
+---
+
+# 3. PATH Hijacking
+
+## What is PATH?
+
+Linux searches directories listed in `$PATH` for executables.
+
+View it:
+
+```bash
+echo $PATH
+```
+
+Example:
+
+```
+/usr/local/bin
+/usr/bin
+/bin
+```
+
+---
+
+## Why It Matters
+
+Poorly written privileged programs may execute commands like:
+
+```c
+system("backup");
+```
+
+instead of
+
+```c
+system("/usr/bin/backup");
+```
+
+Linux searches PATH.
+
+If an attacker controls a writable PATH directory:
+
+* Fake executable runs instead.
+
+---
+
+## Enumeration
+
+Check PATH:
+
+```bash
+echo $PATH
+```
+
+Find writable directories:
+
+```bash
+find / -type d -writable 2>/dev/null
+```
+
+Questions to ask:
+
+* Is a writable directory inside PATH?
+* Can PATH be modified?
+* Does a privileged binary call commands without full paths?
+
+---
+
+# 4. Linux Capabilities
+
+## What Are Capabilities?
+
+Capabilities split root privileges into smaller permissions.
+
+Instead of full root:
+
+Examples include:
+
+* Network administration
+* Raw sockets
+* Changing user IDs
+
+---
+
+## Enumerate Capabilities
+
+```bash
+getcap -r / 2>/dev/null
+```
+
+Example:
+
+```text
+vim = cap_setuid+ep
+ping = cap_net_raw+ep
+```
+
+---
+
+## Important Capability
+
+```
+cap_setuid
+```
+
+Allows a program to change its UID.
+
+Misconfigured binaries with this capability may be abused if the application supports scripting or code execution.
+
+---
+
+## Why Capabilities Matter
+
+Capabilities are **not visible** during SUID enumeration.
+
+Always run:
+
+```bash
+getcap -r /
+```
+
+---
+
+# 5. Cron Jobs
+
+## What is Cron?
+
+Cron automatically runs scheduled tasks.
+
+Many execute as root.
+
+---
+
+## Enumeration
+
+Check:
+
+```bash
+cat /etc/crontab
+```
+
+Also inspect:
+
+```
+/etc/cron.d/
+/etc/cron.hourly/
+/etc/cron.daily/
+/etc/cron.weekly/
+/etc/cron.monthly/
+/var/spool/cron/crontabs/
+```
+
+---
+
+## What to Look For
+
+* Writable scripts
+* Missing scripts
+* Incorrect permissions
+* Relative paths
+* PATH manipulation
+* Programs using wildcards
+
+---
+
+## Example
+
+```
+* * * * * root backup.sh
+```
+
+Questions:
+
+* Can I edit `backup.sh`?
+* Does it run as root?
+* Is the file missing?
+* Does cron search PATH?
+
+---
+
+## Common Weaknesses
+
+* World-writable scripts
+* Deleted scripts still referenced
+* PATH hijacking
+* Weak file permissions
+
+---
+
+# 6. NFS Misconfiguration
+
+## What is NFS?
+
+Network File System allows remote directories to be shared across machines.
+
+Configuration:
+
+```bash
+cat /etc/exports
+```
+
+---
+
+## Dangerous Option
+
+```
+no_root_squash
+```
+
+Normally:
+
+```
+Remote root → nfsnobody
+```
+
+With:
+
+```
+no_root_squash
+```
+
+Remote root remains root.
+
+---
+
+## Enumeration
+
+On target:
+
+```bash
+cat /etc/exports
+```
+
+From attacker machine:
+
+```bash
+showmount -e TARGET_IP
+```
+
+Look for:
+
+* Writable shares
+* `no_root_squash`
+
+---
+
+## Why It Matters
+
+If both conditions exist:
+
+* Writable share
+* no_root_squash
+
+Root-owned files created remotely remain root-owned on the target.
+
+This can allow creation of privileged executables or other dangerous artifacts.
+
+---
+
+# Privilege Escalation Workflow
+
+```
+Initial Shell
+      │
+      ▼
+System Enumeration
+      │
+      ▼
+Check sudo permissions
+      │
+      ▼
+Find SUID binaries
+      │
+      ▼
+Enumerate capabilities
+      │
+      ▼
+Inspect cron jobs
+      │
+      ▼
+Check PATH
+      │
+      ▼
+Inspect NFS exports
+      │
+      ▼
+Compare findings with GTFOBins
+      │
+      ▼
+Identify misconfiguration
+      │
+      ▼
+Gain elevated privileges
+```
+
+---
+
+# Core Enumeration Commands
+
+## Sudo
+
+```bash
+sudo -l
+```
+
+## SUID
+
+```bash
+find / -perm -4000 2>/dev/null
+```
+
+## Capabilities
+
+```bash
+getcap -r / 2>/dev/null
+```
+
+## PATH
+
+```bash
+echo $PATH
+```
+
+## Writable directories
+
+```bash
+find / -type d -writable 2>/dev/null
+```
+
+## Cron
+
+```bash
+cat /etc/crontab
+```
+
+```bash
+ls -la /etc/cron*
+```
+
+## NFS
+
+```bash
+cat /etc/exports
+```
+
+```bash
+showmount -e TARGET_IP
+```
+
+---
+
+# Key Takeaways
+
+* Always start with **enumeration** before attempting privilege escalation.
+* Use `sudo -l` to identify allowed privileged commands.
+* Compare SUID binaries and capabilities against **GTFOBins** for known behaviors.
+* Check whether privileged programs rely on the **PATH** variable.
+* Inspect **cron jobs** for writable scripts, missing files, or weak configurations.
+* Review **NFS exports** for dangerous options such as `no_root_squash`.
+* Most successful privilege escalations come from **small configuration mistakes**, not dramatic software exploits. Careful enumeration is usually the deciding factor.
