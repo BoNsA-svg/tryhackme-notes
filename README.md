@@ -1,3 +1,3 @@
-# Tryhackme-notes
+ # NOTES FOR Jr.PENETESTER
 
 
