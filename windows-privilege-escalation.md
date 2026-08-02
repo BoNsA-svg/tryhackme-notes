@@ -516,3 +516,41 @@ net localgroup administrators
 msiexec /quiet /qn /i malicious.msi
 ```
  organized by enumeration → discovery → exploitation → verification,
+
+## Mental Map
+Who am I?
+│
+├── whoami
+├── whoami /priv
+└── whoami /groups
+
+What services exist?
+│
+├── sc query
+├── Get-Service
+└── WinPEAS
+
+What scheduled tasks exist?
+│
+└── schtasks
+
+Any credentials lying around?
+│
+├── cmdkey /list
+├── PowerShell history
+├── Unattend.xml
+└── web.config
+
+Any vulnerable software?
+│
+└── wmic product get ...
+
+Anything interesting in the registry?
+│
+└── WinPEAS / PrivescCheck
+
+Can I modify anything?
+│
+├── icacls
+├── AccessChk
+└── Service permissions
