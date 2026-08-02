@@ -556,6 +556,8 @@ Can I modify anything?
 └── Service permissions
 
 ~
+
+
 Here are the resources from the room, along with what each one is best used for. I've also included their official links.
 
 | Resource                                                | Link                                                                                                                                                                                                             | What it's useful for                                                                                                                                                                                                                 |
