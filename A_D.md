@@ -726,5 +726,474 @@ Least privilege
 [ ] Document every credential and access path
 ```
 
-This is now structured as a reusable **AD initial-access/breaching playbook**, rather than just raw room notes.
+---
+
+## Windows / Active Directory — Engagement-Ready Notes
+
+### 1. Initial Network Recon
+
+**Objective:** Identify live hosts and locate the Domain Controller (DC).
+
+```bash
+# Discover live hosts
+fping -agq <SUBNET>/24
+
+# Alternative
+nmap -sn <SUBNET>/24
+
+# Full TCP scan
+nmap -sS -p- -T3 -iL hosts.txt -oN full_port_scan.txt
+```
+
+Create a target list:
+
+```bash
+cat hosts.txt
+```
+
+### 2. Identify the Domain Controller
+
+Common AD ports:
+
+| Port | Service            | Pentest relevance                        |
+| ---: | ------------------ | ---------------------------------------- |
+|   53 | DNS                | Domain/service discovery                 |
+|   88 | Kerberos           | User enumeration, Kerberos attacks       |
+|  135 | MS-RPC             | RPC enumeration                          |
+|  139 | NetBIOS/SMB        | Legacy SMB                               |
+|  389 | LDAP               | AD enumeration                           |
+|  445 | SMB                | Shares, authentication, lateral movement |
+|  464 | Kerberos password  | Password operations                      |
+|  636 | LDAPS              | Encrypted LDAP                           |
+| 3268 | Global Catalog     | AD enumeration                           |
+| 3269 | Global Catalog SSL | Encrypted GC                             |
+
+```bash
+nmap -p 53,88,135,139,389,445,464,636,3268,3269 -sV -sC <DC_IP>
+```
+
+**DC indicators:**
+
+* Kerberos on `88`
+* LDAP/LDAPS on `389/636`
+* SMB on `445`
+* Domain name in LDAP banner
+* Windows Server
+* DNS/SRV records identifying the DC
+
+---
+
+## 3. SMB Enumeration
+
+### Anonymous share enumeration
+
+```bash
+smbclient -L //<DC_IP> -N
+```
+
+```bash
+smbmap -H <DC_IP>
+```
+
+Nmap:
+
+```bash
+nmap -p445 --script smb-enum-shares <DC_IP>
+```
+
+Look specifically for:
+
+* `READ`
+* `WRITE`
+* Anonymous access
+* Non-standard shares
+* Backups
+* Configuration files
+* Scripts
+* Documents containing credentials
+
+### Connect to a share
+
+```bash
+smbclient //<DC_IP>/<SHARE> -N
+```
+
+Useful commands:
+
+```text
+ls
+cd <directory>
+get <file>
+mget *
+put <file>
+```
+
+With credentials:
+
+```bash
+smbclient //<DC_IP>/<SHARE> -U 'DOMAIN\username'
+```
+
+---
+
+## 4. RPC Enumeration
+
+Test anonymous/null session:
+
+```bash
+rpcclient -U "" <DC_IP> -N
+```
+
+Useful RPC commands:
+
+```text
+enumdomusers
+enumdomgroups
+querydominfo
+getdompwinfo
+netshareenum
+```
+
+Particularly useful:
+
+```text
+getdompwinfo
+```
+
+This can reveal:
+
+* Minimum password length
+* Complexity requirements
+* Lockout-related information
+
+---
+
+## 5. LDAP Enumeration
+
+Basic LDAP discovery:
+
+```bash
+ldapsearch -x -H ldap://<DC_IP> -s base
+```
+
+Once the domain is known:
+
+```bash
+ldapsearch -x -H ldap://<DC_IP> \
+  -b "DC=domain,DC=local"
+```
+
+Useful targets:
+
+* Users
+* Groups
+* Computers
+* Service accounts
+* Descriptions
+* Email addresses
+* SPNs
+* Group memberships
+* Password-related attributes accidentally exposed
+
+---
+
+# 6. DNS Enumeration
+
+Identify domain infrastructure:
+
+```bash
+nslookup -type=SRV _ldap._tcp.dc._msdcs.<DOMAIN> <DC_IP>
+```
+
+Kerberos:
+
+```bash
+nslookup -type=SRV _kerberos._tcp.<DOMAIN> <DC_IP>
+```
+
+Mail:
+
+```bash
+nslookup -type=MX <DOMAIN> <DC_IP>
+```
+
+Also check:
+
+```bash
+dig @<DC_IP> <DOMAIN> ANY
+dig @<DC_IP> _ldap._tcp.dc._msdcs.<DOMAIN> SRV
+```
+
+---
+
+# 7. Username Enumeration
+
+If Kerberos is exposed and you have a candidate username list:
+
+```bash
+kerbrute userenum \
+  -d <DOMAIN> \
+  --dc <DC_IP> \
+  usernames.txt \
+  -o valid_users.txt
+```
+
+Valid accounts are useful for:
+
+* Authentication testing
+* Password spraying
+* AS-REP roasting checks
+* Further AD enumeration
+
+Extract usernames if necessary:
+
+```bash
+grep "VALID USERNAME" valid_users.txt
+```
+
+---
+
+# 8. Credential Discovery
+
+Prioritize exposed services and files.
+
+### Git
+
+Check:
+
+* `.git`
+* Commit history
+* Configuration files
+* `.env`
+* Deployment scripts
+* CI/CD definitions
+
+```bash
+git log -p
+```
+
+Search history:
+
+```bash
+git log -p | grep -iE \
+'password|passwd|secret|token|apikey|credential'
+```
+
+Potential automated scanning:
+
+```bash
+trufflehog git file:///path/to/repo
+```
+
+### Jenkins / CI/CD
+
+Check:
+
+* Build console output
+* Job configuration
+* Environment variables
+* Workspace files
+* Deployment scripts
+* Credentials referenced by pipelines
+
+Look for:
+
+```text
+password
+secret
+token
+API key
+credential
+username
+connection string
+```
+
+**Engagement note:** A credential found in Git history should be treated as compromised even if it has subsequently been removed from the current branch.
+
+---
+
+# 9. Password Policy
+
+If anonymous RPC access is permitted:
+
+```bash
+rpcclient -U "" <DC_IP> -N
+```
+
+Then:
+
+```text
+getdompwinfo
+```
+
+Alternatively, where permitted:
+
+```bash
+nxc smb <DC_IP> --pass-pol
+```
+
+Record:
+
+```text
+Minimum password length
+Password complexity
+Account lockout threshold
+Lockout duration
+Reset counter
+Maximum password age
+```
+
+**Before authentication testing, understand the lockout policy.**
+
+---
+
+# 10. Password Spraying
+
+**Password spraying ≠ brute forcing.**
+
+| Technique      | Approach                     |
+| -------------- | ---------------------------- |
+| Brute force    | Many passwords → one account |
+| Password spray | One password → many accounts |
+
+For an authorized engagement, use a conservative approach based on the client's lockout policy.
+
+Example:
+
+```bash
+nxc smb <TARGET> \
+  -u users.txt \
+  -p 'CandidatePassword!' \
+  --continue-on-success
+```
+
+Potential result:
+
+```text
+[+] DOMAIN\username:password
+```
+
+Record successful credentials immediately and stop unnecessary authentication attempts.
+
+**Never blindly spray without understanding the lockout policy.**
+
+---
+
+# 11. Post-Credential Enumeration
+
+Once valid credentials are obtained, shift from **unauthenticated enumeration** to **authenticated enumeration**.
+
+Examples:
+
+```bash
+nxc smb <TARGET> -u '<USER>' -p '<PASS>' --shares
+```
+
+```bash
+nxc smb <TARGET> -u '<USER>' -p '<PASS>' --sessions
+```
+
+```bash
+nxc smb <TARGET> -u '<USER>' -p '<PASS>' --users
+```
+
+```bash
+nxc smb <TARGET> -u '<USER>' -p '<PASS>' --groups
+```
+
+Then investigate:
+
+* Local administrator access
+* SMB shares
+* Interesting group membership
+* Service accounts
+* Kerberos SPNs
+* Delegation
+* AD CS
+* GPOs
+* ACLs
+* Trust relationships
+* Lateral movement opportunities
+
+---
+
+# 12. Engagement Evidence to Record
+
+For every finding, record:
+
+```text
+Target:
+IP:
+Hostname:
+Domain:
+Port:
+Service:
+Account:
+Access level:
+Finding:
+Evidence:
+Command/tool:
+Impact:
+Recommended remediation:
+```
+
+Example:
+
+```text
+Finding: Anonymous SMB share access
+
+Target: 10.x.x.x
+Port: 445/tcp
+Share: SharedFiles
+Access: READ
+
+Evidence:
+Anonymous authentication succeeded and files were accessible.
+
+Impact:
+Unauthenticated users can access potentially sensitive corporate data.
+
+Recommendation:
+Disable anonymous SMB access and enforce least-privilege share permissions.
+```
+
+---
+
+## AD Attack-Path Mindset
+
+Keep this mental flow during an engagement:
+
+```text
+NETWORK
+   ↓
+HOST DISCOVERY
+   ↓
+PORT / SERVICE ENUMERATION
+   ↓
+DOMAIN / DC IDENTIFICATION
+   ↓
+SMB / LDAP / RPC / DNS
+   ↓
+USERNAME ENUMERATION
+   ↓
+CREDENTIAL DISCOVERY
+   ↓
+PASSWORD POLICY
+   ↓
+CONTROLLED AUTHENTICATION TESTING
+   ↓
+VALID AD CREDENTIALS
+   ↓
+AUTHENTICATED ENUMERATION
+   ↓
+ACLs / GROUPS / SPNs / GPOs / AD CS
+   ↓
+LATERAL MOVEMENT
+   ↓
+PRIVILEGE ESCALATION
+   ↓
+DOMAIN ADMIN / OBJECTIVE
+```
+
+**Key principle:** don't jump straight to exploitation. Establish the domain, identify the DC, enumerate exposed services, collect identities, discover credentials, and then build the attack path from evidence.
 
