@@ -675,3 +675,535 @@ sudo nmap -sS -sA -f -D RND:5 [Target_IP]
 * **`-f`** ➡️ Fragments the outgoing packets.
 * **`-D RND:5`** ➡️ Wraps the entire operation inside 5 random decoy addresses.
 
+---
+
+# Windows & Active Directory Credential Harvesting — Engagement Note
+
+## 1. Executive Summary
+
+Credential harvesting is a high-value post-compromise activity in Windows environments. Once an operator obtains local Administrator or SYSTEM-level access, multiple credential stores may become accessible, including:
+
+* **LSASS memory**
+* **SAM + SYSTEM registry hives**
+* **LSA Secrets**
+* **DPAPI-protected credentials**
+* **Cached domain credentials (MSCache v2 / DCC2)**
+* **NTDS.dit on Domain Controllers**
+
+During an assessment, these stores can provide password hashes, Kerberos material, cached credentials, service-account credentials, and—in some configurations—plaintext credentials.
+
+The assessment path demonstrated in the supplied material is:
+
+**Local Administrator → credential stores → cached domain credentials → crackable DCC2 credential → domain account → Domain Administrator → NTDS.dit → NTLM hash → Pass-the-Hash → SYSTEM on DC**
+
+The important engagement takeaway is that **no software vulnerability or privilege-escalation exploit was required**. Existing credential exposure and excessive credential reuse were sufficient to progress toward domain compromise.
+
+---
+
+# 2. Credential Store Matrix
+
+| Credential Store      | Primary Contents                                                               | Typical Access Level                                     | Assessment Value                           |
+| --------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------ |
+| **LSASS**             | NTLM/SHA1 material, Kerberos tickets, sometimes plaintext credentials          | Administrator/SYSTEM                                     | Current interactive-session credentials    |
+| **SAM**               | Local-account password hashes                                                  | SYSTEM / administrative access                           | Local account compromise                   |
+| **SYSTEM hive**       | BootKey material used to decrypt SAM                                           | SYSTEM / administrative access                           | Required alongside SAM                     |
+| **LSA Secrets**       | Cached credentials, service/scheduled-task secrets and other protected secrets | SYSTEM                                                   | Service/domain credential recovery         |
+| **DPAPI**             | Application/user secrets, saved credentials                                    | User context and/or access to appropriate DPAPI material | Recovery of stored application credentials |
+| **MSCache v2 / DCC2** | Cached domain-logon secrets                                                    | Local administrative access                              | Offline password cracking                  |
+| **NTDS.dit**          | Domain accounts, NTLM hashes and Kerberos key material                         | Domain replication privileges / DC-level access          | Domain-wide credential compromise          |
+
+---
+
+# 3. Initial Access & Privilege Context
+
+The assessment begins with **local Administrator access to a domain-joined workstation (WRK)**.
+
+This distinction is important:
+
+> Local Administrator access does **not** automatically mean Domain Administrator access.
+
+Instead, the workstation becomes a credential-collection point. The objective is to determine whether users with higher privileges have authenticated to the workstation previously or whether privileged credentials have been stored there.
+
+### Assessment questions
+
+During an engagement, establish:
+
+1. What local accounts exist?
+2. Which users have authenticated to the workstation?
+3. Are privileged/domain-admin accounts present?
+4. Are service credentials stored locally?
+5. Are cached domain credentials available?
+6. Can stored credentials be recovered?
+7. Can recovered credentials authenticate elsewhere?
+
+---
+
+# 4. LSASS Memory
+
+## Purpose
+
+**LSASS (`lsass.exe`)** is responsible for Windows authentication and security-policy enforcement.
+
+The supplied material identifies LSASS as potentially containing:
+
+* NTLM hashes
+* LM hashes
+* Kerberos TGTs
+* Kerberos service tickets
+* Plaintext credentials in some configurations
+* Credential-manager material
+
+Because LSASS contains live authentication material, it is one of the highest-value credential stores on a compromised Windows host.
+
+## Mimikatz assessment
+
+The supplied workflow uses:
+
+```text
+privilege::debug
+sekurlsa::logonpasswords
+```
+
+`privilege::debug` enables the privilege required for accessing protected process memory, while `sekurlsa::logonpasswords` enumerates credential material associated with current logon sessions.
+
+### Engagement interpretation
+
+A successful LSASS extraction should be reviewed for:
+
+* Domain usernames
+* Local usernames
+* NTLM hashes
+* Kerberos material
+* Plaintext passwords
+* Credential Manager entries
+
+### Important limitation
+
+**LSASS is a live credential source.**
+
+If a privileged user previously authenticated but no longer has an active session, their credentials may no longer be present in LSASS.
+
+Therefore:
+
+> **Absence of a domain-admin credential in LSASS does not establish that the workstation is free of privileged credentials.**
+
+Move to persistent credential stores such as cached credentials, DPAPI, LSA Secrets, and registry hives.
+
+---
+
+# 5. SAM + SYSTEM
+
+## SAM
+
+The **Security Account Manager (SAM)** contains password hashes for local Windows accounts.
+
+Typical targets include:
+
+* Local Administrator
+* Local users
+* Other locally created accounts
+
+The SAM itself is protected, so the **SYSTEM hive** is required because it contains the BootKey material used to decrypt the SAM database.
+
+Relevant locations:
+
+```text
+%SystemRoot%\System32\config\SAM
+%SystemRoot%\System32\config\SYSTEM
+```
+
+## Assessment workflow
+
+The supplied material demonstrates exporting both hives:
+
+```powershell
+reg save HKLM\SAM C:\Users\Administrator\Desktop\SAM
+reg save HKLM\SYSTEM C:\Users\Administrator\Desktop\SYSTEM
+```
+
+Mimikatz can then process the exported material:
+
+```text
+lsadump::sam /sam:"C:\Users\Administrator\Desktop\SAM" /system:"C:\Users\Administrator\Desktop\SYSTEM"
+```
+
+### Expected result
+
+The important artifact is the **NTLM hash associated with local accounts**.
+
+### Engagement significance
+
+Recovered local NTLM hashes may support:
+
+* Offline password analysis
+* Password-reuse investigation
+* Authentication testing where authorized
+* Identification of weak/common local administrator passwords
+
+A particularly important finding is **shared local administrator credentials across multiple systems**, because compromise of one workstation can then facilitate movement to others.
+
+---
+
+# 6. LSA Secrets
+
+LSA Secrets are stored beneath:
+
+```text
+HKLM\SECURITY\Policy\Secrets
+```
+
+The supplied material identifies potential contents including:
+
+* Cached domain credentials
+* Service-account credentials
+* Scheduled-task credentials
+* Other protected authentication material
+
+LSA Secrets generally require elevated privileges, with **SYSTEM-level access** being particularly important for extraction.
+
+### Mimikatz workflow
+
+The supplied workflow demonstrates elevating to SYSTEM:
+
+```text
+privilege::debug
+token::elevate
+lsadump::cache
+```
+
+The result can include **MSCache v2 / DCC2** values associated with domain users who have logged on to the workstation.
+
+### Engagement interpretation
+
+A workstation may therefore contain evidence of privileged users even when those users have no current interactive session.
+
+This is a major distinction:
+
+**LSASS = live credentials**
+
+**Cached credentials = credentials retained for offline authentication**
+
+---
+
+# 7. DPAPI
+
+## Purpose
+
+Windows **Data Protection API (DPAPI)** protects user-specific secrets.
+
+The supplied material identifies examples including:
+
+* RDP credentials
+* Browser/application credentials
+* Wi-Fi credentials
+* Windows Credential Manager data
+
+DPAPI protection is tied to the user's cryptographic context and, depending on the credential, may require the appropriate user context/master keys to decrypt.
+
+## Mimikatz
+
+The supplied workflow uses:
+
+```text
+vault::list
+vault::cred /export
+```
+
+The assessment demonstrated that stored credentials could include entries such as:
+
+```text
+TRYHACKME\svc-app
+ElonTusk
+```
+
+### Important assessment distinction
+
+Being **Local Administrator** does not necessarily mean every DPAPI secret can immediately be decrypted.
+
+The supplied example specifically demonstrates that a credential belonging to another user/service account may remain protected because the corresponding DPAPI material is tied to that user's context.
+
+Therefore, document separately:
+
+* **Credential discovered**
+* **Credential successfully decrypted**
+* **Credential identified but still protected**
+
+Do not treat these as equivalent findings.
+
+---
+
+# 8. MSCache v2 / DCC2
+
+One of the most valuable findings in the supplied attack path is **cached domain credentials**.
+
+MSCache v2 exists so domain users can authenticate when a workstation cannot contact a Domain Controller.
+
+Example format:
+
+```text
+$DCC2$10240#username#hash
+```
+
+### Critical distinction
+
+DCC2 hashes are **not equivalent to NTLM hashes for Pass-the-Hash purposes**.
+
+They are designed for offline password verification and therefore are primarily useful for:
+
+> **Offline password cracking**
+
+rather than direct PtH authentication.
+
+---
+
+# 9. Offline Cracking Assessment
+
+The supplied workflow uses John the Ripper with the MSCache2 format:
+
+```bash
+john --format=mscash2 dc2_hash.txt \
+    --wordlist=/usr/share/wordlists/rockyou.txt
+```
+
+The assessment objective is to determine whether the cached domain credential can be recovered using an authorized password dictionary.
+
+### Risk interpretation
+
+A cracked DCC2 credential becomes significantly more valuable when the account:
+
+* Has access to additional systems
+* Has administrative privileges
+* Has excessive permissions
+* Reuses the password elsewhere
+* Is a privileged/domain-admin account
+
+This is where credential harvesting can become **credential-based lateral movement**.
+
+---
+
+# 10. Domain Controller Credential Extraction
+
+Once an account possessing appropriate domain privileges is obtained, the assessment can move from workstation credential stores to the **Domain Controller**.
+
+The supplied material demonstrates the Impacket `secretsdump.py` workflow with:
+
+```text
+-just-dc
+```
+
+This performs domain credential extraction through the **DRSUAPI** mechanism rather than dumping the workstation's local SAM/LSA data.
+
+The resulting material can include:
+
+* Domain usernames
+* RIDs
+* NTLM hashes
+* Kerberos keys
+
+### NTDS.dit significance
+
+`NTDS.dit` is the Active Directory database on a Domain Controller.
+
+It represents the authentication database for the domain and therefore has substantially greater impact than a workstation's SAM database.
+
+Compromise of domain credential material can expose authentication material for:
+
+* Domain users
+* Service accounts
+* Computer accounts
+* Privileged administrators
+
+---
+
+# 11. Pass-the-Hash
+
+A recovered **NTLM hash** can potentially be used for authentication without recovering the plaintext password, where the target protocol and configuration permit it.
+
+The supplied workflow demonstrates using an administrative NTLM hash with Impacket `psexec`.
+
+The resulting session demonstrates:
+
+```text
+whoami
+nt authority\system
+```
+
+### Engagement significance
+
+This establishes the critical distinction between:
+
+**Password compromise**
+
+and
+
+**Credential-material compromise**
+
+An attacker does not necessarily need the plaintext password if a reusable authentication secret such as an NTLM hash is available.
+
+---
+
+# 12. Attack Chain
+
+The complete chain demonstrated by the supplied material can be represented as:
+
+```text
+Local Administrator
+        │
+        ▼
+   Credential Stores
+        │
+        ├── LSASS
+        │
+        ├── SAM + SYSTEM
+        │
+        ├── LSA Secrets
+        │
+        └── DPAPI
+        │
+        ▼
+Cached Domain Credentials
+        │
+        ▼
+       DCC2
+        │
+        ▼
+ Offline Password Cracking
+        │
+        ▼
+Higher-Privilege Domain Account
+        │
+        ▼
+Domain Controller
+        │
+        ▼
+NTDS / Domain Credential Material
+        │
+        ▼
+NTLM Hash
+        │
+        ▼
+ Pass-the-Hash
+        │
+        ▼
+SYSTEM on Domain Controller
+        │
+        ▼
+Domain Compromise
+```
+
+---
+
+# 13. Findings to Capture During an Engagement
+
+For each recovered credential or hash, maintain an evidence table similar to:
+
+| Host | Account       | Credential Type | Source             | Privilege       | Reusable?            | Impact      |
+| ---- | ------------- | --------------- | ------------------ | --------------- | -------------------- | ----------- |
+| WRK  | Administrator | NTLM            | SAM                | Local Admin     | Potentially          | High        |
+| WRK  | svc-app       | Password        | DPAPI/LSASS        | Service account | Validate             | High        |
+| WRK  | Domain user   | DCC2            | Cached credentials | Domain user     | Crack offline        | Medium/High |
+| DC   | Administrator | NTLM            | NTDS               | Domain Admin    | Yes, where supported | Critical    |
+
+Avoid storing recovered plaintext credentials in the report unless necessary. Use controlled evidence storage and redact secrets from the final client-facing report.
+
+---
+
+# 14. Key Engagement Lessons
+
+### 1. Local Administrator is a credential-collection position
+
+Local Administrator access should immediately trigger an assessment of credential exposure.
+
+### 2. LSASS is only one source
+
+Failure to obtain credentials from LSASS does **not** mean the host contains no valuable credentials.
+
+Check:
+
+```text
+LSASS
+SAM + SYSTEM
+LSA Secrets
+DPAPI
+Cached credentials
+```
+
+### 3. Cached credentials can bridge privilege boundaries
+
+A privileged user may have authenticated to a workstation previously, leaving cached authentication material even after their interactive session has ended.
+
+### 4. DCC2 requires cracking
+
+DCC2 is fundamentally different from an NTLM hash for authentication purposes. Its principal assessment value is determining whether the underlying password can be recovered offline.
+
+### 5. NTDS compromise changes the scope
+
+Once domain credential material is obtained from a DC, the assessment has moved from **host compromise** toward **domain compromise**.
+
+### 6. Credential reuse is the multiplier
+
+The most important question after recovering any credential is:
+
+> **Where else does this credential work?**
+
+A low-privilege credential can become high impact if it is reused on privileged systems.
+
+---
+
+# 15. Defensive Recommendations
+
+The demonstrated attack chain also gives a clear remediation roadmap.
+
+### Credential protection
+
+* Deploy **LSASS protections** appropriate to the Windows version and environment.
+* Minimize unnecessary administrative access.
+* Use separate administrative accounts rather than privileged accounts for routine workstation activity.
+* Prevent privileged accounts from interactively logging onto ordinary workstations where possible.
+
+### Local administrator security
+
+* Eliminate shared local Administrator passwords.
+* Deploy **Windows LAPS / Microsoft LAPS** to provide unique, managed local administrator credentials.
+* Rotate local administrative credentials regularly.
+
+### Service accounts
+
+* Avoid storing static service-account passwords where possible.
+* Prefer **gMSAs** where appropriate.
+* Review scheduled tasks and services for embedded credentials.
+* Reduce service-account privileges.
+
+### Domain administration
+
+* Restrict Domain Admin logons to dedicated administrative systems.
+* Apply a tiered administrative model.
+* Monitor privileged authentication to workstations.
+* Protect Domain Controllers as a separate security tier.
+
+### Credential monitoring
+
+Monitor for suspicious activity involving:
+
+* LSASS access
+* SAM/SYSTEM hive extraction
+* Remote Registry activity
+* DRSUAPI/DCSync behavior
+* Unusual administrative SMB activity
+* Remote service creation
+* Pass-the-Hash patterns
+* Credential-dumping tools
+
+---
+
+# 16. Engagement Conclusion
+
+The assessment demonstrates that **credential exposure can provide a complete path from workstation compromise to domain compromise without exploiting a software vulnerability**.
+
+The critical sequence was:
+
+> **Local Administrator → credential extraction → cached domain credential → password recovery → privileged domain access → NTDS credential extraction → NTLM reuse → SYSTEM on the Domain Controller**
+
+From a penetration-testing perspective, the most significant finding is therefore not simply that credential-dumping tools work. The deeper issue is that **privileged authentication material was accessible from a workstation that had already been compromised**.
+
+The primary remediation objective should be to break this chain at multiple points: **reduce privileged logons to workstations, protect credential material, eliminate password reuse, secure service accounts, deploy unique local administrator credentials, and tightly restrict access to Domain Controllers and domain credential replication mechanisms.**
