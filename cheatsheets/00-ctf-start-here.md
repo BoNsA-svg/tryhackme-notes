@@ -7,6 +7,7 @@
 ```bash
 export IP=<TARGET_IP>
 ping -c 2 $IP
+mkdir -p nmap
 nmap -Pn -p- --min-rate 3000 -T4 $IP -oA nmap/all-ports
 ```
 
@@ -32,6 +33,7 @@ Potential attack paths:
 
 ```text
 Target
+  ├─ Open service? ──────────→ services.md
   ├─ Web ports? ─────────────→ web.md
   ├─ 88/389/445 + domain? ──→ active-directory.md
   ├─ Login/credentials? ─────→ passwords.md
@@ -53,11 +55,15 @@ Target
 | 111 | RPC | NFS/services |
 | 139/445 | SMB | shares, users, files |
 | 389/636 | LDAP | domain/directory enumeration |
+| 1433 | MSSQL | version, credentials, permissions |
 | 2049 | NFS | exports, mount permissions |
-| 3306 | MySQL | creds, remote access |
+| 3306 | MySQL | version, credentials, databases |
 | 3389 | RDP | credentials |
+| 5432 | PostgreSQL | version, credentials, databases |
 | 5985/5986 | WinRM | credentials → shell |
-| 8000/8080/3000 | Web | alternate apps/APIs |
+| 3000/5000/8000/8080/8443 | Web | alternate apps/APIs |
+
+For commands and service-by-service checks → **[Service Enumeration](services.md)**
 
 ## 4. Competition Loop
 
@@ -68,6 +74,7 @@ Enumerate → Form hypothesis → Test → Record result → Pivot
 When stuck, ask:
 
 - Did I scan every TCP port?
+- Did I enumerate every discovered service?
 - Did I inspect every web port separately?
 - Did I check virtual hosts/subdomains?
 - Did I read page source and JavaScript?
@@ -77,6 +84,7 @@ When stuck, ask:
 
 ## 5. Useful Pages
 
+- [Service Enumeration](services.md)
 - [Recon](recon.md)
 - [Web](web.md)
 - [Active Directory](active-directory.md)
