@@ -1,6 +1,6 @@
 # 🛡️ TryHackMe Cybersecurity Notes
 
-> My personal cybersecurity knowledge base for penetration testing, red teaming, AI/LLM security, networking, Active Directory, privilege escalation, cloud, mobile, wireless, and hands-on TryHackMe learning.
+> My personal cybersecurity knowledge base for penetration testing, red teaming, AI/LLM security, networking, Active Directory, privilege escalation, Python security scripting, cloud, mobile, wireless, and hands-on TryHackMe learning.
 
 ## 🏁 Competition Mode
 
@@ -19,6 +19,7 @@ Quick references:
 - [🐧 Linux PrivEsc](cheatsheets/linux-privesc.md)
 - [🪟 Windows PrivEsc](cheatsheets/windows-privesc.md)
 - [🔐 Passwords](cheatsheets/passwords.md)
+- [🐍 Python Fundamentals](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer.
 
@@ -33,6 +34,11 @@ This repository contains notes collected while studying and practicing cybersecu
 ---
 
 ## 🧭 Detailed Notes Index
+
+### 🐍 Python for Penetration Testing
+- [Python for Pentesting Hub](python-for-pentesting/README.md)
+- [Python Core Concepts](python-for-pentesting/fundamentals/python-core-concepts.md)
+- [Python Fundamentals Quick Reference](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
 
 ### 🤖 AI & LLM Security
 - [AI-Augmented Web Applications](ai-security/ai-augmented-web-applications.md)
@@ -82,18 +88,14 @@ This repository contains notes collected while studying and practicing cybersecu
 ```text
 tryhackme-notes/
 ├── README.md
-├── cheatsheets/              # Fast competition references
-│   ├── 00-ctf-start-here.md
-│   ├── services.md
-│   ├── recon.md
-│   ├── web.md
-│   ├── active-directory.md
-│   ├── shells.md
-│   ├── file-transfer.md
-│   ├── linux-privesc.md
-│   ├── windows-privesc.md
-│   └── passwords.md
-├── ai-security/              # Detailed study notes
+├── cheatsheets/                 # Fast competition references
+├── python-for-pentesting/       # Python study + reference + scripts
+│   ├── fundamentals/
+│   ├── networking/
+│   ├── security-scripting/
+│   ├── examples/
+│   └── reference/
+├── ai-security/
 ├── active-directory/
 ├── recon/
 ├── web-security/
@@ -120,14 +122,12 @@ CTF / competition
       ↓
 cheatsheets/00-ctf-start-here.md
       ↓
-Open services.md for an unfamiliar/open port
-      ↓
-Open the relevant short cheat sheet
+Open the relevant quick reference
       ↓
 Follow links to detailed notes only when needed
 ```
 
-The competition references are intentionally short and action-oriented. The detailed notes explain the reasoning, concepts, examples, and deeper workflows.
+For Python, detailed explanations live under `python-for-pentesting/fundamentals/`, while fast syntax reminders live under `python-for-pentesting/reference/`. Complete scripts will be kept separately under `examples/`.
 
 ---
 
@@ -138,7 +138,7 @@ Notes use lowercase kebab-case filenames for consistency:
 ```text
 active-recon.md
 linux-privilege-escalation.md
-llm-pentesting.md
+python-core-concepts.md
 ```
 
 ---
@@ -151,11 +151,11 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 
 - [x] Organize notes into topic-based folders
 - [x] Standardize filenames
-- [x] Add AI application architecture notes
 - [x] Create reusable competition cheat sheets
 - [x] Add a CTF start-here workflow
 - [x] Add service-specific competition reference
-- [x] Link competition references to detailed notes
+- [x] Add Python for penetration-testing study/reference structure
+- [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
 
