@@ -2,6 +2,27 @@
 
 > My personal cybersecurity knowledge base for penetration testing, red teaming, AI/LLM security, networking, Active Directory, privilege escalation, cloud, mobile, wireless, and hands-on TryHackMe learning.
 
+## 🏁 Competition Mode
+
+Need something fast during a CTF or competition? Start here:
+
+### 👉 [CTF Start Here](cheatsheets/00-ctf-start-here.md)
+
+Quick references:
+
+- [🔎 Recon](cheatsheets/recon.md)
+- [🌐 Web](cheatsheets/web.md)
+- [🪟 Active Directory](cheatsheets/active-directory.md)
+- [🐚 Shells & Listeners](cheatsheets/shells.md)
+- [📦 File Transfer](cheatsheets/file-transfer.md)
+- [🐧 Linux PrivEsc](cheatsheets/linux-privesc.md)
+- [🪟 Windows PrivEsc](cheatsheets/windows-privesc.md)
+- [🔐 Passwords](cheatsheets/passwords.md)
+
+> **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer.
+
+---
+
 ## 📚 About This Repository
 
 This repository contains notes collected while studying and practicing cybersecurity. The goal is to turn lessons, commands, methodologies, and security concepts into a practical reference that I can continue improving over time.
@@ -10,7 +31,7 @@ This repository contains notes collected while studying and practicing cybersecu
 
 ---
 
-## 🧭 Notes Index
+## 🧭 Detailed Notes Index
 
 ### 🤖 AI & LLM Security
 - [AI-Augmented Web Applications](ai-security/ai-augmented-web-applications.md)
@@ -59,7 +80,18 @@ This repository contains notes collected while studying and practicing cybersecu
 
 ```text
 tryhackme-notes/
-├── ai-security/
+├── README.md
+├── cheatsheets/              # Fast competition references
+│   ├── 00-ctf-start-here.md
+│   ├── recon.md
+│   ├── web.md
+│   ├── active-directory.md
+│   ├── shells.md
+│   ├── file-transfer.md
+│   ├── linux-privesc.md
+│   ├── windows-privesc.md
+│   └── passwords.md
+├── ai-security/              # Detailed study notes
 ├── active-directory/
 ├── recon/
 ├── web-security/
@@ -75,18 +107,23 @@ tryhackme-notes/
 
 ---
 
-## 🧠 What I'm Building
+## 🧠 How to Use This Repo
 
-I want this repository to become more than a collection of notes. It is being organized into a reusable cybersecurity knowledge base containing:
+```text
+Learning / studying
+      ↓
+Detailed topic notes
 
-- 📖 Concept notes
-- 🧰 Tool references
-- 💻 Useful commands
-- 🧪 CTF and lab methodology
-- 🔍 Enumeration techniques
-- ⚔️ Penetration-testing workflows
-- 🤖 AI/LLM security research
-- 📝 Cheatsheets and quick references
+CTF / competition
+      ↓
+cheatsheets/00-ctf-start-here.md
+      ↓
+Open the relevant short cheat sheet
+      ↓
+Follow links to detailed notes only when needed
+```
+
+The competition references are intentionally short and action-oriented. The detailed notes explain the reasoning, concepts, examples, and deeper workflows.
 
 ---
 
@@ -106,14 +143,16 @@ llm-pentesting.md
 
 This is an actively maintained learning repository. Notes may be reorganized, expanded, corrected, or combined as my knowledge grows.
 
-### Planned Improvements
+### Improvements
 
 - [x] Organize notes into topic-based folders
 - [x] Standardize filenames
 - [x] Add AI application architecture notes
-- [ ] Add more web-security notes and cheatsheets
-- [ ] Create reusable penetration-testing checklists
-- [ ] Improve cross-linking between related topics
+- [x] Create reusable competition cheat sheets
+- [x] Add a CTF start-here workflow
+- [x] Link competition references to detailed notes
+- [ ] Expand service-specific cheat sheets as new material is learned
+- [ ] Improve cross-linking between related detailed notes
 
 ---
 
