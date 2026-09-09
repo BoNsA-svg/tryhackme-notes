@@ -1,6 +1,6 @@
 # 🛡️ TryHackMe Cybersecurity Notes
 
-> My personal cybersecurity knowledge base for penetration testing, red teaming, AI/LLM security, networking, Active Directory, privilege escalation, cloud, mobile, and hands-on TryHackMe learning.
+> My personal cybersecurity knowledge base for penetration testing, red teaming, AI/LLM security, networking, Active Directory, privilege escalation, cloud, mobile, wireless, and hands-on TryHackMe learning.
 
 ## 📚 About This Repository
 
@@ -13,38 +13,65 @@ This repository contains notes collected while studying and practicing cybersecu
 ## 🧭 Notes Index
 
 ### 🤖 AI & LLM Security
-- [AI Red Team](AI_RED-TEAM.md)
-- [LLM Pentesting](LLM-Pentesting.md)
+- [AI-Augmented Web Applications](ai-security/ai-augmented-web-applications.md)
+- [LLM Pentesting](ai-security/llm-pentesting.md)
 
 ### 🔎 Reconnaissance
-- [Active Reconnaissance](Active_Recon.md)
-- [Passive Reconnaissance](Passive_Recon.md)
+- [Active Reconnaissance](recon/active-recon.md)
+- [Passive Reconnaissance](recon/passive-recon.md)
 
 ### 🪟 Active Directory
-- [Active Directory](A_D.md)
+- [Active Directory](active-directory/active-directory.md)
 
-### 🌐 Network Security
-- [Network Security](Network%20SEC.md)
+### 🌐 Web Security
+- [Web Walking](web-security/web-walking.md)
+- [Vulnerability Knowledge](web-security/vulnerability-knowledge.md)
 
-### 🐧 Linux & Privilege Escalation
-- [Linux Privilege Escalation](Linux_priv_Esc.md)
+### 🌐 Network & Wireless Security
+- [Network Security](network-security/network-security.md)
+- [Wireless Security](wireless-security/wireless-security.md)
+
+### 🐧 Privilege Escalation
+- [Linux Privilege Escalation](privilege-escalation/linux-privilege-escalation.md)
+- [Windows Privilege Escalation](privilege-escalation/windows-privilege-escalation.md)
 
 ### ⚔️ Exploitation & Offensive Security
-- [Metasploit](Metasploit.md)
-- [Payload Generation](Payload_Generation.md)
-- [Shells & Listeners](Shell%20%26%20Listeners.md)
+- [Metasploit](exploitation/metasploit.md)
+- [Payload Generation](exploitation/payload-generation.md)
+- [Shells & Listeners](exploitation/shells-and-listeners.md)
+- [Password Attacks](exploitation/password-attacks.md)
 
 ### ☁️ Cloud Security
-- [Cloud Security](Cloud-Sec.md)
+- [Cloud Security](cloud-security/cloud-security.md)
 
 ### 📱 Mobile Security
-- [Mobile Application Security](Mobile-App-Sec.md)
+- [Mobile Application Security](mobile-security/mobile-app-security.md)
 
 ### 🎣 Social Engineering
-- [Phishing](Phishing.md)
+- [Phishing](social-engineering/phishing.md)
 
 ### 🎓 Learning Paths
-- [Junior Penetration Testing](Jr.%20Penetration%20Testing.md)
+- [Junior Penetration Testing](learning-paths/junior-penetration-testing.md)
+
+---
+
+## 🗂️ Repository Structure
+
+```text
+tryhackme-notes/
+├── ai-security/
+├── active-directory/
+├── recon/
+├── web-security/
+├── network-security/
+├── wireless-security/
+├── privilege-escalation/
+├── exploitation/
+├── cloud-security/
+├── mobile-security/
+├── social-engineering/
+└── learning-paths/
+```
 
 ---
 
@@ -63,20 +90,14 @@ I want this repository to become more than a collection of notes. It is being or
 
 ---
 
-## 🗺️ Learning Areas
+## ✍️ Naming Standard
+
+Notes use lowercase kebab-case filenames for consistency:
 
 ```text
-Cybersecurity
-├── AI & LLM Security
-├── Active Directory
-├── Reconnaissance
-├── Web Security
-├── Network Security
-├── Linux & Privilege Escalation
-├── Cloud Security
-├── Mobile Security
-├── Exploitation
-└── Social Engineering
+active-recon.md
+linux-privilege-escalation.md
+llm-pentesting.md
 ```
 
 ---
@@ -87,10 +108,10 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 
 ### Planned Improvements
 
-- [ ] Organize notes into topic-based folders
-- [ ] Standardize filenames
-- [ ] Add AI application architecture notes
-- [ ] Add web-security notes and cheatsheets
+- [x] Organize notes into topic-based folders
+- [x] Standardize filenames
+- [x] Add AI application architecture notes
+- [ ] Add more web-security notes and cheatsheets
 - [ ] Create reusable penetration-testing checklists
 - [ ] Improve cross-linking between related topics
 
