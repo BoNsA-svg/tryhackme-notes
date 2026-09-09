@@ -10,6 +10,7 @@ Need something fast during a CTF or competition? Start here:
 
 Quick references:
 
+- [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
 - [🌐 Web](cheatsheets/web.md)
 - [🪟 Active Directory](cheatsheets/active-directory.md)
@@ -83,6 +84,7 @@ tryhackme-notes/
 ├── README.md
 ├── cheatsheets/              # Fast competition references
 │   ├── 00-ctf-start-here.md
+│   ├── services.md
 │   ├── recon.md
 │   ├── web.md
 │   ├── active-directory.md
@@ -118,6 +120,8 @@ CTF / competition
       ↓
 cheatsheets/00-ctf-start-here.md
       ↓
+Open services.md for an unfamiliar/open port
+      ↓
 Open the relevant short cheat sheet
       ↓
 Follow links to detailed notes only when needed
@@ -150,8 +154,9 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add AI application architecture notes
 - [x] Create reusable competition cheat sheets
 - [x] Add a CTF start-here workflow
+- [x] Add service-specific competition reference
 - [x] Link competition references to detailed notes
-- [ ] Expand service-specific cheat sheets as new material is learned
+- [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
 
 ---
