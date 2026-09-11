@@ -8,6 +8,8 @@ Need something fast during a CTF or competition? Start here:
 
 ### 👉 [CTF Start Here](cheatsheets/00-ctf-start-here.md)
 
+### 📝 [CTF Writeups](ctf/README.md)
+
 Quick references:
 
 - [🔌 Service Enumeration](cheatsheets/services.md)
@@ -21,7 +23,7 @@ Quick references:
 - [🔐 Passwords](cheatsheets/passwords.md)
 - [🐍 Python Fundamentals](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
 
-> **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer.
+> **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
 ---
 
@@ -34,6 +36,9 @@ This repository contains notes collected while studying and practicing cybersecu
 ---
 
 ## 🧭 Detailed Notes Index
+
+### 🏁 CTF Writeups
+- [CTF Writeups & Challenge Notes](ctf/README.md)
 
 ### 🐍 Python for Penetration Testing
 - [Python for Pentesting Hub](python-for-pentesting/README.md)
@@ -89,6 +94,8 @@ This repository contains notes collected while studying and practicing cybersecu
 tryhackme-notes/
 ├── README.md
 ├── cheatsheets/                 # Fast competition references
+├── ctf/                         # CTF writeups and challenge notes
+│   └── README.md
 ├── python-for-pentesting/       # Python study + reference + scripts
 │   ├── fundamentals/
 │   ├── networking/
@@ -125,6 +132,12 @@ cheatsheets/00-ctf-start-here.md
 Open the relevant quick reference
       ↓
 Follow links to detailed notes only when needed
+
+Solved challenge / lessons learned
+      ↓
+ctf/
+      ↓
+Sanitized writeup + safe scripts/artifacts
 ```
 
 For Python, detailed explanations live under `python-for-pentesting/fundamentals/`, while fast syntax reminders live under `python-for-pentesting/reference/`. Complete scripts will be kept separately under `examples/`.
@@ -153,6 +166,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Standardize filenames
 - [x] Create reusable competition cheat sheets
 - [x] Add a CTF start-here workflow
+- [x] Add a CTF writeups section
 - [x] Add service-specific competition reference
 - [x] Add Python for penetration-testing study/reference structure
 - [ ] Expand Python security scripting as new concepts are learned
