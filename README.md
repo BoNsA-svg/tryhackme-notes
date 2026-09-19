@@ -22,6 +22,7 @@ Quick references:
 - [🪟 Windows PrivEsc](cheatsheets/windows-privesc.md)
 - [🔐 Passwords](cheatsheets/passwords.md)
 - [🐍 Python Fundamentals](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
+- [🤖 AI Threat Modelling](cheatsheets/ai-threat-modelling.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
@@ -47,6 +48,8 @@ This repository contains notes collected while studying and practicing cybersecu
 - [Python Fundamentals Quick Reference](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
 
 ### 🤖 AI & LLM Security
+- [AI Threat Modelling](ai-security/ai-threat-modelling.md)
+- [AI Threat Modelling Cheat Sheet](cheatsheets/ai-threat-modelling.md)
 - [AI-Augmented Web Applications](ai-security/ai-augmented-web-applications.md)
 - [LLM Pentesting](ai-security/llm-pentesting.md)
 
@@ -171,6 +174,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add service-specific competition reference
 - [x] Add Python for penetration-testing study/reference structure
 - [x] Expand Python fundamentals through complete script building
+- [x] Add AI threat-modelling study and quick-reference notes
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
