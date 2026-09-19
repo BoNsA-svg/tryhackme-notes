@@ -43,6 +43,7 @@ This repository contains notes collected while studying and practicing cybersecu
 ### 🐍 Python for Penetration Testing
 - [Python for Pentesting Hub](python-for-pentesting/README.md)
 - [Python Core Concepts](python-for-pentesting/fundamentals/python-core-concepts.md)
+- [Python: Building Scripts](python-for-pentesting/fundamentals/python-building-scripts.md)
 - [Python Fundamentals Quick Reference](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
 
 ### 🤖 AI & LLM Security
@@ -169,6 +170,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add a CTF writeups section
 - [x] Add service-specific competition reference
 - [x] Add Python for penetration-testing study/reference structure
+- [x] Expand Python fundamentals through complete script building
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
