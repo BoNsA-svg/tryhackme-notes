@@ -22,6 +22,7 @@ Quick references:
 - [🪟 Windows PrivEsc](cheatsheets/windows-privesc.md)
 - [🔐 Passwords](cheatsheets/passwords.md)
 - [🐍 Python Fundamentals](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
+- [🐍 Python Pentesting](python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 - [🤖 AI Threat Modelling](cheatsheets/ai-threat-modelling.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
@@ -45,7 +46,9 @@ This repository contains notes collected while studying and practicing cybersecu
 - [Python for Pentesting Hub](python-for-pentesting/README.md)
 - [Python Core Concepts](python-for-pentesting/fundamentals/python-core-concepts.md)
 - [Python: Building Scripts](python-for-pentesting/fundamentals/python-building-scripts.md)
+- [Python: Pentesting Scripts](python-for-pentesting/security-scripting/python-pentesting-scripts.md)
 - [Python Fundamentals Quick Reference](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
+- [Python Pentesting Quick Reference](python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 
 ### 🤖 AI & LLM Security
 - [AI Threat Modelling](ai-security/ai-threat-modelling.md)
@@ -144,7 +147,7 @@ ctf/
 Sanitized writeup + safe scripts/artifacts
 ```
 
-For Python, detailed explanations live under `python-for-pentesting/fundamentals/`, while fast syntax reminders live under `python-for-pentesting/reference/`. Complete scripts will be kept separately under `examples/`.
+For Python, foundational lessons live under `python-for-pentesting/fundamentals/`, applied security lessons live under `python-for-pentesting/security-scripting/`, and fast references live under `python-for-pentesting/reference/`. Complete reusable scripts will be kept separately under `examples/`.
 
 ---
 
@@ -175,6 +178,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add Python for penetration-testing study/reference structure
 - [x] Expand Python fundamentals through complete script building
 - [x] Add AI threat-modelling study and quick-reference notes
+- [x] Add Python pentesting-scripts lesson and quick reference
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
