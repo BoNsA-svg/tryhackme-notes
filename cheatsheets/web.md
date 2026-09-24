@@ -200,4 +200,4 @@ Use synthetic data where possible. Preserve raw requests/responses and record bl
 - [Web Walking](../web-security/web-walking.md)
 - [Vulnerability Knowledge](../web-security/vulnerability-knowledge.md)
 - [Threat Modelling for Pentesters](../pentesting-methodology/foundations/threat-modelling-for-pentesters.md)
-- [Reconnaissance](../pentesting-methodology/reconnaissance.md)
+- [Reconnaissance](../pentesting-methodology/reconnaissance/reconnaissance-methodology.md)
