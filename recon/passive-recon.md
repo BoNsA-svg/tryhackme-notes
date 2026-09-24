@@ -1,3 +1,5 @@
+> **Methodology context:** Apply this material through the [Reconnaissance Methodology](../pentesting-methodology/reconnaissance/reconnaissance-methodology.md).
+
 
 ---
 
