@@ -1,3 +1,5 @@
+> **Methodology context:** Apply this material through the [Windows Privilege Escalation Methodology](../pentesting-methodology/privilege-escalation/windows-privilege-escalation-methodology.md).
+
 
 ---
 
