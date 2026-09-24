@@ -14,6 +14,7 @@ Quick references:
 
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
+- [📋 Planning & Scoping](cheatsheets/planning-and-scoping.md)
 - [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
 - [🌍 External Network](cheatsheets/external-network.md)
 - [🏢 Internal Network](cheatsheets/internal-network.md)
@@ -51,6 +52,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 ### 🎯 Penetration Testing Methodology
 - [Methodology Hub](pentesting-methodology/README.md)
 - [Engagement Planning and Scoping](pentesting-methodology/foundations/engagement-planning-and-scoping.md)
+- [Planning and Scoping Cheat Sheet](cheatsheets/planning-and-scoping.md)
 - [Threat Modelling for Penetration Testers](pentesting-methodology/foundations/threat-modelling-for-pentesters.md)
 - [Reconnaissance Methodology](pentesting-methodology/reconnaissance/reconnaissance-methodology.md)
 - [External Network Penetration Testing](pentesting-methodology/network/external-network-penetration-testing.md)
