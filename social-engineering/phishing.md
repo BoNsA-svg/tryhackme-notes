@@ -1,5 +1,8 @@
 # 🎣 Phishing Simulation Operations (Pentesting Blueprint)
 
+
+> **Methodology context:** Apply this material through the [Phishing Assessment Methodology](../pentesting-methodology/social-engineering/phishing-assessment-methodology.md).
+
 Phishing operates at the intersection of **human psychology** and **technical manipulation**. In a professional security assessment, it serves as an initialization vector to test an organization's detection, response, and credential security boundaries under controlled, authorized parameters.
 
 ---
