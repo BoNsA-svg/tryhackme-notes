@@ -2,6 +2,9 @@
 
 # Active Directory Breaching — Engagement Notes
 
+
+> **Methodology context:** Apply this material through the [Active Directory Penetration Testing Methodology](../pentesting-methodology/active-directory/active-directory-penetration-testing.md).
+
 ## 1. Objective
 
 **AD breaching** is the process of obtaining the first valid Active Directory credential from an unauthenticated starting position.
