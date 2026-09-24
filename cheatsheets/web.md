@@ -197,7 +197,7 @@ Use synthetic data where possible. Preserve raw requests/responses and record bl
 ## Related Notes
 
 - [Full Web Application Pentesting Methodology](../pentesting-methodology/web/web-application-penetration-testing.md)
-- [Web Walking](../web-security/web-walking.md)
-- [Vulnerability Knowledge](../web-security/vulnerability-knowledge.md)
+- [Web Walking](../knowledge-base/web-security/web-walking.md)
+- [Vulnerability Knowledge](../knowledge-base/web-security/vulnerability-knowledge.md)
 - [Threat Modelling for Pentesters](../pentesting-methodology/foundations/threat-modelling-for-pentesters.md)
 - [Reconnaissance](../pentesting-methodology/reconnaissance/reconnaissance-methodology.md)

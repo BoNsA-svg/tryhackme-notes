@@ -97,4 +97,4 @@ ipconfig /all
 whoami /priv
 ```
 
-Detailed notes: [Shells & Listeners](../exploitation/shells-and-listeners.md)
+Detailed notes: [Shells & Listeners](../knowledge-base/exploitation/shells-and-listeners.md)

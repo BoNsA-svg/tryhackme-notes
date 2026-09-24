@@ -1,6 +1,6 @@
-# 🛡️ TryHackMe Cybersecurity Notes
+# 🛡️ Cyber Notes
 
-> My personal cybersecurity knowledge base for penetration testing, red teaming, AI/LLM security, networking, Active Directory, privilege escalation, Python security scripting, cloud, mobile, wireless, and hands-on TryHackMe learning.
+> My long-term cybersecurity knowledge base for reusable concepts, penetration-testing methodologies, cheat sheets, research, and platform learning from TryHackMe, Hack The Box, PortSwigger, and future sources.
 
 ## 🏁 Competition Mode
 
@@ -8,7 +8,7 @@ Need something fast during a CTF or competition? Start here:
 
 ### 👉 [CTF Start Here](cheatsheets/00-ctf-start-here.md)
 
-### 📝 [CTF Writeups](ctf/README.md)
+### 📝 [CTF Writeups](platforms/tryhackme/writeups/README.md)
 
 Quick references:
 
@@ -27,17 +27,17 @@ Quick references:
 - [🐧 Linux PrivEsc](cheatsheets/linux-privesc.md)
 - [🪟 Windows PrivEsc](cheatsheets/windows-privesc.md)
 - [🔐 Passwords](cheatsheets/passwords.md)
-- [🐍 Python Fundamentals](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
-- [🐍 Python Pentesting](python-for-pentesting/reference/python-pentesting-cheatsheet.md)
+- [🐍 Python Fundamentals](knowledge-base/programming/python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
+- [🐍 Python Pentesting](knowledge-base/programming/python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 - [🤖 AI Threat Modelling](cheatsheets/ai-threat-modelling.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
 ---
 
-## 📚 About This Repository
+## 📚 About Cyber Notes
 
-This repository contains notes collected while studying and practicing cybersecurity. The goal is to turn lessons, commands, methodologies, and security concepts into a practical reference that I can continue improving over time.
+This vault separates permanent cybersecurity knowledge from platform-specific study records. Lessons from TryHackMe, Hack The Box, PortSwigger, university courses, labs, and research are refined into reusable knowledge, methodologies, and cheat sheets.
 
 > **Note:** These materials are for education, CTFs, labs, and authorized security testing only.
 
@@ -46,7 +46,7 @@ This repository contains notes collected while studying and practicing cybersecu
 ## 🧭 Detailed Notes Index
 
 ### 🏁 CTF Writeups
-- [CTF Writeups & Challenge Notes](ctf/README.md)
+- [CTF Writeups & Challenge Notes](platforms/tryhackme/writeups/README.md)
 
 ### 🎯 Penetration Testing Methodology
 - [Methodology Hub](pentesting-methodology/README.md)
@@ -66,87 +66,73 @@ This repository contains notes collected while studying and practicing cybersecu
 - [Threat Modelling Cheat Sheet](cheatsheets/threat-modelling-for-pentesters.md)
 
 ### 🐍 Python for Penetration Testing
-- [Python for Pentesting Hub](python-for-pentesting/README.md)
-- [Python Core Concepts](python-for-pentesting/fundamentals/python-core-concepts.md)
-- [Python: Building Scripts](python-for-pentesting/fundamentals/python-building-scripts.md)
-- [Python: Pentesting Scripts](python-for-pentesting/security-scripting/python-pentesting-scripts.md)
-- [Python Fundamentals Quick Reference](python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
-- [Python Pentesting Quick Reference](python-for-pentesting/reference/python-pentesting-cheatsheet.md)
+- [Python for Pentesting Hub](knowledge-base/programming/python-for-pentesting/README.md)
+- [Python Core Concepts](knowledge-base/programming/python-for-pentesting/fundamentals/python-core-concepts.md)
+- [Python: Building Scripts](knowledge-base/programming/python-for-pentesting/fundamentals/python-building-scripts.md)
+- [Python: Pentesting Scripts](knowledge-base/programming/python-for-pentesting/security-scripting/python-pentesting-scripts.md)
+- [Python Fundamentals Quick Reference](knowledge-base/programming/python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
+- [Python Pentesting Quick Reference](knowledge-base/programming/python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 
 ### 🤖 AI & LLM Security
-- [AI Threat Modelling](ai-security/ai-threat-modelling.md)
+- [AI Threat Modelling](knowledge-base/ai-security/ai-threat-modelling.md)
 - [AI Threat Modelling Cheat Sheet](cheatsheets/ai-threat-modelling.md)
-- [AI-Augmented Web Applications](ai-security/ai-augmented-web-applications.md)
-- [LLM Pentesting](ai-security/llm-pentesting.md)
+- [AI-Augmented Web Applications](knowledge-base/ai-security/ai-augmented-web-applications.md)
+- [LLM Pentesting](knowledge-base/ai-security/llm-pentesting.md)
 
 ### 🔎 Reconnaissance
-- [Active Reconnaissance](recon/active-recon.md)
-- [Passive Reconnaissance](recon/passive-recon.md)
+- [Active Reconnaissance](knowledge-base/reconnaissance/active-recon.md)
+- [Passive Reconnaissance](knowledge-base/reconnaissance/passive-recon.md)
 
 ### 🪟 Active Directory
-- [Active Directory](active-directory/active-directory.md)
+- [Active Directory](knowledge-base/active-directory/active-directory.md)
 
 ### 🌐 Web Security
 - [Web Application Penetration Testing Methodology](pentesting-methodology/web/web-application-penetration-testing.md)
-- [Web Walking](web-security/web-walking.md)
-- [Vulnerability Knowledge](web-security/vulnerability-knowledge.md)
+- [Web Walking](knowledge-base/web-security/web-walking.md)
+- [Vulnerability Knowledge](knowledge-base/web-security/vulnerability-knowledge.md)
 
 ### 🌐 Network & Wireless Security
-- [Network Security](network-security/network-security.md)
-- [Wireless Security](wireless-security/wireless-security.md)
+- [Network Security](knowledge-base/network-security/network-security.md)
+- [Wireless Security](knowledge-base/wireless-security/wireless-security.md)
 
 ### 🐧 Privilege Escalation
-- [Linux Privilege Escalation](privilege-escalation/linux-privilege-escalation.md)
-- [Windows Privilege Escalation](privilege-escalation/windows-privilege-escalation.md)
+- [Linux Privilege Escalation](knowledge-base/privilege-escalation/linux-privilege-escalation.md)
+- [Windows Privilege Escalation](knowledge-base/privilege-escalation/windows-privilege-escalation.md)
 
 ### ⚔️ Exploitation & Offensive Security
-- [Metasploit](exploitation/metasploit.md)
-- [Payload Generation](exploitation/payload-generation.md)
-- [Shells & Listeners](exploitation/shells-and-listeners.md)
-- [Password Attacks](exploitation/password-attacks.md)
+- [Metasploit](knowledge-base/exploitation/metasploit.md)
+- [Payload Generation](knowledge-base/exploitation/payload-generation.md)
+- [Shells & Listeners](knowledge-base/exploitation/shells-and-listeners.md)
+- [Password Attacks](knowledge-base/exploitation/password-attacks.md)
 
 ### ☁️ Cloud Security
-- [Cloud Security](cloud-security/cloud-security.md)
+- [Cloud Security](knowledge-base/cloud-security/cloud-security.md)
 
 ### 📱 Mobile Security
-- [Mobile Application Security](mobile-security/mobile-app-security.md)
+- [Mobile Application Security](knowledge-base/mobile-security/mobile-app-security.md)
 
 ### 🎣 Social Engineering
-- [Phishing](social-engineering/phishing.md)
+- [Phishing](knowledge-base/social-engineering/phishing.md)
 
 ### 🎓 Learning Paths
-- [Junior Penetration Testing](learning-paths/junior-penetration-testing.md)
+- [Junior Penetration Testing](platforms/tryhackme/learning-paths/junior-penetration-testing.md)
 
 ---
 
 ## 🗂️ Repository Structure
 
-```text
-tryhackme-notes/
-├── README.md
-├── cheatsheets/                 # Fast competition references
-├── ctf/                         # CTF writeups and challenge notes
-│   └── README.md
-├── pentesting-methodology/      # Planning, scoping, and assessment methods
-├── python-for-pentesting/       # Python study + reference + scripts
-│   ├── fundamentals/
-│   ├── networking/
-│   ├── security-scripting/
-│   ├── examples/
-│   └── reference/
-├── ai-security/
-├── active-directory/
-├── recon/
-├── web-security/
-├── network-security/
-├── wireless-security/
-├── privilege-escalation/
-├── exploitation/
-├── cloud-security/
-├── mobile-security/
-├── social-engineering/
-└── learning-paths/
-```
+~~~text
+cyber-notes/
+├── 00-inbox/
+├── knowledge-base/
+├── pentesting-methodology/
+├── cheatsheets/
+├── platforms/
+│   └── tryhackme/
+├── research/
+├── templates/
+└── attachments/
+~~~
 
 ---
 

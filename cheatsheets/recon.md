@@ -92,4 +92,4 @@ Potential attack paths
 - Inspect service versions only after confirming them.
 - Look for credentials before chasing exploits.
 
-Detailed notes: [Active Recon](../recon/active-recon.md) · [Passive Recon](../recon/passive-recon.md)
+Detailed notes: [Active Recon](../knowledge-base/reconnaissance/active-recon.md) · [Passive Recon](../knowledge-base/reconnaissance/passive-recon.md)

@@ -163,7 +163,7 @@ Record:
 
 ## Related Notes
 
-- [Full AI Threat Modelling Note](../ai-security/ai-threat-modelling.md)
-- [LLM Pentesting](../ai-security/llm-pentesting.md)
+- [Full AI Threat Modelling Note](../knowledge-base/ai-security/ai-threat-modelling.md)
+- [LLM Pentesting](../knowledge-base/ai-security/llm-pentesting.md)
 - [MITRE ATLAS](https://atlas.mitre.org/)
 - [OWASP GenAI Security Project](https://genai.owasp.org/)

@@ -97,4 +97,4 @@ If allowed and available:
 
 Use automated output to prioritize; verify findings manually.
 
-Detailed notes: [Linux Privilege Escalation](../privilege-escalation/linux-privilege-escalation.md)
+Detailed notes: [Linux Privilege Escalation](../knowledge-base/privilege-escalation/linux-privilege-escalation.md)

@@ -107,4 +107,4 @@ evil-winrm -i <IP> -u '<USER>' -p '<PASS>'
 - Check whether a service account has more access than your current user.
 - Look for multiple attack paths instead of forcing one technique.
 
-Detailed notes: [Active Directory](../active-directory/active-directory.md)
+Detailed notes: [Active Directory](../knowledge-base/active-directory/active-directory.md)

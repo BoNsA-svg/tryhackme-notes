@@ -88,4 +88,4 @@ Record every combination so you do not repeatedly test the same thing.
 
 Before password spraying against AD or any lockout-capable service, understand the competition rules and account lockout policy.
 
-Detailed notes: [Password Attacks](../exploitation/password-attacks.md)
+Detailed notes: [Password Attacks](../knowledge-base/exploitation/password-attacks.md)

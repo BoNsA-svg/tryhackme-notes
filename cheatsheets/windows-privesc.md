@@ -99,4 +99,4 @@ If allowed and available:
 
 Use automated output to prioritize and manually verify findings.
 
-Detailed notes: [Windows Privilege Escalation](../privilege-escalation/windows-privilege-escalation.md)
+Detailed notes: [Windows Privilege Escalation](../knowledge-base/privilege-escalation/windows-privilege-escalation.md)
