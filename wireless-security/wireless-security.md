@@ -1,3 +1,5 @@
+> **Methodology context:** Apply this material through the [Wireless Penetration Testing Methodology](../pentesting-methodology/wireless/wireless-penetration-testing.md).
+
 **Wireless Security Fundamentals & Reference Notes**
 
 ---
