@@ -14,6 +14,7 @@ Quick references:
 
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
+- [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
 - [🌐 Web](cheatsheets/web.md)
 - [🪟 Active Directory](cheatsheets/active-directory.md)
 - [🐚 Shells & Listeners](cheatsheets/shells.md)
@@ -41,6 +42,10 @@ This repository contains notes collected while studying and practicing cybersecu
 
 ### 🏁 CTF Writeups
 - [CTF Writeups & Challenge Notes](ctf/README.md)
+
+### 🎯 Penetration Testing Methodology
+- [Threat Modelling for Penetration Testers](pentesting-methodology/threat-modelling-for-pentesters.md)
+- [Threat Modelling for Penetration Testers Cheat Sheet](cheatsheets/threat-modelling-for-pentesters.md)
 
 ### 🐍 Python for Penetration Testing
 - [Python for Pentesting Hub](python-for-pentesting/README.md)
@@ -103,6 +108,7 @@ tryhackme-notes/
 ├── cheatsheets/                 # Fast competition references
 ├── ctf/                         # CTF writeups and challenge notes
 │   └── README.md
+├── pentesting-methodology/      # Planning, scoping, and assessment methods
 ├── python-for-pentesting/       # Python study + reference + scripts
 │   ├── fundamentals/
 │   ├── networking/
@@ -179,6 +185,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Expand Python fundamentals through complete script building
 - [x] Add AI threat-modelling study and quick-reference notes
 - [x] Add Python pentesting-scripts lesson and quick reference
+- [x] Add pentester threat-modelling lesson and quick reference
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
