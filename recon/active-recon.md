@@ -1,5 +1,8 @@
 # Active Reconnaissance Quick Reference
 
+
+> **Methodology context:** Apply this material through the [Reconnaissance Methodology](../pentesting-methodology/reconnaissance/reconnaissance-methodology.md).
+
 > **Core Principle:** Active reconnaissance involves directly interacting with a target system to identify live hosts, open ports, running services, and exposed technologies. Unlike passive recon, these techniques generate detectable traffic and may trigger alerts from firewalls, WAFs, IDS/IPS, or EDR solutions.
 
 ---
