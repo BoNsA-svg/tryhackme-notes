@@ -1,3 +1,5 @@
+> **Methodology context:** Apply this material through the [Cloud Penetration Testing Methodology](../pentesting-methodology/cloud/cloud-penetration-testing.md).
+
  a single cohesive guide.
 
 ---
