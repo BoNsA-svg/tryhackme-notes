@@ -1,6 +1,6 @@
 # Web Content Discovery & Reconnaissance
 
-> **Methodology context:** Use this note during the discovery and mapping phases of the [Web Application Penetration Testing Methodology](../pentesting-methodology/web-application-penetration-testing.md).
+> **Methodology context:** Use this note during the discovery and mapping phases of the [Web Application Penetration Testing Methodology](../pentesting-methodology/web/web-application-penetration-testing.md).
 
 ## Overview
 
