@@ -1,5 +1,8 @@
 # Network Security: Protocol Attacks & Defenses
 
+
+> **Methodology context:** Apply this material through the [Internal Network Penetration Testing Methodology](../pentesting-methodology/network/internal-network-penetration-testing.md).
+
 ## Overview
 
 This note summarizes the core concepts of network protocol vulnerabilities, focusing on the mechanics and mitigations for three foundational attack vectors: **Sniffing**, **Man-in-the-Middle (MITM)**, and **Password Attacks**. Identifying these flaws allows penetration testers to demonstrate impact, while enabling defenders to enforce fundamental security controls.
