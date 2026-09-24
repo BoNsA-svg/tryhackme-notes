@@ -1,5 +1,7 @@
 # Web Content Discovery & Reconnaissance
 
+> **Methodology context:** Use this note during the discovery and mapping phases of the [Web Application Penetration Testing Methodology](../pentesting-methodology/web-application-penetration-testing.md).
+
 ## Overview
 
 Content discovery is one of the most critical phases of web application reconnaissance. This note covers a comprehensive workflow combining **Manual Analysis**, **Open-Source Intelligence (OSINT)**, and **Automated Enumeration** to effectively map an application's attack surface and locate hidden entry points.
