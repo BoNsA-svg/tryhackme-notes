@@ -1,5 +1,8 @@
 # Linux Privilege Escalation — Enumeration Notes
 
+
+> **Methodology context:** Apply this material through the [Linux Privilege Escalation Methodology](../pentesting-methodology/privilege-escalation/linux-privilege-escalation-methodology.md).
+
 ## Overview
 
 Privilege escalation is a **process, not a single exploit**. There is **no universal technique** that works on every Linux system. Success depends on the target's configuration, including:
