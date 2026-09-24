@@ -8,3 +8,7 @@ Use this area for TryHackMe-specific learning paths, room notes, lab observation
 - Writeups: sanitized challenge solutions and lessons learned
 
 Reusable knowledge belongs in the root knowledge base, methodologies, or cheat sheets.
+
+## Room Notes
+
+- [Planning and Scoping](rooms/planning-and-scoping.md)
