@@ -1,3 +1,5 @@
+> **Methodology context:** Apply this material through the [Mobile Application Penetration Testing Methodology](../pentesting-methodology/mobile/mobile-application-penetration-testing.md).
+
 Here is the structured, step-by-step documentation formatted directly for a GitHub repository (`README.md` or a security study wiki).
 
 ---
