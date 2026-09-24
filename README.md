@@ -15,7 +15,12 @@ Quick references:
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
 - [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
+- [🌍 External Network](cheatsheets/external-network.md)
+- [🏢 Internal Network](cheatsheets/internal-network.md)
 - [🌐 Web](cheatsheets/web.md)
+- [📶 Wireless](cheatsheets/wireless.md)
+- [☁️ Cloud](cheatsheets/cloud.md)
+- [📱 Mobile](cheatsheets/mobile.md)
 - [🪟 Active Directory](cheatsheets/active-directory.md)
 - [🐚 Shells & Listeners](cheatsheets/shells.md)
 - [📦 File Transfer](cheatsheets/file-transfer.md)
@@ -44,9 +49,21 @@ This repository contains notes collected while studying and practicing cybersecu
 - [CTF Writeups & Challenge Notes](ctf/README.md)
 
 ### 🎯 Penetration Testing Methodology
-- [Web Application Penetration Testing Methodology](pentesting-methodology/web-application-penetration-testing.md)
-- [Threat Modelling for Penetration Testers](pentesting-methodology/threat-modelling-for-pentesters.md)
-- [Threat Modelling for Penetration Testers Cheat Sheet](cheatsheets/threat-modelling-for-pentesters.md)
+- [Methodology Hub](pentesting-methodology/README.md)
+- [Engagement Planning and Scoping](pentesting-methodology/foundations/engagement-planning-and-scoping.md)
+- [Threat Modelling for Penetration Testers](pentesting-methodology/foundations/threat-modelling-for-pentesters.md)
+- [Reconnaissance Methodology](pentesting-methodology/reconnaissance/reconnaissance-methodology.md)
+- [External Network Penetration Testing](pentesting-methodology/network/external-network-penetration-testing.md)
+- [Internal Network Penetration Testing](pentesting-methodology/network/internal-network-penetration-testing.md)
+- [Web Application Penetration Testing](pentesting-methodology/web/web-application-penetration-testing.md)
+- [Active Directory Penetration Testing](pentesting-methodology/active-directory/active-directory-penetration-testing.md)
+- [Linux Privilege Escalation Methodology](pentesting-methodology/privilege-escalation/linux-privilege-escalation-methodology.md)
+- [Windows Privilege Escalation Methodology](pentesting-methodology/privilege-escalation/windows-privilege-escalation-methodology.md)
+- [Wireless Penetration Testing](pentesting-methodology/wireless/wireless-penetration-testing.md)
+- [Cloud Penetration Testing](pentesting-methodology/cloud/cloud-penetration-testing.md)
+- [Mobile Application Penetration Testing](pentesting-methodology/mobile/mobile-application-penetration-testing.md)
+- [Phishing Assessment Methodology](pentesting-methodology/social-engineering/phishing-assessment-methodology.md)
+- [Threat Modelling Cheat Sheet](cheatsheets/threat-modelling-for-pentesters.md)
 
 ### 🐍 Python for Penetration Testing
 - [Python for Pentesting Hub](python-for-pentesting/README.md)
@@ -70,7 +87,7 @@ This repository contains notes collected while studying and practicing cybersecu
 - [Active Directory](active-directory/active-directory.md)
 
 ### 🌐 Web Security
-- [Web Application Penetration Testing Methodology](pentesting-methodology/web-application-penetration-testing.md)
+- [Web Application Penetration Testing Methodology](pentesting-methodology/web/web-application-penetration-testing.md)
 - [Web Walking](web-security/web-walking.md)
 - [Vulnerability Knowledge](web-security/vulnerability-knowledge.md)
 
@@ -189,6 +206,8 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
 - [x] Add an end-to-end web application pentesting methodology
+- [x] Add a complete penetration-testing methodology layer
+- [x] Add external, internal, wireless, cloud, and mobile quick references
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
