@@ -44,6 +44,7 @@ This repository contains notes collected while studying and practicing cybersecu
 - [CTF Writeups & Challenge Notes](ctf/README.md)
 
 ### 🎯 Penetration Testing Methodology
+- [Web Application Penetration Testing Methodology](pentesting-methodology/web-application-penetration-testing.md)
 - [Threat Modelling for Penetration Testers](pentesting-methodology/threat-modelling-for-pentesters.md)
 - [Threat Modelling for Penetration Testers Cheat Sheet](cheatsheets/threat-modelling-for-pentesters.md)
 
@@ -69,6 +70,7 @@ This repository contains notes collected while studying and practicing cybersecu
 - [Active Directory](active-directory/active-directory.md)
 
 ### 🌐 Web Security
+- [Web Application Penetration Testing Methodology](pentesting-methodology/web-application-penetration-testing.md)
 - [Web Walking](web-security/web-walking.md)
 - [Vulnerability Knowledge](web-security/vulnerability-knowledge.md)
 
@@ -186,6 +188,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add AI threat-modelling study and quick-reference notes
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
+- [x] Add an end-to-end web application pentesting methodology
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
