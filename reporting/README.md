@@ -9,9 +9,13 @@ This directory contains the reporting standards used after an assessment. Report
 - [Finding-Writing Standard](finding-writing-standard.md)
 - [Evidence and Appendices](evidence-and-appendices.md)
 - [Quality-Assurance Checklist](quality-assurance.md)
+- [Re-Testing Methodology](retesting-methodology.md)
+- [Re-Test Outcomes and Evidence](retest-outcomes-and-evidence.md)
 - [Pentest Reporting Cheat Sheet](../cheatsheets/pentest-reporting.md)
 - [Full Report Template](../templates/pentest-report-template.md)
 - [Finding Template](../templates/finding-template.md)
+- [Re-Test Report Template](../templates/retest-report-template.md)
+- [Re-Testing Cheat Sheet](../cheatsheets/retesting.md)
 
 ## Reporting Workflow
 
@@ -23,6 +27,6 @@ This directory contains the reporting standards used after an assessment. Report
 6. Write the executive summary last.
 7. Complete technical, editorial, and security QA.
 8. Deliver through the approved secure channel.
-9. Track remediation and record retest results.
+9. Run a separately authorized re-test and record remediation outcomes.
 
 > If a result is not supported by reproducible evidence and recorded in the report, the client cannot reliably act on it.
