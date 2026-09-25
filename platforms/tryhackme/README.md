@@ -12,3 +12,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 ## Room Notes
 
 - [Planning and Scoping](rooms/planning-and-scoping.md)
+- [Writing Pentest Reports](rooms/writing-pentest-reports.md)
