@@ -16,6 +16,7 @@ Quick references:
 - [🔎 Recon](cheatsheets/recon.md)
 - [📋 Planning & Scoping](cheatsheets/planning-and-scoping.md)
 - [📝 Pentest Reporting](cheatsheets/pentest-reporting.md)
+- [✅ Re-Testing](cheatsheets/retesting.md)
 - [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
 - [🌍 External Network](cheatsheets/external-network.md)
 - [🏢 Internal Network](cheatsheets/internal-network.md)
@@ -75,8 +76,11 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Finding-Writing Standard](reporting/finding-writing-standard.md)
 - [Evidence and Appendices](reporting/evidence-and-appendices.md)
 - [Quality-Assurance Checklist](reporting/quality-assurance.md)
+- [Re-Testing Methodology](reporting/retesting-methodology.md)
+- [Re-Test Outcomes and Evidence](reporting/retest-outcomes-and-evidence.md)
 - [Pentest Report Template](templates/pentest-report-template.md)
 - [Finding Template](templates/finding-template.md)
+- [Re-Test Report Template](templates/retest-report-template.md)
 
 ### 🐍 Python for Penetration Testing
 - [Python for Pentesting Hub](knowledge-base/programming/python-for-pentesting/README.md)
@@ -209,6 +213,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add a complete penetration-testing methodology layer
 - [x] Add external, internal, wireless, cloud, and mobile quick references
 - [x] Add a complete penetration-test reporting system and templates
+- [x] Add remediation verification and re-testing documentation
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
