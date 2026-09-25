@@ -15,6 +15,7 @@ Quick references:
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
 - [📋 Planning & Scoping](cheatsheets/planning-and-scoping.md)
+- [📝 Pentest Reporting](cheatsheets/pentest-reporting.md)
 - [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
 - [🌍 External Network](cheatsheets/external-network.md)
 - [🏢 Internal Network](cheatsheets/internal-network.md)
@@ -66,6 +67,16 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Mobile Application Penetration Testing](pentesting-methodology/mobile/mobile-application-penetration-testing.md)
 - [Phishing Assessment Methodology](pentesting-methodology/social-engineering/phishing-assessment-methodology.md)
 - [Threat Modelling Cheat Sheet](cheatsheets/threat-modelling-for-pentesters.md)
+
+### 📝 Penetration-Test Reporting
+- [Reporting Hub](reporting/README.md)
+- [Reporting Methodology](reporting/penetration-test-reporting.md)
+- [Executive Summary Guide](reporting/executive-summary-guide.md)
+- [Finding-Writing Standard](reporting/finding-writing-standard.md)
+- [Evidence and Appendices](reporting/evidence-and-appendices.md)
+- [Quality-Assurance Checklist](reporting/quality-assurance.md)
+- [Pentest Report Template](templates/pentest-report-template.md)
+- [Finding Template](templates/finding-template.md)
 
 ### 🐍 Python for Penetration Testing
 - [Python for Pentesting Hub](knowledge-base/programming/python-for-pentesting/README.md)
@@ -132,6 +143,7 @@ cyber-notes/
 ├── platforms/
 │   └── tryhackme/
 ├── research/
+├── reporting/
 ├── templates/
 └── attachments/
 ~~~
@@ -196,6 +208,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add an end-to-end web application pentesting methodology
 - [x] Add a complete penetration-testing methodology layer
 - [x] Add external, internal, wireless, cloud, and mobile quick references
+- [x] Add a complete penetration-test reporting system and templates
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
 - [ ] Improve cross-linking between related detailed notes
