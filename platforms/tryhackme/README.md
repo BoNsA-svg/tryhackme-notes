@@ -14,3 +14,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 - [Planning and Scoping](rooms/planning-and-scoping.md)
 - [Writing Pentest Reports](rooms/writing-pentest-reports.md)
 - [Re-Testing](rooms/retesting.md)
+- [AI System Reconnaissance](rooms/ai-system-reconnaissance.md)
