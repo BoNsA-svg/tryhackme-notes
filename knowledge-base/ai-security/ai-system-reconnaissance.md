@@ -146,6 +146,62 @@ grpcurl -plaintext HOST:PORT describe SERVICE
 
 Reflection output is sensitive API metadata. Enumerate only authorized services and preserve evidence.
 
+## AI Endpoint Wordlist
+
+A reusable, one-path-per-line HTTP wordlist is stored at:
+
+- [ai_wordlist.txt](../../cheatsheets/wordlists/ai_wordlist.txt)
+- [AI gRPC service names](../../cheatsheets/wordlists/ai_grpc_services.txt)
+
+Use the leading-slash wordlist by placing FUZZ directly after the authority:
+
+~~~bash
+ffuf -w ../../cheatsheets/wordlists/ai_wordlist.txt \
+  -u http://HOST:PORTFUZZ \
+  -mc all -fc 404
+~~~
+
+With feroxbuster:
+
+~~~bash
+feroxbuster -u http://HOST:PORT \
+  -w ../../cheatsheets/wordlists/ai_wordlist.txt
+~~~
+
+Establish a baseline first. Some applications return the same 200 response for every unknown path, so status code alone is not proof that an endpoint exists. Compare response length, words, headers, redirects, and body structure.
+
+### Dynamic Model and Collection Routes
+
+Literal placeholders such as <model> and <name> do not belong in a discovery wordlist. First discover an authorized model or collection name, then substitute it deliberately:
+
+~~~bash
+MODEL="discovered-model"
+COLLECTION="discovered-collection"
+
+curl -i "http://HOST:PORT/v2/models/$MODEL/config"
+curl -i "http://HOST:PORT/v2/models/$MODEL/infer"
+curl -i "http://HOST:PORT/v1/models/$MODEL"
+curl -i "http://HOST:PORT/collections/$COLLECTION"
+~~~
+
+Inference routes may execute costly workloads or process sensitive data. A route check or safe metadata request is different from submitting inference. Follow the Rules of Engagement.
+
+### Sensitive Conventional Paths
+
+The wordlist includes paths such as /.env and /.git/config because AI services can inherit ordinary web deployment mistakes. If one returns sensitive content, capture the minimum necessary evidence, stop further retrieval, protect the evidence, and notify the client.
+
+### gRPC Reference
+
+The gRPC service-name file is for follow-up with grpcurl, not HTTP fuzzing:
+
+~~~bash
+grpcurl -plaintext HOST:PORT list
+grpcurl -plaintext HOST:PORT describe inference.GRPCInferenceService
+grpcurl -plaintext HOST:PORT describe tensorflow.serving.PredictionService
+~~~
+
+Reflection and schema enumeration must be explicitly authorized.
+
 ## Enumeration Targets
 
 ### MLflow
