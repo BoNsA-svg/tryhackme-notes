@@ -15,3 +15,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 - [Writing Pentest Reports](rooms/writing-pentest-reports.md)
 - [Re-Testing](rooms/retesting.md)
 - [AI System Reconnaissance](rooms/ai-system-reconnaissance.md)
+- [Prompt Injection](rooms/prompt-injection.md)
