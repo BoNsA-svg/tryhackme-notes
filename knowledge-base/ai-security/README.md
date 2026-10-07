@@ -7,13 +7,16 @@ This section covers reusable security knowledge for AI, ML, retrieval-augmented 
 1. [AI System Reconnaissance](ai-system-reconnaissance.md) — discover what is deployed and exposed.
 2. [AI Threat Modelling](ai-threat-modelling.md) — identify threats, assets, and trust boundaries.
 3. [AI-Augmented Web Applications](ai-augmented-web-applications.md) — understand AI features inside web architecture.
-4. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
+4. [Prompt Injection](prompt-injection.md) — understand direct and indirect context manipulation.
+5. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
 
 ## Practical References
 
 - [AI Reconnaissance Methodology](../../pentesting-methodology/reconnaissance/ai-system-reconnaissance-methodology.md)
 - [AI Reconnaissance Cheat Sheet](../../cheatsheets/ai-system-reconnaissance.md)
 - [AI Threat Modelling Cheat Sheet](../../cheatsheets/ai-threat-modelling.md)
+- [Prompt Injection Testing Methodology](../../pentesting-methodology/ai-security/prompt-injection-testing.md)
+- [Prompt Injection Cheat Sheet](../../cheatsheets/prompt-injection.md)
 
 ## Principle
 
