@@ -75,6 +75,20 @@ grpcurl -plaintext HOST:PORT describe SERVICE
 
 Reflection can expose complete service schemas. Treat that output as sensitive metadata.
 
+## AI-Focused Endpoint Wordlist
+
+The room's endpoint candidates are stored as a reusable [AI HTTP wordlist](../../../cheatsheets/wordlists/ai_wordlist.txt). Every HTTP path occupies its own line so it can be passed directly to ffuf or feroxbuster.
+
+~~~bash
+ffuf -w ../../../cheatsheets/wordlists/ai_wordlist.txt \
+  -u http://HOST:PORTFUZZ \
+  -mc all -fc 404
+~~~
+
+The separate [gRPC service list](../../../cheatsheets/wordlists/ai_grpc_services.txt) contains service names for grpcurl. It is not an HTTP path list.
+
+Routes containing a model, collection, or version name are templates. Discover the authorized identifier first and then replace it; a literal <model> string will not enumerate real routes. Baseline random nonexistent paths and manually confirm findings because many applications return soft-404 responses.
+
 ## Enumeration
 
 ### MLflow and Registries
