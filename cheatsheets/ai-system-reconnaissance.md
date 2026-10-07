@@ -47,6 +47,34 @@ curl -i http://HOST:PORT/openapi.json
 curl -i http://HOST:PORT/metrics
 ~~~
 
+## AI Endpoint Wordlist
+
+Files:
+
+- [ai_wordlist.txt](wordlists/ai_wordlist.txt) — HTTP paths, one per line
+- [ai_grpc_services.txt](wordlists/ai_grpc_services.txt) — grpcurl service names
+
+~~~bash
+ffuf -w cheatsheets/wordlists/ai_wordlist.txt \
+  -u http://HOST:PORTFUZZ \
+  -mc all -fc 404
+
+feroxbuster -u http://HOST:PORT \
+  -w cheatsheets/wordlists/ai_wordlist.txt
+~~~
+
+Baseline a random path before filtering. Status 200 alone does not prove a route exists.
+
+For model-specific paths, replace discovered names deliberately:
+
+~~~bash
+MODEL="discovered-model"
+curl -i "http://HOST:PORT/v2/models/$MODEL/config"
+curl -i "http://HOST:PORT/v1/models/$MODEL"
+~~~
+
+Do not place gRPC service names in the HTTP wordlist.
+
 ## gRPC
 
 ~~~bash
