@@ -34,6 +34,7 @@ Quick references:
 - [🐍 Python Pentesting](knowledge-base/programming/python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 - [🤖 AI Threat Modelling](cheatsheets/ai-threat-modelling.md)
 - [📡 AI System Reconnaissance](cheatsheets/ai-system-reconnaissance.md)
+- [🧠 Prompt Injection](cheatsheets/prompt-injection.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
@@ -97,6 +98,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [AI System Reconnaissance Methodology](pentesting-methodology/reconnaissance/ai-system-reconnaissance-methodology.md)
 - [AI System Reconnaissance Cheat Sheet](cheatsheets/ai-system-reconnaissance.md)
 - [AI Threat Modelling](knowledge-base/ai-security/ai-threat-modelling.md)
+- [Prompt Injection](knowledge-base/ai-security/prompt-injection.md)
+- [Prompt Injection Testing Methodology](pentesting-methodology/ai-security/prompt-injection-testing.md)
+- [Prompt Injection Cheat Sheet](cheatsheets/prompt-injection.md)
 - [AI Threat Modelling Cheat Sheet](cheatsheets/ai-threat-modelling.md)
 - [AI-Augmented Web Applications](knowledge-base/ai-security/ai-augmented-web-applications.md)
 - [LLM Pentesting](knowledge-base/ai-security/llm-pentesting.md)
@@ -213,6 +217,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Expand Python fundamentals through complete script building
 - [x] Add AI threat-modelling study and quick-reference notes
 - [x] Add AI system reconnaissance study, methodology, and quick reference
+- [x] Add prompt-injection study, testing methodology, and quick reference
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
 - [x] Add an end-to-end web application pentesting methodology
