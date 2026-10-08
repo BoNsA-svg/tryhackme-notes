@@ -8,7 +8,8 @@ This section covers reusable security knowledge for AI, ML, retrieval-augmented 
 2. [AI Threat Modelling](ai-threat-modelling.md) — identify threats, assets, and trust boundaries.
 3. [AI-Augmented Web Applications](ai-augmented-web-applications.md) — understand AI features inside web architecture.
 4. [Prompt Injection](prompt-injection.md) — understand direct and indirect context manipulation.
-5. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
+5. [Jailbreaking](jailbreaking.md) — understand attempts to bypass model safety policies.
+6. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
 
 ## Practical References
 
@@ -17,6 +18,8 @@ This section covers reusable security knowledge for AI, ML, retrieval-augmented 
 - [AI Threat Modelling Cheat Sheet](../../cheatsheets/ai-threat-modelling.md)
 - [Prompt Injection Testing Methodology](../../pentesting-methodology/ai-security/prompt-injection-testing.md)
 - [Prompt Injection Cheat Sheet](../../cheatsheets/prompt-injection.md)
+- [Jailbreaking Evaluation Methodology](../../pentesting-methodology/ai-security/jailbreaking-evaluation.md)
+- [Jailbreaking Cheat Sheet](../../cheatsheets/jailbreaking.md)
 
 ## Principle
 
