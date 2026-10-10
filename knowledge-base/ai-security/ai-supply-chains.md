@@ -222,6 +222,8 @@ Incident details should be verified against the original incident reports before
 
 ## Related Notes
 
+- [AI Supply-Chain Attack Vectors](ai-supply-chain-attack-vectors.md)
+- [AI Supply-Chain Attack-Vector Testing](../../pentesting-methodology/ai-security/ai-supply-chain-attack-vector-testing.md)
 - [AI Supply-Chain Assessment Methodology](../../pentesting-methodology/ai-security/ai-supply-chain-assessment.md)
 - [AI Supply-Chain Cheat Sheet](../../cheatsheets/ai-supply-chain.md)
 - [AI System Reconnaissance](ai-system-reconnaissance.md)
