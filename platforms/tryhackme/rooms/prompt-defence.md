@@ -9,7 +9,7 @@ This room explains how to reduce prompt-injection and jailbreaking risk through 
 - Explain why no single prompt or classifier guarantees immunity.
 - Harden system instructions without trusting them as a security boundary.
 - Apply input and output guardrails.
-- protect retrieval and tool-use paths.
+- Protect retrieval and tool-use paths.
 - Limit blast radius through least privilege.
 - Monitor, investigate, and retest prompt-security controls.
 
