@@ -18,3 +18,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 - [Prompt Injection](rooms/prompt-injection.md)
 - [Jailbreaking](rooms/jailbreaking.md)
 - [Prompt Defence](rooms/prompt-defence.md)
+- [Understanding AI Supply Chains](rooms/understanding-ai-supply-chains.md)
