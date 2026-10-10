@@ -37,6 +37,7 @@ Quick references:
 - [🧠 Prompt Injection](cheatsheets/prompt-injection.md)
 - [🔓 Jailbreaking](cheatsheets/jailbreaking.md)
 - [🛡️ Prompt Defence](cheatsheets/prompt-defence.md)
+- [🔗 AI Supply Chain](cheatsheets/ai-supply-chain.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
@@ -99,6 +100,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [AI System Reconnaissance](knowledge-base/ai-security/ai-system-reconnaissance.md)
 - [AI System Reconnaissance Methodology](pentesting-methodology/reconnaissance/ai-system-reconnaissance-methodology.md)
 - [AI System Reconnaissance Cheat Sheet](cheatsheets/ai-system-reconnaissance.md)
+- [AI Supply Chains](knowledge-base/ai-security/ai-supply-chains.md)
+- [AI Supply-Chain Assessment Methodology](pentesting-methodology/ai-security/ai-supply-chain-assessment.md)
+- [AI Supply-Chain Cheat Sheet](cheatsheets/ai-supply-chain.md)
 - [AI Threat Modelling](knowledge-base/ai-security/ai-threat-modelling.md)
 - [Prompt Injection](knowledge-base/ai-security/prompt-injection.md)
 - [Prompt Injection Testing Methodology](pentesting-methodology/ai-security/prompt-injection-testing.md)
@@ -228,6 +232,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add prompt-injection study, testing methodology, and quick reference
 - [x] Add jailbreaking study, evaluation methodology, and quick reference
 - [x] Add prompt-defence study, implementation methodology, and quick reference
+- [x] Add AI supply-chain study, assessment methodology, and quick reference
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
 - [x] Add an end-to-end web application pentesting methodology
