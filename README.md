@@ -39,6 +39,7 @@ Quick references:
 - [🛡️ Prompt Defence](cheatsheets/prompt-defence.md)
 - [🔗 AI Supply Chain](cheatsheets/ai-supply-chain.md)
 - [🧪 AI Supply-Chain Attack Vectors](cheatsheets/ai-supply-chain-attack-vectors.md)
+- [🔒 Securing AI Supply Chain](cheatsheets/securing-ai-supply-chain.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
@@ -107,6 +108,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [AI Supply-Chain Attack Vectors](knowledge-base/ai-security/ai-supply-chain-attack-vectors.md)
 - [AI Supply-Chain Attack-Vector Testing](pentesting-methodology/ai-security/ai-supply-chain-attack-vector-testing.md)
 - [AI Supply-Chain Attack Vectors Cheat Sheet](cheatsheets/ai-supply-chain-attack-vectors.md)
+- [Securing the AI Supply Chain](knowledge-base/ai-security/securing-ai-supply-chain.md)
+- [AI Supply-Chain Hardening Methodology](pentesting-methodology/ai-security/ai-supply-chain-hardening.md)
+- [Securing AI Supply Chain Cheat Sheet](cheatsheets/securing-ai-supply-chain.md)
 - [AI Threat Modelling](knowledge-base/ai-security/ai-threat-modelling.md)
 - [Prompt Injection](knowledge-base/ai-security/prompt-injection.md)
 - [Prompt Injection Testing Methodology](pentesting-methodology/ai-security/prompt-injection-testing.md)
@@ -238,6 +242,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add prompt-defence study, implementation methodology, and quick reference
 - [x] Add AI supply-chain study, assessment methodology, and quick reference
 - [x] Add AI supply-chain attack-vector study, testing methodology, and quick reference
+- [x] Add AI supply-chain security study, hardening methodology, and quick reference
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
 - [x] Add an end-to-end web application pentesting methodology
