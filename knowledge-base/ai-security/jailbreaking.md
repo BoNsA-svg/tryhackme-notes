@@ -122,6 +122,8 @@ No prompt, classifier, or blocklist is a complete defense by itself.
 - [LLM Pentesting](llm-pentesting.md)
 - [Jailbreaking Evaluation Methodology](../../pentesting-methodology/ai-security/jailbreaking-evaluation.md)
 - [Jailbreaking Cheat Sheet](../../cheatsheets/jailbreaking.md)
+- [Prompt Defence](prompt-defence.md)
+- [Prompt Defence Implementation Methodology](../../pentesting-methodology/ai-security/prompt-defence-implementation.md)
 
 ## Responsible Use
 
