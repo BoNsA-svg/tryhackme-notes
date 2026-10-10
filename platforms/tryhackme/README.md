@@ -20,3 +20,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 - [Prompt Defence](rooms/prompt-defence.md)
 - [Understanding AI Supply Chains](rooms/understanding-ai-supply-chains.md)
 - [AI Supply-Chain Attack Vectors](rooms/ai-supply-chain-attack-vectors.md)
+- [Securing the AI Supply Chain](rooms/securing-ai-supply-chain.md)
