@@ -5,17 +5,20 @@ This section covers reusable security knowledge for AI, ML, retrieval-augmented 
 ## Study Order
 
 1. [AI System Reconnaissance](ai-system-reconnaissance.md) — discover what is deployed and exposed.
-2. [AI Threat Modelling](ai-threat-modelling.md) — identify threats, assets, and trust boundaries.
-3. [AI-Augmented Web Applications](ai-augmented-web-applications.md) — understand AI features inside web architecture.
-4. [Prompt Injection](prompt-injection.md) — understand direct and indirect context manipulation.
-5. [Jailbreaking](jailbreaking.md) — understand attempts to bypass model safety policies.
-6. [Prompt Defence](prompt-defence.md) — reduce injection and jailbreak risk through layered controls.
-7. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
+2. [AI Supply Chains](ai-supply-chains.md) — understand inherited trust across models, data, code, and providers.
+3. [AI Threat Modelling](ai-threat-modelling.md) — identify threats, assets, and trust boundaries.
+4. [AI-Augmented Web Applications](ai-augmented-web-applications.md) — understand AI features inside web architecture.
+5. [Prompt Injection](prompt-injection.md) — understand direct and indirect context manipulation.
+6. [Jailbreaking](jailbreaking.md) — understand attempts to bypass model safety policies.
+7. [Prompt Defence](prompt-defence.md) — reduce injection and jailbreak risk through layered controls.
+8. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
 
 ## Practical References
 
 - [AI Reconnaissance Methodology](../../pentesting-methodology/reconnaissance/ai-system-reconnaissance-methodology.md)
 - [AI Reconnaissance Cheat Sheet](../../cheatsheets/ai-system-reconnaissance.md)
+- [AI Supply-Chain Assessment Methodology](../../pentesting-methodology/ai-security/ai-supply-chain-assessment.md)
+- [AI Supply-Chain Cheat Sheet](../../cheatsheets/ai-supply-chain.md)
 - [AI Threat Modelling Cheat Sheet](../../cheatsheets/ai-threat-modelling.md)
 - [Prompt Injection Testing Methodology](../../pentesting-methodology/ai-security/prompt-injection-testing.md)
 - [Prompt Injection Cheat Sheet](../../cheatsheets/prompt-injection.md)
