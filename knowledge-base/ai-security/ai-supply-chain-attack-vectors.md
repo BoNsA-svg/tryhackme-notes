@@ -182,6 +182,8 @@ Investigate the complete trust, execution, fallback, and persistence chain inste
 ## Related Notes
 
 - [Understanding AI Supply Chains](ai-supply-chains.md)
+- [Securing the AI Supply Chain](securing-ai-supply-chain.md)
+- [AI Supply-Chain Hardening Methodology](../../pentesting-methodology/ai-security/ai-supply-chain-hardening.md)
 - [Attack-Vector Testing Methodology](../../pentesting-methodology/ai-security/ai-supply-chain-attack-vector-testing.md)
 - [Attack Vectors Cheat Sheet](../../cheatsheets/ai-supply-chain-attack-vectors.md)
 - [AI Supply-Chain Assessment](../../pentesting-methodology/ai-security/ai-supply-chain-assessment.md)
