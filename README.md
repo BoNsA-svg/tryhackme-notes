@@ -165,7 +165,10 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Phishing](knowledge-base/social-engineering/phishing.md)
 
 ### 🎓 Learning Paths
-- [Junior Penetration Testing](platforms/tryhackme/learning-paths/junior-penetration-testing.md)
+- [TryHackMe — Junior Penetration Testing](platforms/tryhackme/learning-paths/junior-penetration-testing.md)
+- [HTB Academy — Penetration Tester Path](platforms/hack-the-box/penetration-tester-path/README.md)
+  - [Penetration Testing Process](platforms/hack-the-box/penetration-tester-path/penetration-testing-process.md)
+  - [Pre-Engagement, Information Gathering, and Vulnerability Assessment](platforms/hack-the-box/penetration-tester-path/pre-engagement-information-gathering-vulnerability-assessment.md)
 
 ---
 
