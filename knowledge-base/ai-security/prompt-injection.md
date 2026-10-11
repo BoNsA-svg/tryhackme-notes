@@ -326,6 +326,8 @@ Because models are probabilistic, run each important test multiple times and rep
 
 - [Prompt Injection Testing Methodology](../../pentesting-methodology/ai-security/prompt-injection-testing.md)
 - [Prompt Injection Cheat Sheet](../../cheatsheets/prompt-injection.md)
+- [RAG Security Fundamentals](rag-security-fundamentals.md)
+- [RAG Security Assessment Methodology](../../pentesting-methodology/ai-security/rag-security-assessment.md)
 - [Prompt Defence](prompt-defence.md)
 - [Prompt Defence Implementation Methodology](../../pentesting-methodology/ai-security/prompt-defence-implementation.md)
 - [AI Threat Modelling](ai-threat-modelling.md)
