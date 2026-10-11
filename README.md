@@ -40,6 +40,7 @@ Quick references:
 - [🔗 AI Supply Chain](cheatsheets/ai-supply-chain.md)
 - [🧪 AI Supply-Chain Attack Vectors](cheatsheets/ai-supply-chain-attack-vectors.md)
 - [🔒 Securing AI Supply Chain](cheatsheets/securing-ai-supply-chain.md)
+- [📚 RAG Security](cheatsheets/rag-security.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
@@ -112,6 +113,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [AI Supply-Chain Hardening Methodology](pentesting-methodology/ai-security/ai-supply-chain-hardening.md)
 - [Securing AI Supply Chain Cheat Sheet](cheatsheets/securing-ai-supply-chain.md)
 - [AI Threat Modelling](knowledge-base/ai-security/ai-threat-modelling.md)
+- [RAG Security Fundamentals](knowledge-base/ai-security/rag-security-fundamentals.md)
+- [RAG Security Assessment Methodology](pentesting-methodology/ai-security/rag-security-assessment.md)
+- [RAG Security Cheat Sheet](cheatsheets/rag-security.md)
 - [Prompt Injection](knowledge-base/ai-security/prompt-injection.md)
 - [Prompt Injection Testing Methodology](pentesting-methodology/ai-security/prompt-injection-testing.md)
 - [Prompt Injection Cheat Sheet](cheatsheets/prompt-injection.md)
@@ -243,6 +247,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add AI supply-chain study, assessment methodology, and quick reference
 - [x] Add AI supply-chain attack-vector study, testing methodology, and quick reference
 - [x] Add AI supply-chain security study, hardening methodology, and quick reference
+- [x] Add RAG security fundamentals, assessment methodology, and quick reference
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
 - [x] Add an end-to-end web application pentesting methodology
