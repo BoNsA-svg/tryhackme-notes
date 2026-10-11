@@ -193,6 +193,8 @@ Run repeated trials in fresh and continuing sessions. Preserve the model, prompt
 ## Related Notes
 
 - [Prompt Injection](prompt-injection.md)
+- [RAG Security Fundamentals](rag-security-fundamentals.md)
+- [RAG Security Assessment Methodology](../../pentesting-methodology/ai-security/rag-security-assessment.md)
 - [Jailbreaking](jailbreaking.md)
 - [Prompt Defence Implementation Methodology](../../pentesting-methodology/ai-security/prompt-defence-implementation.md)
 - [Prompt Defence Cheat Sheet](../../cheatsheets/prompt-defence.md)
