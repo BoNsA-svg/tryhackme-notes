@@ -181,7 +181,8 @@ cyber-notes/
 ├── pentesting-methodology/
 ├── cheatsheets/
 ├── platforms/
-│   └── tryhackme/
+│   ├── tryhackme/
+│   └── hack-the-box/
 ├── research/
 ├── reporting/
 ├── templates/
