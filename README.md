@@ -6,12 +6,15 @@
 
 Need something fast during a CTF or competition? Start here:
 
+### 👉 [Super Cheat Sheet](cheatsheets/README.md)
+
 ### 👉 [CTF Start Here](cheatsheets/00-ctf-start-here.md)
 
 ### 📝 [CTF Writeups](platforms/tryhackme/writeups/README.md)
 
 Quick references:
 
+- [🧭 Penetration Testing Process](cheatsheets/pentest-process.md)
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
 - [📋 Planning & Scoping](cheatsheets/planning-and-scoping.md)
@@ -20,6 +23,7 @@ Quick references:
 - [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
 - [🌍 External Network](cheatsheets/external-network.md)
 - [🏢 Internal Network](cheatsheets/internal-network.md)
+- [🔍 Web Enumeration](cheatsheets/web-enumeration.md)
 - [🌐 Web](cheatsheets/web.md)
 - [📶 Wireless](cheatsheets/wireless.md)
 - [☁️ Cloud](cheatsheets/cloud.md)
@@ -55,6 +59,12 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 ---
 
 ## 🧭 Detailed Notes Index
+
+### 🧠 Unified Knowledge Base
+- [Knowledge Base Hub](knowledge-base/README.md)
+- [Penetration Testing Foundations and Process](knowledge-base/penetration-testing/foundations-and-process.md)
+- [Web Enumeration](knowledge-base/web-security/web-enumeration.md)
+- [Super Cheat Sheet](cheatsheets/README.md)
 
 ### 🏁 CTF Writeups
 - [CTF Writeups & Challenge Notes](platforms/tryhackme/writeups/README.md)
@@ -137,6 +147,8 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Active Directory](knowledge-base/active-directory/active-directory.md)
 
 ### 🌐 Web Security
+- [Web Enumeration](knowledge-base/web-security/web-enumeration.md)
+- [Web Enumeration Cheat Sheet](cheatsheets/web-enumeration.md)
 - [Web Application Penetration Testing Methodology](pentesting-methodology/web/web-application-penetration-testing.md)
 - [Web Walking](knowledge-base/web-security/web-walking.md)
 - [Vulnerability Knowledge](knowledge-base/web-security/vulnerability-knowledge.md)
@@ -169,6 +181,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [HTB Academy — Penetration Tester Path](platforms/hack-the-box/penetration-tester-path/README.md)
   - [Penetration Testing Process](platforms/hack-the-box/penetration-tester-path/penetration-testing-process.md)
   - [Pre-Engagement, Information Gathering, and Vulnerability Assessment](platforms/hack-the-box/penetration-tester-path/pre-engagement-information-gathering-vulnerability-assessment.md)
+  - [Getting Started: Web Enumeration](platforms/hack-the-box/penetration-tester-path/getting-started-web-enumeration.md)
 
 ---
 
@@ -261,6 +274,9 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add remediation verification and re-testing documentation
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
+- [x] Add a unified topic-first knowledge base hub
+- [x] Add a master super-cheat-sheet hub
+- [x] Merge THM and HTB foundations and web-enumeration material
 - [ ] Improve cross-linking between related detailed notes
 
 ---
