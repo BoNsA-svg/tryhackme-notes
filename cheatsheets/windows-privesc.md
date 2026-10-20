@@ -87,6 +87,7 @@ Writable SYSTEM service/task? → high priority
 Config/history password? → test/reuse
 Vulnerable installed software? → verify version/preconditions
 Internal service? → investigate locally
+Kernel exploit? → last resort after safer paths
 ```
 
 ## Automated Enumeration
