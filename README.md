@@ -165,6 +165,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Metasploit](knowledge-base/exploitation/metasploit.md)
 - [Payload Generation](knowledge-base/exploitation/payload-generation.md)
 - [Shells & Listeners](knowledge-base/exploitation/shells-and-listeners.md)
+- [File Transfer](knowledge-base/exploitation/file-transfer.md)
 - [Password Attacks](knowledge-base/exploitation/password-attacks.md)
 
 ### ☁️ Cloud Security
@@ -182,6 +183,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
   - [Penetration Testing Process](platforms/hack-the-box/penetration-tester-path/penetration-testing-process.md)
   - [Pre-Engagement, Information Gathering, and Vulnerability Assessment](platforms/hack-the-box/penetration-tester-path/pre-engagement-information-gathering-vulnerability-assessment.md)
   - [Getting Started: Web Enumeration](platforms/hack-the-box/penetration-tester-path/getting-started-web-enumeration.md)
+  - [Getting Started: Types of Shells](platforms/hack-the-box/penetration-tester-path/getting-started-shell-types.md)
+  - [Getting Started: Privilege Escalation](platforms/hack-the-box/penetration-tester-path/getting-started-privilege-escalation.md)
+  - [Getting Started: Transferring Files](platforms/hack-the-box/penetration-tester-path/getting-started-file-transfers.md)
 
 ---
 
