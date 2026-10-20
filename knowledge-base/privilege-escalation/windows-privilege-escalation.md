@@ -584,3 +584,15 @@ Since you've just completed the TryHackMe room, I'd study them in this order:
 6. **[Decoder's Blog](https://decoder.cloud?utm_source=chatgpt.com)** – Read selected posts to deepen your understanding of Windows internals and modern privilege escalation research.
 
 proficient at Windows privilege escalation, **HackTricks + PayloadsAllTheThings + Priv2Admin** will give you the strongest foundation, while the remaining resources help you understand the advanced techniques you'll encounter in CTFs, certification labs, and real-world research.
+
+## Additional Enumeration and Safety Notes
+
+Useful authorized enumeration tools include WinPEAS, Seatbelt, and JAWS. These tools can execute many checks, produce substantial telemetry, and trigger endpoint protection, so manual enumeration may be more appropriate under restrictive rules of engagement.
+
+Prioritize unusual token privileges, weak service or scheduled-task permissions, stored credentials, writable privileged execution paths, and vulnerable installed software. LOLBAS provides context for legitimate Windows binaries and scripts that may expose security-relevant functionality.
+
+Local operating-system exploits can destabilize a host. Confirm the precise Windows build, patch state, prerequisites, and client approval before validation.
+
+## Additional Source Record
+
+- [HTB Getting Started: Privilege Escalation](../../platforms/hack-the-box/penetration-tester-path/getting-started-privilege-escalation.md)
