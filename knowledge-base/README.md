@@ -39,6 +39,7 @@ When two sources teach the same concept, the knowledge base keeps one clear expl
 - [Metasploit](exploitation/metasploit.md)
 - [Payload Generation](exploitation/payload-generation.md)
 - [Shells and Listeners](exploitation/shells-and-listeners.md)
+- [File Transfer](exploitation/file-transfer.md)
 - [Password Attacks](exploitation/password-attacks.md)
 
 ## Specialized Security Domains
