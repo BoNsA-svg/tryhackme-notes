@@ -7,6 +7,9 @@ Structured study notes from Hack The Box Academy's Penetration Tester Job Role P
 1. [Penetration Testing Process](penetration-testing-process.md)
 2. [Pre-Engagement, Information Gathering, and Vulnerability Assessment](pre-engagement-information-gathering-vulnerability-assessment.md)
 3. [Getting Started: Web Enumeration](getting-started-web-enumeration.md)
+4. [Getting Started: Types of Shells](getting-started-shell-types.md)
+5. [Getting Started: Privilege Escalation](getting-started-privilege-escalation.md)
+6. [Getting Started: Transferring Files](getting-started-file-transfers.md)
 
 ## Official References
 
