@@ -141,6 +141,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 
 ### 🔎 Reconnaissance
 - [Active Reconnaissance](knowledge-base/reconnaissance/active-recon.md)
+- [Nmap Network Enumeration](knowledge-base/reconnaissance/nmap-network-enumeration.md)
 - [Passive Reconnaissance](knowledge-base/reconnaissance/passive-recon.md)
 
 ### 🪟 Active Directory
@@ -186,6 +187,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
   - [Getting Started: Types of Shells](platforms/hack-the-box/penetration-tester-path/getting-started-shell-types.md)
   - [Getting Started: Privilege Escalation](platforms/hack-the-box/penetration-tester-path/getting-started-privilege-escalation.md)
   - [Getting Started: Transferring Files](platforms/hack-the-box/penetration-tester-path/getting-started-file-transfers.md)
+  - [Network Enumeration with Nmap](platforms/hack-the-box/penetration-tester-path/network-enumeration-with-nmap.md)
 
 ---
 
