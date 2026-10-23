@@ -46,6 +46,28 @@ xsltproc nmap/target.xml -o nmap/target.html
 
 `-oA` preserves normal, grepable, and XML output. Record exact commands and compare fast scans against a slower baseline.
 
+## Domain, Cloud, and Staff OSINT
+
+```bash
+whois <DOMAIN>
+dig <DOMAIN> NS
+dig <DOMAIN> MX
+dig <DOMAIN> TXT
+```
+
+Passive checks:
+
+```text
+Certificate Transparency names
+Historical DNS and cached pages
+Shodan/Censys-style third-party results
+Cloud-provider URLs in HTML, JavaScript, CSS, and documents
+Public repositories and commit history
+Job postings and technical employee profiles
+```
+
+Treat job-posting technologies as leads, not proof. Confirm cloud ownership and written scope before listing or downloading storage contents. Escalate exposed secrets immediately and collect only minimal evidence.
+
 ## Web Ports
 
 ```bash
@@ -124,4 +146,4 @@ Potential attack paths
 - Inspect service versions only after confirming them.
 - Look for credentials before chasing exploits.
 
-Detailed notes: [Active Recon](../knowledge-base/reconnaissance/active-recon.md) · [Nmap Network Enumeration](../knowledge-base/reconnaissance/nmap-network-enumeration.md) · [Passive Recon](../knowledge-base/reconnaissance/passive-recon.md)
+Detailed notes: [Active Recon](../knowledge-base/reconnaissance/active-recon.md) · [Nmap Network Enumeration](../knowledge-base/reconnaissance/nmap-network-enumeration.md) · [Domain, Cloud, and Staff OSINT](../knowledge-base/reconnaissance/domain-cloud-staff-osint.md) · [Service Footprinting](../knowledge-base/reconnaissance/service-footprinting.md) · [Passive Recon](../knowledge-base/reconnaissance/passive-recon.md)
