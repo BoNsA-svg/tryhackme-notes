@@ -9,6 +9,18 @@
 - [ ] Principal, MFA, roles, and session
 - [ ] Production and cost restrictions
 
+## Passive Exposure Discovery
+
+```text
+DNS records pointing to cloud-provider domains
+Storage URLs in HTML, JavaScript, CSS, and public documents
+Search-engine results for company terms on provider storage domains
+Public repositories and infrastructure-as-code
+Company abbreviations used in bucket/container names
+```
+
+Discovery is not authorization. Confirm ownership and scope before listing, downloading, or testing permissions. If a secret or private key is publicly exposed, preserve minimal evidence and follow the engagement's incident-notification process.
+
 ## Workflow
 
 1. Identity and organization context
@@ -24,4 +36,6 @@
 |  |  |  |  |  |  |
 
 Avoid adjacent tenants, bulk data, expensive resources, persistence, and organization-wide changes.
+
+Related knowledge: [Domain, Cloud, and Staff OSINT](../knowledge-base/reconnaissance/domain-cloud-staff-osint.md)
 
