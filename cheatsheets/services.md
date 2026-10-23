@@ -10,16 +10,22 @@
 | 22 | SSH | Record version; test discovered credentials/keys |
 | 25 | SMTP | Identify mail server and possible users |
 | 53 | DNS | Query records and test zone transfer |
+| 110/995 | POP3(S) | Record banner/TLS/auth capabilities |
+| 143/993 | IMAP(S) | Record banner/TLS/auth capabilities |
 | 80/443 | HTTP(S) | Fingerprint, source, robots, dirs, vhosts |
 | 88 | Kerberos | Identify AD domain/DC and enumerate known usernames |
 | 111 | RPCbind | Enumerate RPC/NFS services |
+| 161/UDP | SNMP | Identify version and authorized community access |
 | 139/445 | SMB | Enumerate shares, access, users, files |
 | 389/636 | LDAP(S) | Identify directory/domain and permitted queries |
 | 2049 | NFS | List exports and inspect mount permissions |
 | 3306 | MySQL | Identify version; test authorized/discovered creds |
 | 5432 | PostgreSQL | Identify version; test authorized/discovered creds |
 | 1433 | MSSQL | Identify version; test authorized/discovered creds |
+| 1521 | Oracle TNS | Enumerate listener version and services/SIDs |
 | 3389 | RDP | Record domain/hostname; use valid discovered creds |
+| 623/UDP | IPMI | Identify BMC/IPMI version and auth posture |
+| 873 | Rsync | List exposed modules and permissions |
 | 5985/5986 | WinRM | Valid Windows creds may provide remote shell |
 | 3000/5000/8000/8080/8443 | Alternate web | Treat each as a separate web application/API |
 
@@ -265,6 +271,61 @@ A successful WinRM login gives a useful Windows foothold.
 
 ---
 
+## Mail Retrieval — POP3 / IMAP
+
+```bash
+nmap -sV -sC -p110,143,993,995 $IP
+openssl s_client -connect $IP:993
+openssl s_client -connect $IP:995
+```
+
+Record the server banner, TLS support, authentication methods, and capabilities. Access mailboxes only with valid authorized credentials.
+
+---
+
+## SNMP — 161/UDP
+
+```bash
+sudo nmap -sU -sV -p161 --script snmp-info $IP
+snmpwalk -v2c -c <COMMUNITY> $IP
+onesixtyone -c <COMMUNITY_LIST> $IP
+```
+
+Useful output may include interfaces, routes, processes, software, usernames, and device metadata. Prefer SNMPv3 in defensive environments; v1/v2c community strings act like shared passwords.
+
+---
+
+## Oracle TNS — 1521
+
+```bash
+nmap -sV -p1521 --script oracle-tns-version $IP
+tnscmd10g version -h $IP
+```
+
+Record listener version and advertised services/SIDs before any credential testing.
+
+---
+
+## IPMI — 623/UDP
+
+```bash
+sudo nmap -sU -sV -p623 $IP
+```
+
+BMC access is high impact and independent of the host OS. Do not attempt hash retrieval or configuration changes without explicit authorization.
+
+---
+
+## Rsync / R-Services — 873 / 512–514
+
+```bash
+nmap -sV -p512,513,514,873 $IP
+rsync --list-only rsync://$IP/
+```
+
+Look for exposed rsync modules and legacy host-trust relationships. Avoid writes unless explicitly permitted.
+
+---
 ## Unknown Port
 
 ```bash
@@ -284,4 +345,6 @@ Ask:
 
 ## Competition Rule
 
-**Enumerate the service before attacking it. Versions, banners, files, usernames, hostnames, and credentials should drive the next step.**
+**Enumerate the service before attacking it. Versions, banners, files, usernames, hostnames, permissions, and credentials should drive the next step.**
+
+Detailed notes: [Service Footprinting](../knowledge-base/reconnaissance/service-footprinting.md)
