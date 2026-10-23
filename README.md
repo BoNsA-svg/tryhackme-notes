@@ -142,6 +142,8 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 ### 🔎 Reconnaissance
 - [Active Reconnaissance](knowledge-base/reconnaissance/active-recon.md)
 - [Nmap Network Enumeration](knowledge-base/reconnaissance/nmap-network-enumeration.md)
+- [Domain, Cloud, and Staff OSINT](knowledge-base/reconnaissance/domain-cloud-staff-osint.md)
+- [Service Footprinting](knowledge-base/reconnaissance/service-footprinting.md)
 - [Passive Reconnaissance](knowledge-base/reconnaissance/passive-recon.md)
 
 ### 🪟 Active Directory
@@ -188,6 +190,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
   - [Getting Started: Privilege Escalation](platforms/hack-the-box/penetration-tester-path/getting-started-privilege-escalation.md)
   - [Getting Started: Transferring Files](platforms/hack-the-box/penetration-tester-path/getting-started-file-transfers.md)
   - [Network Enumeration with Nmap](platforms/hack-the-box/penetration-tester-path/network-enumeration-with-nmap.md)
+  - [Footprinting](platforms/hack-the-box/penetration-tester-path/footprinting.md)
 
 ---
 
