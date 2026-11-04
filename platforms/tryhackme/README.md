@@ -23,3 +23,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 - [Securing the AI Supply Chain](rooms/securing-ai-supply-chain.md)
 - [RAG Security Fundamentals](rooms/rag-security-fundamentals.md)
 - [Agentic Fundamentals](rooms/agentic-fundamentals.md)
+- [Agentic Threat Modelling](rooms/agentic-threat-modelling.md)
