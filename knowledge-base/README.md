@@ -49,6 +49,7 @@ When two sources teach the same concept, the knowledge base keeps one clear expl
 
 - [AI and LLM Security](ai-security/README.md)
   - [Agentic AI Fundamentals](ai-security/agentic-ai-fundamentals.md)
+  - [Agentic Threat Modelling](ai-security/agentic-threat-modelling.md)
 - [Cloud Security](cloud-security/cloud-security.md)
 - [Wireless Security](wireless-security/wireless-security.md)
 - [Mobile Application Security](mobile-security/mobile-app-security.md)
