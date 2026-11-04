@@ -39,6 +39,7 @@ Use the smallest relevant sheet during a lab. Open the linked knowledge note or 
 
 ## AI and LLM Security
 
+- [Agentic AI Security](agentic-ai-security.md)
 - [AI Threat Modelling](ai-threat-modelling.md)
 - [AI System Reconnaissance](ai-system-reconnaissance.md)
 - [Prompt Injection](prompt-injection.md)
