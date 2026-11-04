@@ -5,3 +5,4 @@ Create one file or folder per room. Link each room to the reusable knowledge not
 ## AI and LLM Security
 
 - [Agentic Fundamentals](agentic-fundamentals.md)
+- [Agentic Threat Modelling](agentic-threat-modelling.md)
