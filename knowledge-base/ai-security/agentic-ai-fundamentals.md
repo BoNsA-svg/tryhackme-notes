@@ -166,6 +166,10 @@ The model may help choose an action, but deterministic controls should decide wh
 
 - TryHackMe — Agentic Fundamentals
 
+## Next Topic
+
+- [Agentic Threat Modelling](agentic-threat-modelling.md)
+
 ## Related References
 
 - [Agentic AI Security Review](../../pentesting-methodology/ai-security/agentic-ai-security-review.md)
