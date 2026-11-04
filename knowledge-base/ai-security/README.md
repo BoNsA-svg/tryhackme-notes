@@ -8,15 +8,19 @@ This section covers reusable security knowledge for AI, ML, retrieval-augmented 
 2. [AI Supply Chains](ai-supply-chains.md) — understand inherited trust across models, data, code, and providers.
 3. [AI Supply-Chain Attack Vectors](ai-supply-chain-attack-vectors.md) — analyze unsafe artifacts, dependencies, repositories, and APIs.
 4. [Securing the AI Supply Chain](securing-ai-supply-chain.md) — harden acquisition, scanning, promotion, and monitoring.
-5. [AI Threat Modelling](ai-threat-modelling.md) — identify threats, assets, and trust boundaries.
-6. [AI-Augmented Web Applications](ai-augmented-web-applications.md) — understand AI features inside web architecture.
-7. [RAG Security Fundamentals](rag-security-fundamentals.md) — secure ingestion, retrieval, provenance, and context assembly.
-8. [Prompt Injection](prompt-injection.md) — understand direct and indirect context manipulation.
-9. [Jailbreaking](jailbreaking.md) — understand attempts to bypass model safety policies.
-10. [Prompt Defence](prompt-defence.md) — reduce injection and jailbreak risk through layered controls.
-11. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
+5. [Agentic AI Fundamentals](agentic-ai-fundamentals.md) — understand autonomy, tools, delegation, MCP, A2A, and Least Agency.
+6. [AI Threat Modelling](ai-threat-modelling.md) — identify threats, assets, and trust boundaries.
+7. [AI-Augmented Web Applications](ai-augmented-web-applications.md) — understand AI features inside web architecture.
+8. [RAG Security Fundamentals](rag-security-fundamentals.md) — secure ingestion, retrieval, provenance, and context assembly.
+9. [Prompt Injection](prompt-injection.md) — understand direct and indirect context manipulation.
+10. [Jailbreaking](jailbreaking.md) — understand attempts to bypass model safety policies.
+11. [Prompt Defence](prompt-defence.md) — reduce injection and jailbreak risk through layered controls.
+12. [LLM Pentesting](llm-pentesting.md) — assess authorized LLM application behavior.
 
 ## Practical References
+
+- [Agentic AI Security Review](../../pentesting-methodology/ai-security/agentic-ai-security-review.md)
+- [Agentic AI Security Cheat Sheet](../../cheatsheets/agentic-ai-security.md)
 
 - [AI Reconnaissance Methodology](../../pentesting-methodology/reconnaissance/ai-system-reconnaissance-methodology.md)
 - [AI Reconnaissance Cheat Sheet](../../cheatsheets/ai-system-reconnaissance.md)
