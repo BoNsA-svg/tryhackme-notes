@@ -133,4 +133,4 @@ Require deterministic policy and usually human approval for:
 Model proposes → Policy authorizes → Application executes → Telemetry records
 ```
 
-Detailed notes: [Agentic AI Fundamentals](../knowledge-base/ai-security/agentic-ai-fundamentals.md) · [Review Methodology](../pentesting-methodology/ai-security/agentic-ai-security-review.md)
+Detailed notes: [Agentic AI Fundamentals](../knowledge-base/ai-security/agentic-ai-fundamentals.md) · [Agentic Threat Modelling](../knowledge-base/ai-security/agentic-threat-modelling.md) · [Review Methodology](../pentesting-methodology/ai-security/agentic-ai-security-review.md)
