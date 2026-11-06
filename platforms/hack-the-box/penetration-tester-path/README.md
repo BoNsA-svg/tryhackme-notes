@@ -12,6 +12,7 @@ Structured study notes from Hack The Box Academy's Penetration Tester Job Role P
 6. [Getting Started: Transferring Files](getting-started-file-transfers.md)
 7. [Network Enumeration with Nmap](network-enumeration-with-nmap.md)
 8. [Footprinting](footprinting.md)
+9. [Information Gathering — Web Edition](information-gathering-web-edition.md)
 
 ## Official References
 
