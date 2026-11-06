@@ -152,3 +152,7 @@ A useful finding contains:
 - TryHackMe — Agentic Threat Modelling
 
 > Threat modelling and validation must remain within explicit authorization and data-handling boundaries.
+
+## Continue With
+
+- [Agentic Security Monitoring](agentic-security-monitoring.md) — turn expected behavior and attack paths into telemetry, detection, authorization checks, and containment.
