@@ -32,6 +32,7 @@ When two sources teach the same concept, the knowledge base keeps one clear expl
 - [Domain, Cloud, and Staff OSINT](reconnaissance/domain-cloud-staff-osint.md)
 - [Service Footprinting](reconnaissance/service-footprinting.md)
 - [Passive Reconnaissance](reconnaissance/passive-recon.md)
+- [Web Reconnaissance](reconnaissance/web-reconnaissance.md)
 - [Network Security](network-security/network-security.md)
 - [Web Enumeration](web-security/web-enumeration.md)
 - [Web Walking](web-security/web-walking.md)
