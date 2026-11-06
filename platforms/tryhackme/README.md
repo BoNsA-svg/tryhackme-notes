@@ -24,3 +24,4 @@ Reusable knowledge belongs in the root knowledge base, methodologies, or cheat s
 - [RAG Security Fundamentals](rooms/rag-security-fundamentals.md)
 - [Agentic Fundamentals](rooms/agentic-fundamentals.md)
 - [Agentic Threat Modelling](rooms/agentic-threat-modelling.md)
+- [Agentic Security Monitoring](rooms/agentic-security-monitoring.md)
