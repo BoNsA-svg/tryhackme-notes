@@ -120,4 +120,6 @@ Chain-breaking remediation
 Monitoring and validation
 ```
 
+Continue with [Agentic Security Monitoring](agentic-security-monitoring.md) to validate these expectations in logs.
+
 Detailed notes: [Agentic Threat Modelling](../knowledge-base/ai-security/agentic-threat-modelling.md) · [Methodology](../pentesting-methodology/ai-security/agentic-threat-modelling.md) · [Agentic Fundamentals](agentic-ai-security.md)
