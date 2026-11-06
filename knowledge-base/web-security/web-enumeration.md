@@ -1,3 +1,5 @@
+[Start with Web Reconnaissance](../reconnaissance/web-reconnaissance.md) to build and validate the web-facing asset inventory before deep enumeration.
+
 # Web Enumeration
 
 > Unified from TryHackMe and Hack The Box web-enumeration material.
