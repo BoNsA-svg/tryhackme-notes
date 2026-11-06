@@ -38,6 +38,7 @@ Quick references:
 - [🐍 Python Pentesting](knowledge-base/programming/python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 - [🤖 Agentic AI Security](cheatsheets/agentic-ai-security.md)
 - [🧭 Agentic Threat Modelling](cheatsheets/agentic-threat-modelling.md)
+- [📊 Agentic Security Monitoring](cheatsheets/agentic-security-monitoring.md)
 - [🤖 AI Threat Modelling](cheatsheets/ai-threat-modelling.md)
 - [📡 AI System Reconnaissance](cheatsheets/ai-system-reconnaissance.md)
 - [🧠 Prompt Injection](cheatsheets/prompt-injection.md)
@@ -116,6 +117,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Agentic Threat Modelling](knowledge-base/ai-security/agentic-threat-modelling.md)
 - [Agentic Threat-Modelling Methodology](pentesting-methodology/ai-security/agentic-threat-modelling.md)
 - [Agentic Threat-Modelling Cheat Sheet](cheatsheets/agentic-threat-modelling.md)
+- [Agentic Security Monitoring](knowledge-base/ai-security/agentic-security-monitoring.md)
+- [Agentic Security Monitoring Assessment](pentesting-methodology/ai-security/agentic-security-monitoring.md)
+- [Agentic Security Monitoring Cheat Sheet](cheatsheets/agentic-security-monitoring.md)
 - [Agentic AI Security Review](pentesting-methodology/ai-security/agentic-ai-security-review.md)
 - [Agentic AI Security Cheat Sheet](cheatsheets/agentic-ai-security.md)
 - [AI System Reconnaissance](knowledge-base/ai-security/ai-system-reconnaissance.md)
@@ -275,6 +279,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Expand Python fundamentals through complete script building
 - [x] Add agentic AI fundamentals, security-review methodology, and quick reference
 - [x] Add agentic threat-modelling study, methodology, and quick reference
+- [x] Add agentic security-monitoring study, assessment methodology, and quick reference
 - [x] Add AI threat-modelling study and quick-reference notes
 - [x] Add AI system reconnaissance study, methodology, and quick reference
 - [x] Add prompt-injection study, testing methodology, and quick reference
