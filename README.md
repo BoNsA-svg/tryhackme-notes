@@ -17,6 +17,7 @@ Quick references:
 - [🧭 Penetration Testing Process](cheatsheets/pentest-process.md)
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
+- [🕸️ Web Reconnaissance](cheatsheets/web-reconnaissance.md)
 - [📋 Planning & Scoping](cheatsheets/planning-and-scoping.md)
 - [📝 Pentest Reporting](cheatsheets/pentest-reporting.md)
 - [✅ Re-Testing](cheatsheets/retesting.md)
@@ -66,6 +67,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 ### 🧠 Unified Knowledge Base
 - [Knowledge Base Hub](knowledge-base/README.md)
 - [Penetration Testing Foundations and Process](knowledge-base/penetration-testing/foundations-and-process.md)
+- [Web Reconnaissance](knowledge-base/reconnaissance/web-reconnaissance.md)
 - [Web Enumeration](knowledge-base/web-security/web-enumeration.md)
 - [Super Cheat Sheet](cheatsheets/README.md)
 
@@ -78,6 +80,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Planning and Scoping Cheat Sheet](cheatsheets/planning-and-scoping.md)
 - [Threat Modelling for Penetration Testers](pentesting-methodology/foundations/threat-modelling-for-pentesters.md)
 - [Reconnaissance Methodology](pentesting-methodology/reconnaissance/reconnaissance-methodology.md)
+- [Web Reconnaissance Methodology](pentesting-methodology/reconnaissance/web-reconnaissance-methodology.md)
 - [External Network Penetration Testing](pentesting-methodology/network/external-network-penetration-testing.md)
 - [Internal Network Penetration Testing](pentesting-methodology/network/internal-network-penetration-testing.md)
 - [Web Application Penetration Testing](pentesting-methodology/web/web-application-penetration-testing.md)
@@ -203,6 +206,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
   - [Getting Started: Transferring Files](platforms/hack-the-box/penetration-tester-path/getting-started-file-transfers.md)
   - [Network Enumeration with Nmap](platforms/hack-the-box/penetration-tester-path/network-enumeration-with-nmap.md)
   - [Footprinting](platforms/hack-the-box/penetration-tester-path/footprinting.md)
+  - [Information Gathering — Web Edition](platforms/hack-the-box/penetration-tester-path/information-gathering-web-edition.md)
 
 ---
 
@@ -301,6 +305,7 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add a unified topic-first knowledge base hub
 - [x] Add a master super-cheat-sheet hub
 - [x] Merge THM and HTB foundations and web-enumeration material
+- [x] Add HTB Web Information Gathering study, methodology, and quick reference
 - [ ] Improve cross-linking between related detailed notes
 
 ---
