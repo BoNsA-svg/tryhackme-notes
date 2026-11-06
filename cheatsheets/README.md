@@ -10,6 +10,7 @@ Use the smallest relevant sheet during a lab. Open the linked knowledge note or 
 - [Penetration Testing Process](pentest-process.md)
 - [Planning and Scoping](planning-and-scoping.md)
 - [Reconnaissance](recon.md)
+- [Web Reconnaissance](web-reconnaissance.md)
 - [Service Enumeration](services.md)
 - [Web Enumeration](web-enumeration.md)
 - [Complete Web Testing](web.md)
