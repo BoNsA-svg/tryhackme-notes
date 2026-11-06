@@ -146,4 +146,6 @@ Potential attack paths
 - Inspect service versions only after confirming them.
 - Look for credentials before chasing exploits.
 
+Focused workflow: [Web Reconnaissance](web-reconnaissance.md)
+
 Detailed notes: [Active Recon](../knowledge-base/reconnaissance/active-recon.md) · [Nmap Network Enumeration](../knowledge-base/reconnaissance/nmap-network-enumeration.md) · [Domain, Cloud, and Staff OSINT](../knowledge-base/reconnaissance/domain-cloud-staff-osint.md) · [Service Footprinting](../knowledge-base/reconnaissance/service-footprinting.md) · [Passive Recon](../knowledge-base/reconnaissance/passive-recon.md)
