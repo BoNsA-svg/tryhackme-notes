@@ -27,6 +27,7 @@ When two sources teach the same concept, the knowledge base keeps one clear expl
 ## Penetration Testing
 
 - [Foundations and Testing Process](penetration-testing/foundations-and-process.md)
+- [Vulnerability Assessment and Management](vulnerability-management/vulnerability-assessment.md)
 - [Active Reconnaissance](reconnaissance/active-recon.md)
 - [Nmap Network Enumeration](reconnaissance/nmap-network-enumeration.md)
 - [Domain, Cloud, and Staff OSINT](reconnaissance/domain-cloud-staff-osint.md)
