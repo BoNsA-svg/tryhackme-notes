@@ -26,6 +26,7 @@ Use the smallest relevant sheet during a lab. Open the linked knowledge note or 
 
 ## Assessment Types
 
+- [Vulnerability Assessment](vulnerability-assessment.md)
 - [External Network](external-network.md)
 - [Internal Network](internal-network.md)
 - [Wireless](wireless.md)
