@@ -2,6 +2,18 @@
 
 Structured study notes from Hack The Box Academy's Penetration Tester Job Role Path.
 
+## Complete Path Study Pack
+
+- [Full 28-Module Study Pack](complete-path-study-pack/README.md)
+- [All 28 Module Notes](complete-path-study-pack/knowledge-base/README.md)
+- [Master HTB Path Cheat Sheet](complete-path-study-pack/cheatsheet.md)
+- [Engagement-Ready Workflow](complete-path-study-pack/engagement-ready.md)
+- [CTF-Ready Workflow](complete-path-study-pack/ctf-ready.md)
+- [Progress Tracker](complete-path-study-pack/PROGRESS.md)
+- [Explicit Gaps Log](complete-path-study-pack/GAPS.md)
+
+The study pack preserves complete lesson-level coverage for all 28 modules and 495 sections. Hands-on exercises, assessment answers, flags, and personal worked notes remain explicitly tracked as gaps.
+
 ## Modules
 
 1. [Penetration Testing Process](penetration-testing-process.md)
