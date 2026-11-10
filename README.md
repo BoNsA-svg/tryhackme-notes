@@ -15,6 +15,8 @@ Need something fast during a CTF or competition? Start here:
 Quick references:
 
 - [🧭 Penetration Testing Process](cheatsheets/pentest-process.md)
+- [📚 HTB Penetration Tester Path — Complete Study Pack](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/README.md)
+- [⚡ HTB Penetration Tester Path — Master Cheat Sheet](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/cheatsheet.md)
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
 - [🕸️ Web Reconnaissance](cheatsheets/web-reconnaissance.md)
@@ -198,6 +200,9 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 ### 🎓 Learning Paths
 - [TryHackMe — Junior Penetration Testing](platforms/tryhackme/learning-paths/junior-penetration-testing.md)
 - [HTB Academy — Penetration Tester Path](platforms/hack-the-box/penetration-tester-path/README.md)
+  - [Complete 28-Module Study Pack](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/README.md)
+  - [Progress and Coverage](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/PROGRESS.md)
+  - [Known Gaps](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/GAPS.md)
   - [Penetration Testing Process](platforms/hack-the-box/penetration-tester-path/penetration-testing-process.md)
   - [Pre-Engagement, Information Gathering, and Vulnerability Assessment](platforms/hack-the-box/penetration-tester-path/pre-engagement-information-gathering-vulnerability-assessment.md)
   - [Getting Started: Web Enumeration](platforms/hack-the-box/penetration-tester-path/getting-started-web-enumeration.md)
