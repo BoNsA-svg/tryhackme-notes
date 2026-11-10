@@ -7,6 +7,7 @@ Use the smallest relevant sheet during a lab. Open the linked knowledge note or 
 ## Start Here
 
 - [CTF Start Here](00-ctf-start-here.md)
+- [HTB Penetration Tester Path — Complete Master Cheat Sheet](../platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/cheatsheet.md)
 - [Penetration Testing Process](pentest-process.md)
 - [Planning and Scoping](planning-and-scoping.md)
 - [Reconnaissance](recon.md)
