@@ -25,6 +25,22 @@ Search for secrets:
 grep -RniE 'pass(word)?|secret|token|key' /home /var/www 2>/dev/null
 ```
 
+## SSH Keys
+
+```bash
+find /home /root -type f \( -name 'id_rsa' -o -name 'id_ed25519' -o -name '*.pem' \) 2>/dev/null
+find /home /root -type f -name authorized_keys 2>/dev/null
+```
+
+If an authorised lab yields a private key:
+
+```bash
+chmod 600 <KEY>
+ssh -i <KEY> <USER>@<TARGET_IP>
+```
+
+A writable `authorized_keys` can create persistence; never modify it unless explicitly permitted, and document any change.
+
 ## SUID / SGID
 
 ```bash
@@ -85,6 +101,7 @@ Writable root cron/service? → inspect execution path
 Credentials found? → reuse/test locally
 Interesting local service? → inspect/port-forward
 Old/vulnerable software? → verify exact version/preconditions
+Kernel exploit? → last resort after safer paths
 ```
 
 ## Automated Enumeration
@@ -95,6 +112,6 @@ If allowed and available:
 ./linpeas.sh
 ```
 
-Use automated output to prioritize; verify findings manually.
+Automated tools are noisy and can produce false positives. Use their output to prioritize, then verify findings manually. Treat kernel exploits as a last resort: confirm the exact kernel, architecture, prerequisites, stability risk, and engagement permission before use.
 
 Detailed notes: [Linux Privilege Escalation](../knowledge-base/privilege-escalation/linux-privilege-escalation.md)

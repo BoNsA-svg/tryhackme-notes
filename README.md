@@ -6,20 +6,27 @@
 
 Need something fast during a CTF or competition? Start here:
 
+### 👉 [Super Cheat Sheet](cheatsheets/README.md)
+
 ### 👉 [CTF Start Here](cheatsheets/00-ctf-start-here.md)
 
 ### 📝 [CTF Writeups](platforms/tryhackme/writeups/README.md)
 
 Quick references:
 
+- [🧭 Penetration Testing Process](cheatsheets/pentest-process.md)
+- [📚 HTB Penetration Tester Path — Complete Study Pack](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/README.md)
+- [⚡ HTB Penetration Tester Path — Master Cheat Sheet](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/cheatsheet.md)
 - [🔌 Service Enumeration](cheatsheets/services.md)
 - [🔎 Recon](cheatsheets/recon.md)
+- [🕸️ Web Reconnaissance](cheatsheets/web-reconnaissance.md)
 - [📋 Planning & Scoping](cheatsheets/planning-and-scoping.md)
 - [📝 Pentest Reporting](cheatsheets/pentest-reporting.md)
 - [✅ Re-Testing](cheatsheets/retesting.md)
 - [🎯 Pentester Threat Modelling](cheatsheets/threat-modelling-for-pentesters.md)
 - [🌍 External Network](cheatsheets/external-network.md)
 - [🏢 Internal Network](cheatsheets/internal-network.md)
+- [🔍 Web Enumeration](cheatsheets/web-enumeration.md)
 - [🌐 Web](cheatsheets/web.md)
 - [📶 Wireless](cheatsheets/wireless.md)
 - [☁️ Cloud](cheatsheets/cloud.md)
@@ -32,7 +39,18 @@ Quick references:
 - [🔐 Passwords](cheatsheets/passwords.md)
 - [🐍 Python Fundamentals](knowledge-base/programming/python-for-pentesting/reference/python-fundamentals-cheatsheet.md)
 - [🐍 Python Pentesting](knowledge-base/programming/python-for-pentesting/reference/python-pentesting-cheatsheet.md)
+- [🤖 Agentic AI Security](cheatsheets/agentic-ai-security.md)
+- [🧭 Agentic Threat Modelling](cheatsheets/agentic-threat-modelling.md)
+- [📊 Agentic Security Monitoring](cheatsheets/agentic-security-monitoring.md)
 - [🤖 AI Threat Modelling](cheatsheets/ai-threat-modelling.md)
+- [📡 AI System Reconnaissance](cheatsheets/ai-system-reconnaissance.md)
+- [🧠 Prompt Injection](cheatsheets/prompt-injection.md)
+- [🔓 Jailbreaking](cheatsheets/jailbreaking.md)
+- [🛡️ Prompt Defence](cheatsheets/prompt-defence.md)
+- [🔗 AI Supply Chain](cheatsheets/ai-supply-chain.md)
+- [🧪 AI Supply-Chain Attack Vectors](cheatsheets/ai-supply-chain-attack-vectors.md)
+- [🔒 Securing AI Supply Chain](cheatsheets/securing-ai-supply-chain.md)
+- [📚 RAG Security](cheatsheets/rag-security.md)
 
 > **Competition layer:** command-first references for fast lookup. The detailed folders below remain the study/knowledge layer, while `ctf/` stores challenge-specific writeups.
 
@@ -48,6 +66,13 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 
 ## 🧭 Detailed Notes Index
 
+### 🧠 Unified Knowledge Base
+- [Knowledge Base Hub](knowledge-base/README.md)
+- [Penetration Testing Foundations and Process](knowledge-base/penetration-testing/foundations-and-process.md)
+- [Web Reconnaissance](knowledge-base/reconnaissance/web-reconnaissance.md)
+- [Web Enumeration](knowledge-base/web-security/web-enumeration.md)
+- [Super Cheat Sheet](cheatsheets/README.md)
+
 ### 🏁 CTF Writeups
 - [CTF Writeups & Challenge Notes](platforms/tryhackme/writeups/README.md)
 
@@ -57,6 +82,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Planning and Scoping Cheat Sheet](cheatsheets/planning-and-scoping.md)
 - [Threat Modelling for Penetration Testers](pentesting-methodology/foundations/threat-modelling-for-pentesters.md)
 - [Reconnaissance Methodology](pentesting-methodology/reconnaissance/reconnaissance-methodology.md)
+- [Web Reconnaissance Methodology](pentesting-methodology/reconnaissance/web-reconnaissance-methodology.md)
 - [External Network Penetration Testing](pentesting-methodology/network/external-network-penetration-testing.md)
 - [Internal Network Penetration Testing](pentesting-methodology/network/internal-network-penetration-testing.md)
 - [Web Application Penetration Testing](pentesting-methodology/web/web-application-penetration-testing.md)
@@ -91,19 +117,58 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Python Pentesting Quick Reference](knowledge-base/programming/python-for-pentesting/reference/python-pentesting-cheatsheet.md)
 
 ### 🤖 AI & LLM Security
+- [AI Security Hub](knowledge-base/ai-security/README.md)
+- [Agentic AI Fundamentals](knowledge-base/ai-security/agentic-ai-fundamentals.md)
+- [Agentic Threat Modelling](knowledge-base/ai-security/agentic-threat-modelling.md)
+- [Agentic Threat-Modelling Methodology](pentesting-methodology/ai-security/agentic-threat-modelling.md)
+- [Agentic Threat-Modelling Cheat Sheet](cheatsheets/agentic-threat-modelling.md)
+- [Agentic Security Monitoring](knowledge-base/ai-security/agentic-security-monitoring.md)
+- [Agentic Security Monitoring Assessment](pentesting-methodology/ai-security/agentic-security-monitoring.md)
+- [Agentic Security Monitoring Cheat Sheet](cheatsheets/agentic-security-monitoring.md)
+- [Agentic AI Security Review](pentesting-methodology/ai-security/agentic-ai-security-review.md)
+- [Agentic AI Security Cheat Sheet](cheatsheets/agentic-ai-security.md)
+- [AI System Reconnaissance](knowledge-base/ai-security/ai-system-reconnaissance.md)
+- [AI System Reconnaissance Methodology](pentesting-methodology/reconnaissance/ai-system-reconnaissance-methodology.md)
+- [AI System Reconnaissance Cheat Sheet](cheatsheets/ai-system-reconnaissance.md)
+- [AI Supply Chains](knowledge-base/ai-security/ai-supply-chains.md)
+- [AI Supply-Chain Assessment Methodology](pentesting-methodology/ai-security/ai-supply-chain-assessment.md)
+- [AI Supply-Chain Cheat Sheet](cheatsheets/ai-supply-chain.md)
+- [AI Supply-Chain Attack Vectors](knowledge-base/ai-security/ai-supply-chain-attack-vectors.md)
+- [AI Supply-Chain Attack-Vector Testing](pentesting-methodology/ai-security/ai-supply-chain-attack-vector-testing.md)
+- [AI Supply-Chain Attack Vectors Cheat Sheet](cheatsheets/ai-supply-chain-attack-vectors.md)
+- [Securing the AI Supply Chain](knowledge-base/ai-security/securing-ai-supply-chain.md)
+- [AI Supply-Chain Hardening Methodology](pentesting-methodology/ai-security/ai-supply-chain-hardening.md)
+- [Securing AI Supply Chain Cheat Sheet](cheatsheets/securing-ai-supply-chain.md)
 - [AI Threat Modelling](knowledge-base/ai-security/ai-threat-modelling.md)
+- [RAG Security Fundamentals](knowledge-base/ai-security/rag-security-fundamentals.md)
+- [RAG Security Assessment Methodology](pentesting-methodology/ai-security/rag-security-assessment.md)
+- [RAG Security Cheat Sheet](cheatsheets/rag-security.md)
+- [Prompt Injection](knowledge-base/ai-security/prompt-injection.md)
+- [Prompt Injection Testing Methodology](pentesting-methodology/ai-security/prompt-injection-testing.md)
+- [Prompt Injection Cheat Sheet](cheatsheets/prompt-injection.md)
+- [Jailbreaking](knowledge-base/ai-security/jailbreaking.md)
+- [Jailbreaking Evaluation Methodology](pentesting-methodology/ai-security/jailbreaking-evaluation.md)
+- [Jailbreaking Cheat Sheet](cheatsheets/jailbreaking.md)
+- [Prompt Defence](knowledge-base/ai-security/prompt-defence.md)
+- [Prompt Defence Implementation Methodology](pentesting-methodology/ai-security/prompt-defence-implementation.md)
+- [Prompt Defence Cheat Sheet](cheatsheets/prompt-defence.md)
 - [AI Threat Modelling Cheat Sheet](cheatsheets/ai-threat-modelling.md)
 - [AI-Augmented Web Applications](knowledge-base/ai-security/ai-augmented-web-applications.md)
 - [LLM Pentesting](knowledge-base/ai-security/llm-pentesting.md)
 
 ### 🔎 Reconnaissance
 - [Active Reconnaissance](knowledge-base/reconnaissance/active-recon.md)
+- [Nmap Network Enumeration](knowledge-base/reconnaissance/nmap-network-enumeration.md)
+- [Domain, Cloud, and Staff OSINT](knowledge-base/reconnaissance/domain-cloud-staff-osint.md)
+- [Service Footprinting](knowledge-base/reconnaissance/service-footprinting.md)
 - [Passive Reconnaissance](knowledge-base/reconnaissance/passive-recon.md)
 
 ### 🪟 Active Directory
 - [Active Directory](knowledge-base/active-directory/active-directory.md)
 
 ### 🌐 Web Security
+- [Web Enumeration](knowledge-base/web-security/web-enumeration.md)
+- [Web Enumeration Cheat Sheet](cheatsheets/web-enumeration.md)
 - [Web Application Penetration Testing Methodology](pentesting-methodology/web/web-application-penetration-testing.md)
 - [Web Walking](knowledge-base/web-security/web-walking.md)
 - [Vulnerability Knowledge](knowledge-base/web-security/vulnerability-knowledge.md)
@@ -120,6 +185,7 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Metasploit](knowledge-base/exploitation/metasploit.md)
 - [Payload Generation](knowledge-base/exploitation/payload-generation.md)
 - [Shells & Listeners](knowledge-base/exploitation/shells-and-listeners.md)
+- [File Transfer](knowledge-base/exploitation/file-transfer.md)
 - [Password Attacks](knowledge-base/exploitation/password-attacks.md)
 
 ### ☁️ Cloud Security
@@ -132,7 +198,20 @@ This vault separates permanent cybersecurity knowledge from platform-specific st
 - [Phishing](knowledge-base/social-engineering/phishing.md)
 
 ### 🎓 Learning Paths
-- [Junior Penetration Testing](platforms/tryhackme/learning-paths/junior-penetration-testing.md)
+- [TryHackMe — Junior Penetration Testing](platforms/tryhackme/learning-paths/junior-penetration-testing.md)
+- [HTB Academy — Penetration Tester Path](platforms/hack-the-box/penetration-tester-path/README.md)
+  - [Complete 28-Module Study Pack](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/README.md)
+  - [Progress and Coverage](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/PROGRESS.md)
+  - [Known Gaps](platforms/hack-the-box/penetration-tester-path/complete-path-study-pack/GAPS.md)
+  - [Penetration Testing Process](platforms/hack-the-box/penetration-tester-path/penetration-testing-process.md)
+  - [Pre-Engagement, Information Gathering, and Vulnerability Assessment](platforms/hack-the-box/penetration-tester-path/pre-engagement-information-gathering-vulnerability-assessment.md)
+  - [Getting Started: Web Enumeration](platforms/hack-the-box/penetration-tester-path/getting-started-web-enumeration.md)
+  - [Getting Started: Types of Shells](platforms/hack-the-box/penetration-tester-path/getting-started-shell-types.md)
+  - [Getting Started: Privilege Escalation](platforms/hack-the-box/penetration-tester-path/getting-started-privilege-escalation.md)
+  - [Getting Started: Transferring Files](platforms/hack-the-box/penetration-tester-path/getting-started-file-transfers.md)
+  - [Network Enumeration with Nmap](platforms/hack-the-box/penetration-tester-path/network-enumeration-with-nmap.md)
+  - [Footprinting](platforms/hack-the-box/penetration-tester-path/footprinting.md)
+  - [Information Gathering — Web Edition](platforms/hack-the-box/penetration-tester-path/information-gathering-web-edition.md)
 
 ---
 
@@ -145,7 +224,8 @@ cyber-notes/
 ├── pentesting-methodology/
 ├── cheatsheets/
 ├── platforms/
-│   └── tryhackme/
+│   ├── tryhackme/
+│   └── hack-the-box/
 ├── research/
 ├── reporting/
 ├── templates/
@@ -206,7 +286,18 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add service-specific competition reference
 - [x] Add Python for penetration-testing study/reference structure
 - [x] Expand Python fundamentals through complete script building
+- [x] Add agentic AI fundamentals, security-review methodology, and quick reference
+- [x] Add agentic threat-modelling study, methodology, and quick reference
+- [x] Add agentic security-monitoring study, assessment methodology, and quick reference
 - [x] Add AI threat-modelling study and quick-reference notes
+- [x] Add AI system reconnaissance study, methodology, and quick reference
+- [x] Add prompt-injection study, testing methodology, and quick reference
+- [x] Add jailbreaking study, evaluation methodology, and quick reference
+- [x] Add prompt-defence study, implementation methodology, and quick reference
+- [x] Add AI supply-chain study, assessment methodology, and quick reference
+- [x] Add AI supply-chain attack-vector study, testing methodology, and quick reference
+- [x] Add AI supply-chain security study, hardening methodology, and quick reference
+- [x] Add RAG security fundamentals, assessment methodology, and quick reference
 - [x] Add Python pentesting-scripts lesson and quick reference
 - [x] Add pentester threat-modelling lesson and quick reference
 - [x] Add an end-to-end web application pentesting methodology
@@ -216,6 +307,10 @@ This is an actively maintained learning repository. Notes may be reorganized, ex
 - [x] Add remediation verification and re-testing documentation
 - [ ] Expand Python security scripting as new concepts are learned
 - [ ] Expand service references as new material is learned
+- [x] Add a unified topic-first knowledge base hub
+- [x] Add a master super-cheat-sheet hub
+- [x] Merge THM and HTB foundations and web-enumeration material
+- [x] Add HTB Web Information Gathering study, methodology, and quick reference
 - [ ] Improve cross-linking between related detailed notes
 
 ---

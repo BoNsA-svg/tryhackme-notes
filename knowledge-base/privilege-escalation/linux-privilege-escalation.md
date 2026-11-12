@@ -1872,3 +1872,17 @@ whoami
 # Final Summary
 
 Linux privilege escalation automation enhances efficiency by combining **automated enumeration**, **public exploit research**, and **real-time process monitoring**. Tools like **LinPEAS** and **LSE** rapidly identify misconfigurations and vulnerable software, **searchsploit** and GitHub help locate applicable CVEs and proof-of-concept exploits, and **pspy** exposes transient root processes that traditional scanners cannot detect. Together, these tools significantly reduce manual effort, but they are most effective when paired with a solid understanding of Linux privilege escalation fundamentals and careful validation of every finding.
+
+## SSH Key Findings and Operational Safety
+
+Readable private keys may appear in paths such as `/home/USER/.ssh/id_rsa` or `/root/.ssh/id_rsa`. If an authorized assessment permits use of a discovered key, copy it through an approved channel, set restrictive permissions with `chmod 600`, and preserve its source as evidence.
+
+Write access to a controlled user's `authorized_keys` can provide SSH access, but adding a key is persistence. It requires explicit authorization and must be tracked and removed during cleanup.
+
+Automated enumeration tools such as LinPEAS, LinEnum, and linuxprivchecker can generate substantial telemetry and may trigger endpoint controls. Use them only when permitted and manually validate their findings.
+
+Kernel exploits are high-risk validation methods because they can destabilize or crash a host. Confirm the exact build and prerequisites, reproduce in a matching lab, and obtain explicit production approval.
+
+## Additional Source Record
+
+- [HTB Getting Started: Privilege Escalation](../../platforms/hack-the-box/penetration-tester-path/getting-started-privilege-escalation.md)

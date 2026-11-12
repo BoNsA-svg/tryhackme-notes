@@ -165,5 +165,8 @@ Record:
 
 - [Full AI Threat Modelling Note](../knowledge-base/ai-security/ai-threat-modelling.md)
 - [LLM Pentesting](../knowledge-base/ai-security/llm-pentesting.md)
+- [Prompt Injection](../knowledge-base/ai-security/prompt-injection.md)
+- [Prompt Injection Testing Methodology](../pentesting-methodology/ai-security/prompt-injection-testing.md)
+- [Prompt Injection Cheat Sheet](prompt-injection.md)
 - [MITRE ATLAS](https://atlas.mitre.org/)
 - [OWASP GenAI Security Project](https://genai.owasp.org/)

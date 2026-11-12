@@ -53,3 +53,9 @@ Use this table for a quick syntax check. **`dig`** is the modern, recommended to
 * **Monitor Your Footprint:** Don't let attackers see it first. Set up Shodan/Censys alerts for your IP spaces.
 * **Watch the Logs:** Monitor CT logs for any new certificates issued under your domains.
 * **Track DNS:** Actively track DNS changes to prevent **subdomain takeover** risks (where a DNS record points to a dead cloud service that an attacker can reclaim).
+
+---
+
+## Continue With
+
+- [Web Reconnaissance](web-reconnaissance.md) — combine WHOIS, DNS, CT, archives, vhosts, fingerprinting, crawling, and validation into one workflow.
