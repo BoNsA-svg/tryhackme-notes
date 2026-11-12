@@ -1,3 +1,6 @@
+---
+aliases:
+---
 
 # Penetesting Fundamentals
 
