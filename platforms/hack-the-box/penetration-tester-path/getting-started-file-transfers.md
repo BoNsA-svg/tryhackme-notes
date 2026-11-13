@@ -669,28 +669,262 @@ After both directions work, the exercise answer is `DONE`.
 
 ## 6. Protected file transfers
 
-Assessment artifacts can contain credentials, account lists, directory data, and network details. Minimize collection, avoid transferring real PII or financial data unless the client explicitly requires it, and use synthetic data to test DLP controls.
+Assessment artifacts may contain usernames, credentials, network details, Active Directory information, or other sensitive data. A professional tester must minimize collection and protect any data that must be transferred.
 
-### Windows AES helper
+Unless the client specifically requests it, do not remove real PII, payment-card information, trade secrets, or other unnecessary sensitive information. Use dummy data that resembles the protected information when testing DLP or egress controls.
 
-After reviewing and importing an approved AES helper script:
+Two protections solve different problems:
+
+| Protection | Purpose |
+|---|---|
+| Encrypting the file | Protects the stored artifact before, during, and after transfer |
+| SSH, SFTP, or HTTPS | Protects the network connection while the file is being transferred |
+| Base64 | Only represents binary data as text; it does not provide security |
+
+Where practical, encrypt the artifact and transfer it through an encrypted, authenticated connection.
+
+### File encryption on Windows
+
+HTB uses `Invoke-AESEncryption.ps1`, a PowerShell function that encrypts and decrypts text strings or files.
+
+| Parameter | Purpose |
+|---|---|
+| `-Mode Encrypt` | Encrypt the supplied text or file |
+| `-Mode Decrypt` | Decrypt the supplied ciphertext or encrypted file |
+| `-Key` | Password used to derive the AES key |
+| `-Text` | Select text-string processing |
+| `-Path` | Select file processing |
+
+The function hashes the supplied password with SHA-256 to obtain a 256-bit key, uses AES in CBC mode, prefixes the random IV to the ciphertext, returns encrypted text as Base64, and adds `.aes` to an encrypted filename.
+
+#### Complete `Invoke-AESEncryption.ps1` function
 
 ```powershell
-Import-Module .\\Invoke-AESEncryption.ps1
-Invoke-AESEncryption -Mode Encrypt -Key '<UNIQUE_STRONG_SECRET>' -Path .\\results.txt
-Invoke-AESEncryption -Mode Decrypt -Key '<UNIQUE_STRONG_SECRET>' -Path .\\results.txt.aes
+function Invoke-AESEncryption {
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Encrypt', 'Decrypt')]
+        [String]$Mode,
+
+        [Parameter(Mandatory = $true)]
+        [String]$Key,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "CryptText")]
+        [String]$Text,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "CryptFile")]
+        [String]$Path
+    )
+
+    Begin {
+        $shaManaged = New-Object System.Security.Cryptography.SHA256Managed
+        $aesManaged = New-Object System.Security.Cryptography.AesManaged
+        $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+        $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::Zeros
+        $aesManaged.BlockSize = 128
+        $aesManaged.KeySize = 256
+    }
+
+    Process {
+        $aesManaged.Key = $shaManaged.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Key))
+
+        switch ($Mode) {
+            'Encrypt' {
+                if ($Text) {
+                    $plainBytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+                }
+
+                if ($Path) {
+                    $File = Get-Item -Path $Path -ErrorAction SilentlyContinue
+                    if (!$File.FullName) {
+                        Write-Error -Message "File not found!"
+                        break
+                    }
+                    $plainBytes = [System.IO.File]::ReadAllBytes($File.FullName)
+                    $outPath = $File.FullName + ".aes"
+                }
+
+                $encryptor = $aesManaged.CreateEncryptor()
+                $encryptedBytes = $encryptor.TransformFinalBlock($plainBytes, 0, $plainBytes.Length)
+                $encryptedBytes = $aesManaged.IV + $encryptedBytes
+                $aesManaged.Dispose()
+
+                if ($Text) {
+                    return [System.Convert]::ToBase64String($encryptedBytes)
+                }
+
+                if ($Path) {
+                    [System.IO.File]::WriteAllBytes($outPath, $encryptedBytes)
+                    (Get-Item $outPath).LastWriteTime = $File.LastWriteTime
+                    return "File encrypted to $outPath"
+                }
+            }
+
+            'Decrypt' {
+                if ($Text) {
+                    $cipherBytes = [System.Convert]::FromBase64String($Text)
+                }
+
+                if ($Path) {
+                    $File = Get-Item -Path $Path -ErrorAction SilentlyContinue
+                    if (!$File.FullName) {
+                        Write-Error -Message "File not found!"
+                        break
+                    }
+                    $cipherBytes = [System.IO.File]::ReadAllBytes($File.FullName)
+                    $outPath = $File.FullName -replace ".aes"
+                }
+
+                $aesManaged.IV = $cipherBytes[0..15]
+                $decryptor = $aesManaged.CreateDecryptor()
+                $decryptedBytes = $decryptor.TransformFinalBlock($cipherBytes, 16, $cipherBytes.Length - 16)
+                $aesManaged.Dispose()
+
+                if ($Text) {
+                    return [System.Text.Encoding]::UTF8.GetString($decryptedBytes).Trim([char]0)
+                }
+
+                if ($Path) {
+                    [System.IO.File]::WriteAllBytes($outPath, $decryptedBytes)
+                    (Get-Item $outPath).LastWriteTime = $File.LastWriteTime
+                    return "File decrypted to $outPath"
+                }
+            }
+        }
+    }
+
+    End {
+        $shaManaged.Dispose()
+        $aesManaged.Dispose()
+    }
+}
 ```
 
-Use a unique secret per engagement and transfer it through a separate approved channel. Prefer modern authenticated encryption where available; encryption without authentication may not detect tampering.
+#### Import and use the function
 
-### Linux OpenSSL encryption
+Transfer the script to the Windows host using an approved method, change into its directory, and import it:
+
+```powershell
+Import-Module .\Invoke-AESEncryption.ps1
+```
+
+Encrypt a text string:
+
+```powershell
+Invoke-AESEncryption -Mode Encrypt -Key "<UNIQUE_STRONG_PASSWORD>" -Text "Secret Text"
+```
+
+The output is Base64-encoded AES ciphertext. Decrypt that value with:
+
+```powershell
+Invoke-AESEncryption -Mode Decrypt -Key "<UNIQUE_STRONG_PASSWORD>" -Text "<BASE64_CIPHERTEXT>"
+```
+
+Encrypt a file:
+
+```powershell
+Invoke-AESEncryption -Mode Encrypt -Key "<UNIQUE_STRONG_PASSWORD>" -Path .\scan-results.txt
+```
+
+The function creates `scan-results.txt.aes` while leaving the original file in place. Confirm it with:
+
+```powershell
+Get-ChildItem
+```
+
+Decrypt the file:
+
+```powershell
+Invoke-AESEncryption -Mode Decrypt -Key "<UNIQUE_STRONG_PASSWORD>" -Path .\scan-results.txt.aes
+```
+
+Use a strong, unique password for every engagement. Do not reuse one client password for another client, and transfer the password through a separate approved channel. The HTB helper demonstrates AES-CBC encryption but does not add a separate authentication tag, so real engagements should use an organization-approved, authenticated encryption tool where available.
+
+#### Windows hands-on practice
+
+Create a harmless working file:
+
+```powershell
+New-Item -ItemType Directory -Path C:\htb -Force
+Set-Location C:\htb
+"Dummy vulnerability assessment results" | Out-File .\scan-results.txt
+```
+
+After placing `Invoke-AESEncryption.ps1` in `C:\htb`, practice the full workflow:
+
+```powershell
+Import-Module .\Invoke-AESEncryption.ps1
+Invoke-AESEncryption -Mode Encrypt -Key "<UNIQUE_STRONG_PASSWORD>" -Path .\scan-results.txt
+Get-ChildItem
+Invoke-AESEncryption -Mode Decrypt -Key "<UNIQUE_STRONG_PASSWORD>" -Path .\scan-results.txt.aes
+```
+
+### File encryption on Linux
+
+OpenSSL is commonly available on Linux and can encrypt an artifact before it is transferred. HTB's example uses AES-256, PBKDF2, and 100,000 password-derivation iterations.
+
+Encrypt `/etc/passwd`:
 
 ```bash
-openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -in results.txt -out results.enc
-openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in results.enc -out results.txt
+openssl enc -aes256 -iter 100000 -pbkdf2 -in /etc/passwd -out passwd.enc
 ```
 
-Encryption at rest complements rather than replaces an encrypted transport.
+OpenSSL prompts for the encryption password twice:
+
+```text
+enter aes-256-cbc encryption password:
+Verifying - enter aes-256-cbc encryption password:
+```
+
+Decrypt the artifact:
+
+```bash
+openssl enc -d -aes256 -iter 100000 -pbkdf2 -in passwd.enc -out passwd
+```
+
+| Option | Meaning |
+|---|---|
+| `enc` | Use OpenSSL's symmetric encryption interface |
+| `-d` | Decrypt instead of encrypting |
+| `-aes256` | Use AES-256-CBC |
+| `-iter 100000` | Run 100,000 password-derivation iterations |
+| `-pbkdf2` | Derive the encryption key using PBKDF2 |
+| `-in FILE` | Input file |
+| `-out FILE` | Output file |
+
+#### Linux hands-on practice
+
+Create a harmless test artifact on the Pwnbox:
+
+```bash
+mkdir -p "$HOME/section6-practice"
+cd "$HOME/section6-practice"
+echo "Dummy vulnerability assessment results" > scan-results.txt
+```
+
+Encrypt it:
+
+```bash
+openssl enc -aes256 -iter 100000 -pbkdf2 -in scan-results.txt -out scan-results.enc
+```
+
+Confirm the files exist:
+
+```bash
+ls -l
+```
+
+Decrypt to a separate filename and read the recovered content:
+
+```bash
+openssl enc -d -aes256 -iter 100000 -pbkdf2 -in scan-results.enc -out recovered-results.txt
+cat recovered-results.txt
+```
+
+The recovered text should match the original. After encryption, transfer the encrypted artifact using HTTPS, SFTP, SSH, or another approved method rather than relying on encryption alone.
 
 ---
 
