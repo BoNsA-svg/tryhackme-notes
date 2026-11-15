@@ -964,18 +964,18 @@ type C:\flag.txt
 
 When an authorized foothold provides a basic command channel or limited shell, the next step may be to spawn a more useful local shell. A new shell is not automatically a pseudo-terminal (PTY), does not grant higher privileges, and does not make activity invisible. Use these techniques only within an explicitly scoped lab or assessment.
 
-`text
+```text
 Initial command execution
   -> Identify available interpreters
   -> Spawn one compatible shell
   -> Verify identity and terminal capabilities
   -> Inspect permissions if allowed
   -> Document and clean up
-`
+```
 
 ### Preflight: identify the session
 
-`bash
+```bash
 id
 whoami
 hostname
@@ -983,7 +983,7 @@ pwd
 tty
 printf 'Configured login shell: %s\n' "$SHELL"
 command -v sh bash python3 perl ruby lua awk find vim
-`
+```
 
 - `tty` returns a device such as `/dev/pts/0` when a terminal exists; `not a tty` means no attached terminal.
 - `$SHELL` is the configured login shell and might not identify the current interpreter.
@@ -1007,16 +1007,16 @@ Choose **one** method instead of running each in succession. Verify that ` /bin/
 
 ### 1. Native shell: /bin/sh -i
 
-`bash
+```bash
 /bin/sh -i
-`
+```
 
 The `-i` option requests interactive shell mode. An example output is:
 
-`text
+```text
 sh: no job control in this shell
 sh-4.2$
-`
+```
 
 This warning commonly means the shell lacks a controlling terminal. The prompt does not prove a full TTY or elevated rights.
 
@@ -1024,15 +1024,15 @@ This warning commonly means the shell lacks a controlling terminal. The prompt d
 
 **From a command line:**
 
-`bash
+```bash
 perl -e 'exec "/bin/sh";'
-`
+```
 
 **Inside a Perl script:**
 
-`perl
+```perl
 exec "/bin/sh";
-`
+```
 
 The `exec` call replaces the Perl process with the shell interpreter.
 
@@ -1040,15 +1040,15 @@ The `exec` call replaces the Perl process with the shell interpreter.
 
 **From a command line:**
 
-`bash
+```bash
 ruby -e 'exec "/bin/sh"'
-`
+```
 
 **Inside a Ruby script:**
 
-`ruby
+```ruby
 exec "/bin/sh"
-`
+```
 
 Do not paste `ruby: exec "/bin/sh"` verbatim. In some course notes, `ruby:` is a label rather than part of the executable syntax.
 
@@ -1056,23 +1056,23 @@ Do not paste `ruby: exec "/bin/sh"` verbatim. In some course notes, `ruby:` is a
 
 **From a command line:**
 
-`bash
+```bash
 lua -e 'os.execute("/bin/sh")'
-`
+```
 
 **Inside a Lua script:**
 
-`lua
+```lua
 os.execute("/bin/sh")
-`
+```
 
 `os.execute` runs a local OS command and inherits the current account's permissions.
 
 ### 5. AWK
 
-`bash
+```bash
 awk 'BEGIN {system("/bin/sh")}'
-`
+```
 
 The `BEGIN` block runs before AWK processes any lines; `system()` launches the local shell.
 
@@ -1080,17 +1080,17 @@ The `BEGIN` block runs before AWK processes any lines; `system()` launches the l
 
 **Preferred, narrow method:**
 
-`bash
+```bash
 find . -exec /bin/sh \; -quit
-`
+```
 
 The current directory ordinarily matches itself. `-exec` launches the shell, and `-quit` prevents repeated invocations.
 
 **Alternative method from the HTB lesson:**
 
-`bash
+```bash
 find / -name 'nameoffile' -exec /bin/awk 'BEGIN {system("/bin/sh")}' \;
-`
+```
 
 Substitute an actual filename. This only works if a file matches the `-name` predicate, and searching `/ ` broadly may be noisy or blocked by permissions. Prefer the narrow form when possible.
 
@@ -1098,36 +1098,36 @@ Substitute an actual filename. This only works if a file matches the `-name` pre
 
 **Direct invocation:**
 
-`bash
+```bash
 vim -c ':!/bin/sh'
-`
+```
 
 **From inside Vim (press Esc for normal mode):**
 
-`vim
+```vim
 :set shell=/bin/sh
 :shell
-`
+```
 
 Run `exit` to return to Vim. Vim needs a sufficiently functioning terminal environment.
 
 ### Verify shell vs. terminal
 
-`bash
+```bash
 id
 whoami
 hostname
 tty
 printf 'Shell PID: %s\n' "$$"
-`
+```
 
 A new command prompt means a shell is running, not necessarily a stable PTY. `tty` is the relevant check. `#` as a prompt is **not** reliable proof of root privileges.
 
 If Python 3 is available, an optional PTY-spawning technique is:
 
-`bash
+```bash
 python3 -c 'import pty; pty.spawn("/bin/bash")'
-`
+```
 
 A PTY alone does not guarantee working job control over every network transport. Refer to the repository's [shell cheat sheet](../../../../cheatsheets/shells.md) for additional terminal-handling steps.
 
@@ -1135,22 +1135,22 @@ A PTY alone does not guarantee working job control over every network transport.
 
 Inspect the ownership and mode bits of a specific executable or file:
 
-`bash
+```bash
 ls -la /path/to/file-or-binary
-`
+```
 
 If authorized, check the current account's sudo rules:
 
-`bash
+```bash
 sudo -l
-`
+```
 
 Example output from the HTB lesson:
 
-`text
+```text
 User apache may run the following commands on ILF-WebSrv:
     (ALL : ALL) NOPASSWD: ALL
-`
+```
 
 This permits the *example apache account on that example host* to run any command as any user/group without entering a sudo password. Do **not** assume other systems have this configuration. Listing a sudo permission is not permission to use it outside the engagement rules.
 
@@ -1188,7 +1188,7 @@ This permits the *example apache account on that example host* to run any comman
 
 ### Fast engagement card
 
-`bash
+```bash
 # Verify the in-scope foothold
 id; hostname; tty
 command -v sh bash python3 perl ruby lua awk find vim
@@ -1209,7 +1209,7 @@ python3 -c 'import pty; pty.spawn("/bin/bash")'
 id; whoami; tty
 ls -la /path/to/file-or-binary
 sudo -l
-`
+```
 
 ### Key takeaways
 
