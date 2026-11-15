@@ -7,7 +7,7 @@
 - **HTB module:** Shells & Payloads
 - **Penetration Tester path module:** 8
 - **Total sections:** 17
-- **Current detailed progress:** Sections 1, 4, 5, 9, and 11 / 17
+- **Current detailed progress:** Sections 1, 4, 5, 9, 11, and 14 / 17
 - **Primary goal:** Understand how payloads produce shell access and how shells become the command-line foothold used for later assessment work.
 
 ---
@@ -1218,3 +1218,238 @@ sudo -l
 - Command-line forms (such as `ruby -e` and `lua -e`) differ from code written inside scripts.
 - Shell spawning does not change OS permissions or create an elevated session.
 - Verify identity, terminal state, and sudo restrictions before further authorized work.
+
+---
+
+## 14. Antak Webshell (ASPX / ASP.NET)
+
+### Objective
+
+Understand the ASPX attack surface, find and prepare Nishang's Antak ASP.NET web shell in an **authorized HTB lab**, access it using the correct virtual hostname, and verify which Windows account executes commands. Document the lab evidence, detection opportunities, and cleanup.
+
+### Web-shell mental model
+
+```text
+Tester browser
+   |
+   | HTTP(S) request to uploaded .aspx file
+   v
+Windows web server / IIS / ASP.NET application
+   |
+   | Antak runs server-side PowerShell commands
+   v
+Windows OS under the application process identity
+   |
+   +--> Command output returned in the Antak web interface
+```
+
+- **ASPX** stands for Active Server Pages Extended and is associated with ASP.NET server-side pages; whether a particular file runs depends on hosting/configuration.
+- An **ASPX file does not execute PowerShell merely because it is uploaded**. Server-side execution requires the destination to interpret that file as ASP.NET code and allow the relevant execution path.
+- **Antak** is an ASP.NET web shell distributed with the **Nishang** PowerShell security toolkit. Its interface resembles a PowerShell console.
+- Antak runs individual submitted commands as separate processes. **Do not assume** environment variables, working directory, or session state persist across commands.
+- Uploading and executing a web shell is only appropriate when explicitly authorized by the lab or engagement.
+
+### Prerequisites and scope
+
+Before attempting the HTB exercise, confirm:
+
+1. The Academy target has been spawned and your Pwnbox/VPN is connected.
+2. The target IP is current: use the IP shown by the lab, not a hardcoded address from a walkthrough.
+3. The virtual host is `status.inlanefreight.local`.
+4. The portal's upload functionality and subsequent access to the uploaded file are within the designated lab scope.
+5. You have documented the planned file name, source, target, and expected cleanup.
+
+### Step 1 — Locate Antak on Pwnbox
+
+```bash
+ls -la /usr/share/nishang/Antak-WebShell/
+```
+
+Expected contents in the HTB environment:
+
+```text
+antak.aspx
+Readme.md
+```
+
+**Answer to Question 1:**
+
+```text
+/usr/share/nishang/Antak-WebShell/antak.aspx
+```
+
+If the directory is missing, inspect the current Pwnbox tool installation and lab image rather than assuming another path is valid.
+
+### Step 2 — Resolve the target virtual host
+
+The application is routed by hostname, so a raw IP URL might reach a different site or fail to present the same application. On Pwnbox, inspect the mapping first:
+
+```bash
+grep -n 'status.inlanefreight.local' /etc/hosts
+```
+
+When the lab has authorized the target and you know `TARGET_IP`, add this line to `/etc/hosts` through your editor:
+
+```text
+TARGET_IP status.inlanefreight.local
+```
+
+Replace `TARGET_IP` with the current spawned target address; **do not** literally paste the word `TARGET_IP`. Use a privileged editor if necessary:
+
+```bash
+sudo nano /etc/hosts
+```
+
+Verify resolution and the portal:
+
+```bash
+getent hosts status.inlanefreight.local
+curl -I http://status.inlanefreight.local/
+```
+
+A response such as 200, 301, 302, 401, or 403 may indicate a reachable HTTP service; this does not prove upload or code execution works.
+
+### Step 3 — Prepare a working copy
+
+Keep the installed original as a known reference:
+
+```bash
+cp /usr/share/nishang/Antak-WebShell/antak.aspx `/Upload.aspx
+ls -l `/Upload.aspx
+```
+
+Open the copy and inspect the authentication settings (the lesson identifies them near line 14; actual line numbers can vary by version):
+
+```bash
+nano `/Upload.aspx
+```
+
+Set a **unique temporary lab username and strong password** in the authentication checks. Do not use these examples as real credentials or commit the configured ASPX file to a public repository. Antak's built-in login is an access control, but it is **not** a replacement for scope controls, network restriction, or encrypted transport.
+
+The original course mentions removing signatures/comments from payloads. For this study workflow, prioritize correct configuration, controlled exposure, and defender visibility; no AV-evasion modifications are necessary to demonstrate the lab concepts.
+
+### Step 4 — Upload through the authorized portal
+
+1. Open the portal at `http://status.inlanefreight.local/`.
+2. Use the same upload interface that the HTB Laudanum section introduced.
+3. Select ``/Upload.aspx` and upload **only to the scoped test environment**.
+4. Record the resulting file name and path. The lesson places uploads under the web application's `/files/` route.
+5. Browse through the **virtual hostname**, not just the target IP:
+
+```text
+http://status.inlanefreight.local/files/Upload.aspx
+```
+
+**Case matters when translating between filesystems and URLs**; use the actual name presented by the application. If upload is blocked or server-side ASPX execution is disabled, document that control instead of assuming exploitation succeeded.
+
+### Step 5 — Authenticate and verify command identity
+
+After opening the page, authenticate with the temporary credentials configured in your copied ASPX file. The Antak interface typically includes a command input area and controls such as **Submit**, **Upload the File**, **Download**, **Encode and Execute**, and **Parse web.config**. These controls can touch sensitive systems and data; use only what the exercise authorizes.
+
+Run basic verification commands:
+
+```powershell
+whoami
+hostname
+$env:USERNAME
+$env:USERDOMAIN
+Get-Location
+```
+
+- `whoami` returns the actual Windows security identity, often in `DOMAIN\username` or `HOSTNAME\username` form.
+- `$env:USERNAME` alone may omit domain or computer context.
+- Record the exact output, including capitalization and spacing, for the HTB answer format.
+
+**Question 2:** The user name must be obtained from the **actual spawned target** by running `whoami` through the uploaded Antak shell at the vHost URL. No universal answer can be determined from the lesson text alone. Expected format: `****\****` (the question states one space; copy the exact output and check the submission instructions).
+
+### Operational notes: per-command execution
+
+Because Antak executes commands in new processes, avoid relying on `cd` or temporary variable assignments from earlier commands. Prefer fully qualified paths or a single self-contained PowerShell command.
+
+Simple, low-impact verification:
+
+```powershell
+whoami
+Get-Location
+Get-ChildItem -Name
+```
+
+In an actual engagement, commands that enumerate credential stores, download configuration files, or modify server content require separate scoping and data-handling approval.
+
+### Common problems
+
+| Symptom | Likely cause | Check |
+|---|---|---|
+| Portal does not load at vHost | `/etc/hosts` missing/wrong or target offline | `getent hosts`, VPN status, current target IP |
+| IP address works but vHost differs | HTTP Host header / virtual host routing | Use `status.inlanefreight.local` |
+| Upload rejected | Extension filtering, size policy, upload controls | Record evidence; verify scope and allowed formats |
+| Downloaded ASPX source instead of login page | File served as static text or ASP.NET handler absent | Stop; document server misconfiguration/controls |
+| 404 at `/files/Upload.aspx` | Upload failed, renamed file, or wrong route | Check uploader response and exact case |
+| 403 | Server denies access or execution | Record restriction |
+| Antak login fails | Credentials in copied file do not match | Recheck local copy; do not publish secrets |
+| Submitted command has no output | PowerShell unavailable/blocked, process privileges, errors | Test `whoami` and inspect returned error |
+| `cd` does not persist | Each request may use another process | Use absolute paths in each command |
+
+### Detection and defensive perspective
+
+Watch for:
+
+- Unexpected `.aspx` files in upload directories, especially where uploads should be static only.
+- IIS worker process (`w3wp.exe`) spawning `powershell.exe` or other command interpreters.
+- Requests to newly uploaded ASPX resources followed by command-like POST traffic.
+- PowerShell script-block and process-creation logs (when enabled) and unusual file-access patterns.
+- Repeated requests to admin-like upload endpoints and outbound connections initiated from web-server accounts.
+
+Mitigations include storing uploads outside executable webroots, disabling script execution in upload directories, strict allowlisting of upload types and content checks, least-privilege application identities, patching, restricted egress, and centralized IIS/EDR monitoring.
+
+### Evidence and cleanup
+
+- Record the authorized target ID, vHost, upload route, uploaded filename, execution identity, timestamps, and redacted proof of successful command execution.
+- Do not save test credentials, real customer data, private `web.config` content, or HTB flags in this public repo.
+- Delete the uploaded ASPX shell through the lab-approved interface or cleanup procedure when finished.
+- Remove your temporary `/Upload.aspx` copy and temporary `/etc/hosts` entry only if no other running lab needs them.
+- Confirm the uploaded web shell no longer responds and record cleanup status.
+
+### Fast engagement card
+
+```bash
+# Pwnbox: locate and copy
+ls /usr/share/nishang/Antak-WebShell
+cp /usr/share/nishang/Antak-WebShell/antak.aspx `/Upload.aspx
+
+# Configure temporary authentication in the working copy
+nano `/Upload.aspx
+
+# Map the current scoped target IP in /etc/hosts
+sudo nano /etc/hosts
+# TARGET_IP status.inlanefreight.local
+
+# Verify vHost resolution
+getent hosts status.inlanefreight.local
+
+# Use the lab portal to upload `/Upload.aspx, then browse to:
+# http://status.inlanefreight.local/files/Upload.aspx
+```
+
+```powershell
+# Antak command box: confirm identity on the real lab target
+whoami
+hostname
+Get-Location
+```
+
+### Questions and answers
+
+| HTB question | Answer / method |
+|---|---|
+| Q1 — Full Antak web-shell path on Pwnbox | `/usr/share/nishang/Antak-WebShell/antak.aspx` |
+| Q2 — User whose identity runs commands | Run `whoami` inside the uploaded web shell via **status.inlanefreight.local**; submit the resulting `DOMAIN\user` string |
+
+### Learning resource and takeaways
+
+- [IPPSEC search index](https://ippsec.rocks/) provides timestamped video references for concepts such as ASPX web shells.
+- ASPX execution depends on an ASP.NET-enabled server-side handler and applicable permissions.
+- Antak uses the Windows web application's execution identity, not automatically Administrator or SYSTEM.
+- Virtual-host resolution is essential for this lab.
+- Verify output with `whoami` rather than guessing the answer.
+- Treat upload, execution, evidence handling, and cleanup as separate authorized engagement steps.
