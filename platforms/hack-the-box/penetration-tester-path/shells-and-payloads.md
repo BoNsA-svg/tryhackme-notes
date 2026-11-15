@@ -7,7 +7,7 @@
 - **HTB module:** Shells & Payloads
 - **Penetration Tester path module:** 8
 - **Total sections:** 17
-- **Current detailed progress:** Sections 1, 4, 5, and 9 / 17
+- **Current detailed progress:** Sections 1, 4, 5, 9, and 11 / 17
 - **Primary goal:** Understand how payloads produce shell access and how shells become the command-line foothold used for later assessment work.
 
 ---
@@ -955,3 +955,266 @@ whoami
 hostname
 type C:\flag.txt
 ```
+
+---
+
+## 11. Spawning Interactive Shells
+
+### Objective and engagement context
+
+When an authorized foothold provides a basic command channel or limited shell, the next step may be to spawn a more useful local shell. A new shell is not automatically a pseudo-terminal (PTY), does not grant higher privileges, and does not make activity invisible. Use these techniques only within an explicitly scoped lab or assessment.
+
+`text
+Initial command execution
+  -> Identify available interpreters
+  -> Spawn one compatible shell
+  -> Verify identity and terminal capabilities
+  -> Inspect permissions if allowed
+  -> Document and clean up
+`
+
+### Preflight: identify the session
+
+`bash
+id
+whoami
+hostname
+pwd
+tty
+printf 'Configured login shell: %s\n' "$SHELL"
+command -v sh bash python3 perl ruby lua awk find vim
+`
+
+- `tty` returns a device such as `/dev/pts/0` when a terminal exists; `not a tty` means no attached terminal.
+- `$SHELL` is the configured login shell and might not identify the current interpreter.
+- Confirm hostname and user are within engagement scope before continuing.
+
+### One-command quick reference
+
+| Available program | Shell-spawning command | Operational note |
+|---|---|---|
+| sh | `/bin/sh -i` | Interactive interpreter, but not necessarily a TTY |
+| bash | `/bin/bash -i` | Requires Bash on target |
+| Python 3 | `python3 -c 'import pty; pty.spawn("/bin/bash")'` | Requests a PTY if Python and Bash exist |
+| Perl | `perl -e 'exec "/bin/sh";'` | Replaces Perl process with shell |
+| Ruby | `ruby -e 'exec "/bin/sh"'` | Correct Ruby command-line syntax |
+| Lua | `lua -e 'os.execute("/bin/sh")'` | Invokes local shell through Lua |
+| AWK | `awk 'BEGIN {system("/bin/sh")}'` | Executes shell with AWK system() |
+| Find | `find . -exec /bin/sh \; -quit` | Spawns shell for first matched path |
+| Vim | `vim -c ':!/bin/sh'` | Runs shell from Vim; needs usable terminal |
+
+Choose **one** method instead of running each in succession. Verify that ` /bin/sh ` or ` /bin/bash ` exists; `sh` could be dash, BusyBox, or another implementation.
+
+### 1. Native shell: /bin/sh -i
+
+`bash
+/bin/sh -i
+`
+
+The `-i` option requests interactive shell mode. An example output is:
+
+`text
+sh: no job control in this shell
+sh-4.2$
+`
+
+This warning commonly means the shell lacks a controlling terminal. The prompt does not prove a full TTY or elevated rights.
+
+### 2. Perl
+
+**From a command line:**
+
+`bash
+perl -e 'exec "/bin/sh";'
+`
+
+**Inside a Perl script:**
+
+`perl
+exec "/bin/sh";
+`
+
+The `exec` call replaces the Perl process with the shell interpreter.
+
+### 3. Ruby
+
+**From a command line:**
+
+`bash
+ruby -e 'exec "/bin/sh"'
+`
+
+**Inside a Ruby script:**
+
+`ruby
+exec "/bin/sh"
+`
+
+Do not paste `ruby: exec "/bin/sh"` verbatim. In some course notes, `ruby:` is a label rather than part of the executable syntax.
+
+### 4. Lua
+
+**From a command line:**
+
+`bash
+lua -e 'os.execute("/bin/sh")'
+`
+
+**Inside a Lua script:**
+
+`lua
+os.execute("/bin/sh")
+`
+
+`os.execute` runs a local OS command and inherits the current account's permissions.
+
+### 5. AWK
+
+`bash
+awk 'BEGIN {system("/bin/sh")}'
+`
+
+The `BEGIN` block runs before AWK processes any lines; `system()` launches the local shell.
+
+### 6. Find
+
+**Preferred, narrow method:**
+
+`bash
+find . -exec /bin/sh \; -quit
+`
+
+The current directory ordinarily matches itself. `-exec` launches the shell, and `-quit` prevents repeated invocations.
+
+**Alternative method from the HTB lesson:**
+
+`bash
+find / -name 'nameoffile' -exec /bin/awk 'BEGIN {system("/bin/sh")}' \;
+`
+
+Substitute an actual filename. This only works if a file matches the `-name` predicate, and searching `/ ` broadly may be noisy or blocked by permissions. Prefer the narrow form when possible.
+
+### 7. Vim
+
+**Direct invocation:**
+
+`bash
+vim -c ':!/bin/sh'
+`
+
+**From inside Vim (press Esc for normal mode):**
+
+`vim
+:set shell=/bin/sh
+:shell
+`
+
+Run `exit` to return to Vim. Vim needs a sufficiently functioning terminal environment.
+
+### Verify shell vs. terminal
+
+`bash
+id
+whoami
+hostname
+tty
+printf 'Shell PID: %s\n' "$$"
+`
+
+A new command prompt means a shell is running, not necessarily a stable PTY. `tty` is the relevant check. `#` as a prompt is **not** reliable proof of root privileges.
+
+If Python 3 is available, an optional PTY-spawning technique is:
+
+`bash
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+`
+
+A PTY alone does not guarantee working job control over every network transport. Refer to the repository's [shell cheat sheet](../../../../cheatsheets/shells.md) for additional terminal-handling steps.
+
+### Permissions checks
+
+Inspect the ownership and mode bits of a specific executable or file:
+
+`bash
+ls -la /path/to/file-or-binary
+`
+
+If authorized, check the current account's sudo rules:
+
+`bash
+sudo -l
+`
+
+Example output from the HTB lesson:
+
+`text
+User apache may run the following commands on ILF-WebSrv:
+    (ALL : ALL) NOPASSWD: ALL
+`
+
+This permits the *example apache account on that example host* to run any command as any user/group without entering a sudo password. Do **not** assume other systems have this configuration. Listing a sudo permission is not permission to use it outside the engagement rules.
+
+**TTY nuance:** `sudo -l` does not always require a TTY, but password prompts, a `requiretty` rule, or an unstable shell can prevent it from functioning.
+
+### Troubleshooting
+
+| Problem | Explanation | What to check |
+|---|---|---|
+| `command not found` | Program absent or missing from PATH | `command -v <program>` and available alternatives |
+| `/bin/bash` does not exist | Bash not installed | Try `/bin/sh` |
+| `no job control in this shell` | Shell has no controlling terminal | Check `tty` |
+| `not a tty` | Pipe/socket rather than terminal | Use an authorized PTY method if available |
+| `sudo: a terminal is required` | Sudo needs terminal interaction | Record limitation; consider a permitted PTY |
+| `sudo: a password is required` | Sudo rule needs credentials | Do not assume `NOPASSWD` |
+| Vim behaves incorrectly | Inadequate terminal support | Use a simpler interpreter |
+| Find returns permission errors | Unnecessarily broad search | Limit to `find .` |
+| Spawned shell immediately exits | Lost stdin or underlying session | Check the original connection |
+
+### Detection and operational security
+
+- Shell-spawning programs may appear in endpoint process trees and audit logs.
+- Interpreters that launch `/bin/sh` can generate recognizable parent/child process events.
+- Sudo attempts may be logged; credentials, client IP addresses, and lab flags must not be published in GitHub notes.
+- Use the least disruptive technique and keep records of commands, timestamps, actual user, terminal state, and relevant error output.
+- A spawned shell does not inherently provide persistence, evasion, or privilege escalation.
+
+### Cleanup and reporting
+
+1. Exit only the child shells you created, preserving your authorized access channel as required by the lab.
+2. If using Vim, exit the nested shell to return to the editor.
+3. Do not alter permissions, sudoers configuration, login shells, or system services solely to improve the prompt.
+4. Record the technique, prerequisite executable, output of `id` and `tty`, limitations, and cleanup status.
+5. Never commit real client data, passwords, private keys, flags, or sensitive transcripts to this public repository.
+
+### Fast engagement card
+
+`bash
+# Verify the in-scope foothold
+id; hostname; tty
+command -v sh bash python3 perl ruby lua awk find vim
+
+# Choose ONE method that is available
+/bin/sh -i
+perl -e 'exec "/bin/sh";'
+ruby -e 'exec "/bin/sh"'
+lua -e 'os.execute("/bin/sh")'
+awk 'BEGIN {system("/bin/sh")}'
+find . -exec /bin/sh \; -quit
+vim -c ':!/bin/sh'
+
+# Optional PTY method when Python 3 and Bash exist
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+
+# Verify and enumerate only what scope allows
+id; whoami; tty
+ls -la /path/to/file-or-binary
+sudo -l
+`
+
+### Key takeaways
+
+- **Interactive shell is not synonymous with a fully interactive TTY.**
+- Perl, Ruby, Lua, AWK, Find, and Vim provide alternatives when Python is missing.
+- Command-line forms (such as `ruby -e` and `lua -e`) differ from code written inside scripts.
+- Shell spawning does not change OS permissions or create an elevated session.
+- Verify identity, terminal state, and sudo restrictions before further authorized work.
